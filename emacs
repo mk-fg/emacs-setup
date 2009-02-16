@@ -2,7 +2,6 @@
 (set-fontset-font (frame-parameter nil 'font)
   'han '("cwTeXHeiBold" . "unicode-bmp"))
 
-
 (custom-set-variables
   ;; custom-set-variables was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
@@ -16,12 +15,11 @@
   ;; If there is more than one, they won't work right.
  )
 
-
 (color-theme-initialize)
 (color-theme-infodoc)
 (color-theme-late-night)
-(set-cursor-color "red")
 
-
+(tool-bar-mode -1)
+(set-mouse-color "white")
 (setq make-backup-files nil)
 (setq auto-save-mode nil)
