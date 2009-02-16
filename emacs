@@ -20,6 +20,7 @@
 (color-theme-initialize)
 (color-theme-infodoc)
 (color-theme-late-night)
+(set-cursor-color "red")
 
 
 (setq make-backup-files nil)
