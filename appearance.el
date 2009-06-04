@@ -1,7 +1,28 @@
 ;; Font init
 (set-default-font "Luxi Sans-8")
 
+;; Color init
+(require 'font-lock)
+(global-font-lock-mode t)
 
+;; Startup screen? WTF!?
+(custom-set-variables '(inhibit-startup-screen t))
+
+;; Time is critical
+(setq display-time-day-and-date t
+	display-time-24hr-format t)
+(display-time)
+
+;; Format the title-bar to always include the buffer name
+(setq frame-title-format "emacs - %b")
+
+;; Column numbers
+(column-number-mode t)
+
+;; Flash!
+(setq visible-bell t)
+
+;; TODO: M4 keyz for per-buffer mono/sans font switching (see buffer-face-set)
 ;; TODO: Pull colors from this stuff:
 ;;(color-theme-initialize)
 ;;(color-theme-lawrence)
@@ -48,10 +69,3 @@
 
 ;; Masquerade!
 (if window-system (masq_x) (masq_nox))
-
-
-;; Fuck da startup screen
-(custom-set-variables '(inhibit-startup-screen t))
-
-
-;; TODO: M4 keyz for per-buffer mono/sans font switching (see buffer-face-set)

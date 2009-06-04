@@ -4,5 +4,7 @@
 ; (require 'cl)
 
 (require 'slime)
-
 (slime-setup)
+
+(add-to-list 'auto-mode-alist
+	'("\\.cl$\\|.el$|\\.emacs$" . lisp-mode))
