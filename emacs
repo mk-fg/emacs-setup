@@ -1,25 +1,40 @@
-(set-default-font "DejaVu Sans Condensed-8")
-(set-fontset-font (frame-parameter nil 'font)
-  'han '("cwTeXHeiBold" . "unicode-bmp"))
+;; Extend include path
+(setq load-path (cons "~/.emacs.d" load-path))
 
-(custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(inhibit-startup-screen t))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )
 
-(color-theme-initialize)
-(color-theme-infodoc)
-(color-theme-late-night)
-
-(tool-bar-mode -1)
-(set-mouse-color "white")
+;; Supress stupid save behavior
 (setq make-backup-files nil)
 (setq auto-save-mode nil)
+
+
+;; Lisp stuff
+(load-library "appearance")
+(load-library "lisp")
+(load-library "shell")
+(load-library "keymap")
+
+
+
+;; Text and the such
+;; Use colors to highlight commands, etc.
+;(global-font-lock-mode t)
+;; Disable the welcome message
+;(setq inhibit-startup-message t)
+;; Format the title-bar to always include the buffer name
+;(setq frame-title-format "emacs - %b")
+;; Display time
+;(display-time)
+;; Make the mouse wheel scroll Emacs
+;(mouse-wheel-mode t)
+;; Always end a file with a newline
+;(setq require-final-newline t)
+;; Stop emacs from arbitrarily adding lines to the end of a file when the
+;; cursor is moved past the end of it:
+;(setq next-line-add-newlines nil)
+;; Flash instead of that annoying bell
+;(setq visible-bell t)
+;; Remove icons toolbar
+;(if (> emacs-major-version 20)
+;(tool-bar-mode -1))
+;; Use y or n instead of yes or not
+;(fset 'yes-or-no-p 'y-or-n-p)
