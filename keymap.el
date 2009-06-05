@@ -24,39 +24,19 @@
 (global-set-key (key "M-<up>") 'windmove-up)
 (global-set-key (key "M-<down>") 'windmove-down)
 
+;; Consistent undo/redo
 ;; C-z is outrighty dangerous otherwise
-(global-set-key [?\C-z] 'multi-term)
+(global-set-key [?\C-z] 'undo)
+(global-set-key [C-S-z] 'redo)
+(global-set-key [?\C-x ?\C-z] 'repeat)
+(global-set-key [C-return] 'multi-term)
 
 ;; Make the mouse wheel scroll Emacs
 (mouse-wheel-mode t)
 
-
-(defun indent-rigidly (start end arg)
-	"Indent all lines starting in the region sideways by ARG columns.
-Called from a program, takes three arguments, START, END and ARG.
-You can remove all indentation from a region by giving a large negative ARG."
-	(interactive "r\np")
-	(save-excursion
-		(goto-char end)
-		(setq end (point-marker))
-		(goto-char start)
-		(or (bolp) (forward-line 1))
-		(while (< (point) end)
-			(let ((indent (current-indentation))
-			eol-flag)
-	(save-excursion
-		(skip-chars-forward " \t")
-		(setq eol-flag (eolp)))
-	(or eol-flag
-			(indent-to (max 0 (+ indent arg)) 0))
-	(delete-region (point) (progn (skip-chars-forward " \t") (point))))
-			(forward-line 1))
-		(move-marker end nil)))
-
-
 ;; TAB is TAB, and backspace is a backspace, goddamnit!
-; (global-set-key (kbd "TAB") 'self-insert-command)
 (global-set-key [backspace] 'backward-delete-char)
+(global-set-key (kbd "TAB") 'self-insert-command)
 
-
-(global-set-key (kbd "TAB") 'insert-tab)
+; (global-set-key (kbd "TAB") 'tab-to-tab-stop)
+; (setq tab-stop-list '(2 4 6 8 10 12 14 16 18 20 22 24 26 28 30))

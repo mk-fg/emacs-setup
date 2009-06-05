@@ -7,7 +7,7 @@
 (setq auto-save-mode nil)
 
 
-;; Lisp stuff
+;; Includes
 (load-library "appearance")
 (load-library "lisp")
 (load-library "shell")
@@ -31,7 +31,7 @@
 	kept-new-versions 6
 	kept-old-versions 2
 	version-control t) ; use versioned backups
-(setq temporary-file-directory "~/tmp")
+(setq temporary-file-directory "tmp")
 
 
 ;; Self-composition
