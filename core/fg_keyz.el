@@ -23,6 +23,7 @@
 (global-set-key (key "M-<right>") 'windmove-right)
 (global-set-key (key "M-<up>") 'windmove-up)
 (global-set-key (key "M-<down>") 'windmove-down)
+(global-set-key (kbd "C-<tab>") 'bury-buffer)
 
 ;; Consistent undo/redo
 ;; C-z is outrighty dangerous otherwise

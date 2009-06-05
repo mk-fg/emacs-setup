@@ -1,4 +1,5 @@
 ;; Tabs appearance and formatting basics
+(setq require-final-newline t)
 (setq indent-tabs-mode t)
 (setq-default indent-tabs-mode t)
 (setq default-tab-width 2)

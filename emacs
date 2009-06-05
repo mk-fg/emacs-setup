@@ -1,38 +1,39 @@
+(defvar fg-path
+	(expand-file-name "~/.emacs.d")
+	"root for all emacs-related crap")
+
 ;; Extend include path
-(setq load-path (cons "~/.emacs.d" load-path))
-
-
-;; Supress stupid save behavior
-(setq make-backup-files nil)
-(setq auto-save-mode nil)
-
+(add-to-list 'load-path fg-path)
+(add-to-list 'load-path (concat fg-path "/extz"))
+(add-to-list 'load-path (concat fg-path "/core"))
 
 ;; Includes
-(load-library "appearance")
-(load-library "lisp")
-(load-library "shell")
-(load-library "code_style")
-(load-library "keymap") ; must be the last one
+(load-library "fg_lookz")
+(load-library "fg_lisp")
+(load-library "fg_shell")
+(load-library "fg_style")
+(load-library "fg_keyz") ; must be the last one
 
-
-;; Always end a file with a newline
-(setq require-final-newline t)
 
 ;; Use y or n instead of yes or not
 (fset 'yes-or-no-p 'y-or-n-p)
 
-
-;; tmp / bakz
+;; Adjust tmp path and use it for all backup and autosave files
 (setq
-	backup-by-copying t ; don't clobber symlinks
+	temporary-file-directory
+		(concat fg-path "/tmp/")
 	backup-directory-alist
-	'(("." . "~/.emacs.d/bakz"))
+		(list (cons "." temporary-file-directory))
+	auto-save-list-file-prefix
+		(concat temporary-file-directory "/bakz-")
+	auto-save-file-name-transforms
+		(list (cons ".*" (list temporary-file-directory t)))
+	backup-by-copying t
 	delete-old-versions t
 	kept-new-versions 6
 	kept-old-versions 2
-	version-control t) ; use versioned backups
-(setq temporary-file-directory "tmp")
-
+	version-control t)
+(make-directory temporary-file-directory t)
 
 ;; Self-composition
 (defun autocompile nil

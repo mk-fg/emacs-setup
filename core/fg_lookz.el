@@ -24,14 +24,14 @@
 
 ;; TODO: M4 keyz for per-buffer mono/sans font switching (see buffer-face-set)
 ;; TODO: Pull colors from this stuff:
-;;(color-theme-initialize)
-;;(color-theme-lawrence)
+; (color-theme-initialize)
+; (color-theme-mods)
 
 
 ;; Mask for de X
 (defun masq_x ()
 	(custom-set-faces
-		'(default ((t (:foreground "wheat" :background "black"))))
+		'(default ((t (:foreground "#6ad468" :background "#101c10"))))
 		'(flyspell-duplicate ((t (:foreground "Gold3" :underline t :weight normal))))
 		'(flyspell-incorrect ((t (:foreground "OrangeRed" :underline t :weight normal))))
 		'(font-lock-comment-face ((t (:foreground "SteelBlue1"))))
@@ -39,20 +39,19 @@
 		'(font-lock-keyword-face ((t (:foreground "springgreen"))))
 		'(font-lock-type-face ((t (:foreground "PaleGreen"))))
 		'(font-lock-variable-name-face ((t (:foreground "Coral"))))
-		'(menu ((((type x-toolkit)) (:background "light slate gray" :foreground "wheat" :box (:line-width 2 :color "grey75" :style released-button)))))
-		'(mode-line ((t (:foreground "black" :background "light slate gray"))))
-		'(tool-bar ((((type x w32 mac) (class color)) (:background "midnight blue" :foreground "wheat" :box (:line-width 1 :style released-button))))))
-		(tool-bar-mode -1)
-		(set-cursor-color "deep sky blue")
-		(set-foreground-color "wheat")
-		(set-background-color "black")
-		(set-face-foreground 'default "wheat")
-		(set-face-background 'default "black"))
+		'(menu ((((type x-toolkit)) (:background "light slate gray" :foreground "#6ad468" :box (:line-width 2 :color "grey75" :style released-button)))))
+		'(mode-line ((t (:foreground "black" :background "light slate gray")))))
+	(tool-bar-mode -1)
+	(set-cursor-color "#6ad468")
+	(set-foreground-color "#6ad468")
+	(set-background-color "#101c10")
+	(set-face-foreground 'default "#6ad468")
+	(set-face-background 'default "#101c10"))
 
 ;; Mask 4 no-X
 (defun masq_nox ()
 	(custom-set-faces
-		'(default ((t (:foreground "white" :background "black"))))
+		'(default ((t (:foreground "wheat" :background "black"))))
 		'(font-lock-comment-face ((t (:foreground "magenta"))))
 		'(font-lock-function-name-face ((t (:foreground "red"))))
 		'(font-lock-keyword-face ((t (:foreground "green"))))
@@ -61,11 +60,11 @@
 		'(font-lock-variable-name-face ((t (:foreground "blue"))))
 		'(menu ((((type x-toolkit)) (:background "white" :foreground "black" :box (:line-width 2 :color "grey75" :style released-button)))))
 		'(modeline ((t (:foreground "blue" :background "white")))))
-		(set-cursor-color "blue")
-		(set-foreground-color "white")
-		(set-background-color "black")
-		(set-face-foreground 'default "white")
-		(set-face-background 'default "black"))
+	(set-cursor-color "blue")
+	(set-foreground-color "white")
+	(set-background-color "black")
+	(set-face-foreground 'default "white")
+	(set-face-background 'default "black"))
 
 ;; Masquerade!
 (if window-system (masq_x) (masq_nox))
