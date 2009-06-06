@@ -23,14 +23,38 @@
 (global-set-key (key "M-<right>") 'windmove-right)
 (global-set-key (key "M-<up>") 'windmove-up)
 (global-set-key (key "M-<down>") 'windmove-down)
-(global-set-key (kbd "C-<tab>") 'bury-buffer)
+
+(require 'wcy-swbuff)
+(global-set-key (kbd "<C-tab>") 'wcy-switch-buffer-forward)
+(global-set-key (kbd "<C-S-iso-lefttab>") 'wcy-switch-buffer-backward)
+
+; (global-set-key (key "C-<tab>") 'nice-ctl-tab)
+; (global-set-key (key "C-S-<tab>") 'nice-ctl-tab)
+
+; (global-set-key (kbd "C-<tab>") 'bury-buffer)
+; (global-set-key (kbd "C-S-<tab>") 'unbury-buffer)
 
 ;; Consistent undo/redo
 ;; C-z is outrighty dangerous otherwise
-(global-set-key [?\C-z] 'undo)
-(global-set-key [C-S-z] 'redo)
-(global-set-key [?\C-x ?\C-z] 'repeat)
-(global-set-key [C-return] 'multi-term)
+(require 'redo) ; consistent redo, grabbed from XEmacs
+(global-set-key (key "C-z") 'undo)
+(global-set-key (key "C-S-z") 'redo)
+(global-set-key (key "C-M-z") 'repeat)
+
+(global-set-key (key "C-c") 'clipboard-kill-ring-save)
+; (global-set-key (key "C-x") 'clipboard-kill-region)
+(global-set-key (key "C-v") 'clipboard-yank)
+
+(require 'multi-term)
+(global-set-key (key "C-<return>") 'multi-term)
+
+(global-set-key (key "C-d") 'duplicate-line)
+(global-set-key (key "C-)") 'delete-window)
+; (global-set-key "\C-d2" 'split-window-vertically)
+; (global-set-key "\C-d3" 'split-window-horizontally)
+; (global-set-key "\C-d\C-c" 'save-buffers-kill-terminal)
+; (global-set-key "\C-d\C-f" 'find-file)
+; (global-set-key "\C-d\C-s" 'save-buffer)
 
 ;; Make the mouse wheel scroll Emacs
 (mouse-wheel-mode t)

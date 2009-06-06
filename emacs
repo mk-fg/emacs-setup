@@ -7,7 +7,9 @@
 (add-to-list 'load-path (concat fg-path "/extz"))
 (add-to-list 'load-path (concat fg-path "/core"))
 
+
 ;; Includes
+(load-library "fg_macroz")
 (load-library "fg_lookz")
 (load-library "fg_lisp")
 (load-library "fg_shell")
@@ -19,20 +21,28 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 
 ;; Adjust tmp path and use it for all backup and autosave files
+; (require ’saveplace)
 (setq
 	temporary-file-directory
 		(concat fg-path "/tmp/")
-	backup-directory-alist
-		(list (cons "." temporary-file-directory))
+	; autosave
 	auto-save-list-file-prefix
 		(concat temporary-file-directory "/bakz-")
 	auto-save-file-name-transforms
 		(list (cons ".*" (list temporary-file-directory t)))
+	; backups
+	backup-directory-alist
+		(list (cons "." temporary-file-directory))
 	backup-by-copying t
 	delete-old-versions t
+	version-control t
 	kept-new-versions 6
 	kept-old-versions 2
-	version-control t)
+	; save-place-in-file
+	save-place t
+	save-place-file
+		(concat fg-path "/tmp/placez"))
+
 (make-directory temporary-file-directory t)
 
 ;; Self-composition

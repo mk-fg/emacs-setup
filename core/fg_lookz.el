@@ -16,8 +16,12 @@
 ;; Format the title-bar to always include the buffer name
 (setq frame-title-format "emacs - %b")
 
-;; Column numbers
+;; Column numbers at the bottom
 (column-number-mode t)
+
+;; Parenthesis' matching
+(show-paren-mode t)
+(setq show-paren-style 'mixed)
 
 ;; Flash!
 (setq visible-bell t)
