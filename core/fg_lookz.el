@@ -26,6 +26,10 @@
 ;; Flash!
 (setq visible-bell t)
 
+;; Show the death clock
+(display-battery-mode)
+
+
 ;; TODO: M4 keyz for per-buffer mono/sans font switching (see buffer-face-set)
 ;; TODO: Pull colors from this stuff:
 ; (color-theme-initialize)

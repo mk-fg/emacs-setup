@@ -9,7 +9,7 @@
 
 
 ;; Includes
-(load-library "fg_macroz")
+(load-library "fg_macroz"); should be first
 (load-library "fg_lookz")
 (load-library "fg_lisp")
 (load-library "fg_shell")
