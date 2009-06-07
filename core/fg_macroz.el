@@ -4,15 +4,17 @@
 
 (require 'setnu)
 
+;; TODO: steal upper/lower case from 'misc
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Line/word ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun copy-line (&optional arg)
+(defun fg-copy-line (&optional arg)
 	"Copy current line into ring buffer.
-ARG is interpreted as in kill-whole-line."
+ARG is interpreted as in kill-whole-line, nil is parsed to 1."
 	(interactive "p")
 	(or arg (setq arg 1))
 	(if
@@ -30,19 +32,42 @@ ARG is interpreted as in kill-whole-line."
 		(setq last-command 'kill-region))
 	(if (< arg 0) (setq arg (1+ arg)))
 	(save-excursion
-		(copy-region
+		(fg-copy-region
 			(progn (forward-visible-line 0) (point))
 			(progn (forward-visible-line arg) (point)))))
 
-(defun duplicate-line ()
-	"Clone line at cursor, leaving the latter intact."
-	(interactive)
+(defun fg-clone (arg)
+	"If no region is active - clone current line.
+If only part of a single line is selected - clone it inline.
+Otherwise, clone all lines, tainted (even partly) by region.
+ARG specifies the number of copies to make."
+	(interactive "p")
 	(save-excursion
 		(let (deactivate-mark)
-			(copy-line)
-			(forward-line 1)
-			(if (eobp) (newline))
-			(yank))))
+			(if mark-active
+				(let
+					((start (region-beginning))
+						(end (region-end)))
+					(if (= (count-lines start end) 1)
+						(fg-copy-region start end)
+						(fg-copy-region
+							(progn
+								(goto-char start)
+								(forward-line 0)
+								(point))
+							(progn
+								(goto-char end)
+								(if (/= (current-column) 0) (forward-line 1))
+								(if (eobp) (newline))
+								(point)))))
+				(progn
+					(fg-copy-line)
+					(forward-line 1)
+					(if (eobp) (newline))))
+			(while (> arg 0)
+				(yank)
+				(setq arg (1- arg))))))
+
 
 
 
@@ -50,23 +75,23 @@ ARG is interpreted as in kill-whole-line."
 ;; Smart kill/delete ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun sdel-word (arg)
+(defun fg-del-word (arg)
 	"Delete characters forward until encountering the end of a word.
 With argument ARG, do this that many times.
 Negative arg reverses direction."
 	(interactive "p")
 	(delete-region (point) (progn (forward-word arg) (point))))
 
-(defun sdel-word-backwards (arg)
+(defun fg-del-word-backwards (arg)
 	"Remove chars before point to until the beginning of a word.
 Safe for read-only buffer parts (like prompts). See also delete-word."
 	(interactive "p")
 	(save-excursion
 		(let
 			((kill-read-only-ok t) deactivate-marker)
-			(sdel-word (- arg)))))
+			(fg-del-word (- arg)))))
 
-(defun sdel-char (arg)
+(defun fg-del-char (arg)
 	(interactive "p")
 	(if mark-active
 		(delete-region
@@ -74,16 +99,53 @@ Safe for read-only buffer parts (like prompts). See also delete-word."
 			(region-end))
 		(delete-char arg)))
 
-(defun sdel-char-backwards (arg)
+(defun fg-del-char-backwards (arg)
 	(interactive "p")
-	(sdel-char (- arg)))
+	(fg-del-char (- arg)))
 
 
-(defun skill-line-backwards ()
-	"Blank current line."
+(defun fg-kill-line-blank ()
+	"Blank current line, mode-safe."
 	(interactive)
-	(execute-kbd-macro (kbd "<home>")) ; mode-safe
+	(execute-kbd-macro (kbd "<home>"))
 	(or (eolp) (kill-line)))
+
+(defun fg-kill-line-backwards ()
+	"Remove text before cursor, mode-safe."
+	(interactive)
+	(or (bolp)
+		(kill-region
+			(point)
+			(progn
+				(execute-kbd-macro (kbd "<home>"))
+				(point)))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Skimming ops
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; TODO: sort this mess out
+
+; (defadvice fg-page-up (around fga-page-up first act)
+  ; "Keep cursor in the same column."
+  ; (let ((col (current-column)))
+    ; ad-do-it
+    ; (move-to-column col)))
+
+; (defadvice fg-page-down (around fga-page-down first act)
+  ; "Keep cursor in the same column."
+  ; (let ((col (current-column)))
+    ; ad-do-it
+    ; (move-to-column col)))
+
+(defun fg-beginning-of-line ()
+  "Move point to first non-whitespace character or beginning-of-line."
+	(interactive)
+	(let ((oldpos (point)))
+		(back-to-indentation)
+		(and (= oldpos (point))
+			(beginning-of-line))))
 
 
 
@@ -91,7 +153,7 @@ Safe for read-only buffer parts (like prompts). See also delete-word."
 ;; Region ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun copy-region (start end)
+(defun fg-copy-region (start end)
 	"Same as copy-region-as-kill but doesn't deactivate the mark."
 	(interactive "r")
 	(if (eq last-command 'kill-region)
@@ -139,7 +201,7 @@ LIST defaults to all existing live buffers."
 ;; Indentation descrimination (tab-only) stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun smart-tab (arg)
+(defun fg-tab (arg)
 	"Needs `transient-mark-mode' to be on. This smart tab is
 	minibuffer compliant: it acts as usual in the minibuffer.
 
@@ -148,37 +210,37 @@ LIST defaults to all existing live buffers."
 	expands it. Else calls `smart-indent'."
 	(interactive "p")
 	(labels
-		((smart-tab-must-expand (&optional arg)
+		((fg-tab-must-expand (&optional arg)
 			(unless
 				(or (consp arg) mark-active)
 				(looking-at "\\_>"))))
 		(cond
 			((minibufferp)
 				(minibuffer-complete))
-			((smart-tab-must-expand arg)
+			((fg-tab-must-expand arg)
 				(or (hippie-expand arg)
-					(smart-indent arg)))
+					(fg-indent arg)))
 			(t
-				(smart-indent arg)
+				(fg-indent arg)
 				(skip-chars-forward " \t")))))
 
-(defun smart-untab (arg)
-	"Reverse of smart-tab (just inverts arg)."
+(defun fg-untab (arg)
+	"Reverse of fg-tab (just inverts arg)."
 	(interactive "p")
-	(smart-tab (- arg)))
+	(fg-tab (- arg)))
 
-(defun smart-indent (arg)
+(defun fg-indent (arg)
 	"Indents region if mark is active, or current line otherwise."
 	(interactive "p")
 	(if mark-active
 		; indent-region is too dumb: can't take ARG
-		(nazi-tab-region
+		(fg-indent-region
 			(region-beginning)
 			(region-end)
 			arg)
-		(nazi-tab arg)))
+		(fg-indent-line arg)))
 
-(defun nazi-tab-region (start end &optional arg)
+(defun fg-indent-region (start end &optional arg)
 	"Tab-only variant of indent-rigidly.
 Indent all lines in the region by ARG tabs (\t).
 Can be used by indent-region, since ARG defaults to 1."
@@ -187,19 +249,19 @@ Can be used by indent-region, since ARG defaults to 1."
 		(goto-char end)
 		(setq end (point-marker))
 		(goto-char start)
-		(move-beginning-of-line nil)
+		(forward-line 0)
 		(while (< (point) end)
-			(nazi-tab-indent arg t)
+			(fg-indent-command arg t)
 			(forward-line 1))))
 
-(defun nazi-tab (arg)
+(defun fg-indent-line (arg)
 	"Indent current line regardless of point position."
 	(interactive "p")
 	(save-excursion
-		(move-beginning-of-line nil)
-		(nazi-tab-indent arg)))
+		(forward-line 0)
+		(fg-indent-command arg)))
 
-(defun nazi-tab-indent (arg &optional check-eol)
+(defun fg-indent-command (arg &optional check-eol)
 	"Insert ARG tabs w/o deactivating mark if point is in the indent zone.
 If check-eol is set and line is just indent zone, it'll be blanked."
 	(interactive "p")

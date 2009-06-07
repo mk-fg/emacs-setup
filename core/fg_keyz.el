@@ -20,14 +20,19 @@
 			(read-kbd-macro desc))))
 
 
-;; TODO: Make PgUp go fuckin' up to freakin' top! (same for PgDn)
-
 ;; Basic ops
-(global-set-key (key "<return>") 'newline-and-indent)
-(global-set-key (key "<backspace>") 'sdel-char-backwards)
-(global-set-key (key "<delete>") 'sdel-char)
-(global-set-key (key "<tab>") 'smart-tab)
-(global-set-key (key "<backtab>") 'smart-untab)
+; (global-set-key (key "<return>") 'newline-and-indent) ; TODO: MAKE IT WORK!
+(global-set-key (key "<backspace>") 'fg-del-char-backwards)
+(global-set-key (key "<delete>") 'fg-del-char)
+(global-set-key (key "<tab>") 'fg-tab)
+(global-set-key (key "<backtab>") 'fg-untab)
+(global-set-key (key "<prior>") 'fg-page-up)
+(global-set-key (key "<next>") 'fg-page-down)
+(global-set-key (key "<home>") 'fg-beginning-of-line)
+
+; (global-set-key (key "S-<prior>") 'backward-page) ; TODO: make it via motion-n-select decorator (advice)
+; (global-set-key (key "S-<next>") 'forward-page)
+
 
 ;; Flux-style pane glide
 (global-set-key (key "M-<left>") 'windmove-left)
@@ -58,8 +63,8 @@
 (global-set-key (key "C-M-z") 'repeat)
 
 ;; Emacs' clipboard was designed by a bunch of certified lunatics
-;; TODO: bind some key to copy-line
-(global-set-key (key "C-c") 'copy-region)
+;; TODO: bind some key to fg-copy-line
+(global-set-key (key "C-c") 'fg-copy-region)
 ; (global-set-key (key "C-x") 'kill-region) ; I hate original binding for this key
 (global-set-key (key "C-v") 'yank)
 
@@ -68,10 +73,11 @@
 (global-set-key (key "C-<return>") 'multi-term)
 
 ;; Line/word ops
-(global-set-key (key "C-d") 'duplicate-line) ; fg_macro, ever-amazing emacs doesn't seem to have it!
+(global-set-key (key "C-d") 'fg-clone) ; fg_macro, ever-amazing emacs doesn't seem to have it!
 (global-set-key (key "C-k") 'kill-whole-line)
-(global-set-key (key "C-w") 'sdel-word-backwards)
-(global-set-key (key "C-u") 'skill-line-backwards)
+(global-set-key (key "C-w") 'fg-del-word-backwards)
+(global-set-key (key "C-u") 'fg-kill-line-blank)
+(global-set-key (key "C-S-u") 'fg-kill-line-backwards)
 
 ;; File/buffer stuff
 (global-set-key (key "C-S-c") 'save-buffers-kill-terminal)

@@ -21,6 +21,8 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 ;; Shared clipboard should always be enabled
 (setq x-select-enable-clipboard t)
+;; Keep vertical cursor pos during PgUp / PgDn
+(setq scroll-preserve-screen-position t)
 
 ;; Adjust tmp path and use it for all backup and autosave files
 ; (require ’saveplace)
