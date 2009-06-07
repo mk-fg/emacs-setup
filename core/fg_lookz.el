@@ -37,6 +37,17 @@
 
 
 ;; Mask for de X
+
+; TODO: add time-based masq switching (see http://www.jurta.org/en/emacs/dotemacs)
+; (defun masq_x ()
+	; (let
+		; ((color "green"))
+		; (setq default-frame-alist
+			; (append default-frame-alist
+				; '((foreground-color . color)
+				; (background-color . "black")
+				; (cursor-color . "blue"))))))
+
 (defun masq_x ()
 	(custom-set-faces
 		'(default ((t (:foreground "#6ad468" :background "#101c10"))))

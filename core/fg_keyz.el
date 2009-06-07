@@ -1,4 +1,6 @@
 ;; Terminal/X independent keybindings' translation
+;; TODO: Make single symbol table for key - func binding instead of global-set-key
+;; TODO: Make decorator w/ embedded save-excursion
 (defvar real-keyboard-keys
 	'(("M-<up>"				. "\M-[1;3A")
 		("M-<down>"			. "\M-[1;3B")
@@ -18,6 +20,15 @@
 			(read-kbd-macro desc))))
 
 
+;; TODO: Make PgUp go fuckin' up to freakin' top! (same for PgDn)
+
+;; Basic ops
+(global-set-key (key "<return>") 'newline-and-indent)
+(global-set-key (key "<backspace>") 'sdel-char-backwards)
+(global-set-key (key "<delete>") 'sdel-char)
+(global-set-key (key "<tab>") 'smart-tab)
+(global-set-key (key "<backtab>") 'smart-untab)
+
 ;; Flux-style pane glide
 (global-set-key (key "M-<left>") 'windmove-left)
 (global-set-key (key "M-<right>") 'windmove-right)
@@ -31,6 +42,7 @@
 (global-set-key (key "C-<") 'split-window-horizontally)
 
 ;; Tab cycling w/ status in minibuffer
+;; TODO: Add buffer filtering (only *scratch* and *msgz* form sys-buffz)
 (require 'wcy-swbuff)
 (global-set-key (kbd "<C-tab>") 'wcy-switch-buffer-forward)
 (global-set-key (kbd "<C-S-iso-lefttab>") 'wcy-switch-buffer-backward)
@@ -46,18 +58,20 @@
 (global-set-key (key "C-M-z") 'repeat)
 
 ;; Emacs' clipboard was designed by a bunch of certified lunatics
-(global-set-key (key "C-c") 'clipboard-kill-ring-save)
-; (global-set-key (key "C-x") 'clipboard-kill-region) ; I hate original binding for this key
-(global-set-key (key "C-v") 'clipboard-yank)
+;; TODO: bind some key to copy-line
+(global-set-key (key "C-c") 'copy-region)
+; (global-set-key (key "C-x") 'kill-region) ; I hate original binding for this key
+(global-set-key (key "C-v") 'yank)
 
 ;; Pitiful replacement for xterm but it'll have to do
 (require 'multi-term)
 (global-set-key (key "C-<return>") 'multi-term)
 
-;; Line ops
-(global-set-key (key "<delete>") 'delete-char) ; so it won't be aliased to C-d
+;; Line/word ops
 (global-set-key (key "C-d") 'duplicate-line) ; fg_macro, ever-amazing emacs doesn't seem to have it!
 (global-set-key (key "C-k") 'kill-whole-line)
+(global-set-key (key "C-w") 'sdel-word-backwards)
+(global-set-key (key "C-u") 'skill-line-backwards)
 
 ;; File/buffer stuff
 (global-set-key (key "C-S-c") 'save-buffers-kill-terminal)
@@ -67,10 +81,3 @@
 
 ;; Make it scroll!
 (mouse-wheel-mode t)
-
-;; TAB is TAB, and backspace is a backspace, goddamnit!
-(global-set-key (key "<backspace>") 'backward-delete-char)
-
-(global-set-key (key "<tab>") 'smart-tab)
-(global-set-key (key "<backtab>") 'smart-untab)
-; (global-set-key (key "tab") 'self-insert-command)

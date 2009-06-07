@@ -19,6 +19,8 @@
 
 ;; Use y or n instead of yes or not
 (fset 'yes-or-no-p 'y-or-n-p)
+;; Shared clipboard should always be enabled
+(setq x-select-enable-clipboard t)
 
 ;; Adjust tmp path and use it for all backup and autosave files
 ; (require ’saveplace)
@@ -54,3 +56,6 @@
 		default-directory ".emacs")))
       (byte-compile-file (buffer-file-name))))
 (add-hook 'after-save-hook 'autocompile)
+
+;; TODO: look out for (server-start) function
+;; TODO: look at http://infolab.stanford.edu/~manku/dotemacs.html
