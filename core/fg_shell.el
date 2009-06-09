@@ -4,5 +4,7 @@
 
 ; (add-hook 'term-mode-hook (lambda () (buffer-face-set "shadow")))
 
-; (add-hook 'term-mode-hook (lambda ()
-	; (set-face-background 'default "red")))
+(add-hook 'term-mode-hook (lambda ()
+	; (buffer-face-set 'fixed-pitch)
+	(local-set-key (key "<tab>") 'key)))
+

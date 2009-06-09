@@ -1,5 +1,5 @@
 ;; Terminal/X independent keybindings' translation
-;; TODO: Make single symbol table for key - func binding instead of global-set-key
+;; TODO: Make single symbol table for key - func binding instead of global-setkey
 ;; TODO: Make decorator w/ embedded save-excursion
 (defvar real-keyboard-keys
 	'(("M-<up>"				. "\M-[1;3A")
@@ -15,9 +15,15 @@
 	"An assoc list of pretty key strings and their terminal equivalents.")
 
 (defun key (desc)
+	"Return env-dependant (X / term) key sequence."
 	(or (and window-system (read-kbd-macro desc))
 		(or (cdr (assoc desc real-keyboard-keys))
 			(read-kbd-macro desc))))
+
+(defun transient-wrap (func &optional mode)
+	"Execute FUNC w/o deactivating mark.
+MODE is argument presentation mode (see interactive)."
+	`(lambda (&optional arg) (interactive ,mode) (let (deactivate-mark) (,func arg))))
 
 
 ;; Basic ops
@@ -26,12 +32,12 @@
 (global-set-key (key "<delete>") 'fg-del-char)
 (global-set-key (key "<tab>") 'fg-tab)
 (global-set-key (key "<backtab>") 'fg-untab)
-(global-set-key (key "<prior>") 'fg-page-up)
-(global-set-key (key "<next>") 'fg-page-down)
+(global-set-key (key "<prior>") 'fg-scroll-up) ; pageup
+(global-set-key (key "<next>") 'fg-scroll-down) ; pagedown
 (global-set-key (key "<home>") 'fg-beginning-of-line)
 
-; (global-set-key (key "S-<prior>") 'backward-page) ; TODO: make it via motion-n-select decorator (advice)
-; (global-set-key (key "S-<next>") 'forward-page)
+(global-set-key (key "S-<prior>") 'fg-scroll-up-mark)
+(global-set-key (key "S-<next>") 'fg-scroll-down-mark)
 
 
 ;; Flux-style pane glide
@@ -41,10 +47,12 @@
 (global-set-key (key "M-<down>") 'windmove-down)
 
 ;; Had to leave C-S-NUM bindings reserved for the tentacled alien masters
-(global-set-key (key "C-?") 'delete-window)
-(global-set-key (key "C-/") 'delete-other-windows)
-(global-set-key (key "C->") 'split-window-vertically)
-(global-set-key (key "C-<") 'split-window-horizontally)
+(global-set-key (key "C-,") 'split-window-horizontally)
+(global-set-key (key "C-.") 'split-window-vertically)
+(global-set-key (key "C-<") 'delete-window)
+(global-set-key (key "C->") 'delete-other-windows)
+(global-set-key (key "M-,") '(lambda () (interactive) (kill-buffer nil))) ; kill current buffer w/o asking
+(global-set-key (key "M-.") 'fg-nuke-all)
 
 ;; Tab cycling w/ status in minibuffer
 ;; TODO: Add buffer filtering (only *scratch* and *msgz* form sys-buffz)
@@ -57,18 +65,18 @@
 ;; Consistent undo/redo
 ;; C-z is outrighty dangerous otherwise!
 (require 'redo) ; consistent redo, grabbed from XEmacs
-;; TODO: bind deactivate-mark w/ let on undo/redo (try tabbing region, then undo)
-(global-set-key (key "C-z") 'undo)
-(global-set-key (key "C-S-z") 'redo)
+(global-set-key (key "C-z") (transient-wrap 'undo "p"))
+(global-set-key (key "C-S-z") (transient-wrap 'redo "p"))
 (global-set-key (key "C-M-z") 'repeat)
 
 ;; Emacs' clipboard was designed by a bunch of certified lunatics
 ;; TODO: bind some key to fg-copy-line
-(global-set-key (key "C-c") 'fg-copy-region)
-; (global-set-key (key "C-x") 'kill-region) ; I hate original binding for this key
+(global-set-key (key "C-c") 'fg-copy)
+(global-set-key (key "C-x") 'kill-region) ; I hate original binding for this key
 (global-set-key (key "C-v") 'yank)
 
-;; Pitiful replacement for xterm but it'll have to do
+;; Pitiful replacement for xterm but it'll have to do...
+;; TODO: restrict keybindings from interfering w/ zsh operation
 (require 'multi-term)
 (global-set-key (key "C-<return>") 'multi-term)
 

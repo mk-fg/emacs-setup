@@ -1,5 +1,5 @@
 ;; Font init
-(set-default-font "Luxi Sans-8")
+(set-frame-font "Luxi Sans-8")
 
 ;; Color init
 (require 'font-lock)

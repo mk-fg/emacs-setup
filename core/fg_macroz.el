@@ -4,13 +4,20 @@
 
 (require 'setnu)
 
-;; TODO: steal upper/lower case from 'misc
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Line/word ops
+;; Copy/Cut/Paste ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun fg-copy (arg)
+	(interactive "p")
+	(if mark-active
+		(fg-copy-region
+			(region-beginning)
+			(region-end))
+		(fg-copy-line)))
+
 
 (defun fg-copy-line (&optional arg)
 	"Copy current line into ring buffer.
@@ -31,10 +38,18 @@ ARG is interpreted as in kill-whole-line, nil is parsed to 1."
 		(kill-new "")
 		(setq last-command 'kill-region))
 	(if (< arg 0) (setq arg (1+ arg)))
-	(save-excursion
-		(fg-copy-region
-			(progn (forward-visible-line 0) (point))
-			(progn (forward-visible-line arg) (point)))))
+	(fg-copy-region
+		(line-beginning-position)
+		(line-beginning-position 2)))
+
+
+(defun fg-copy-region (start end)
+	"Same as copy-region-as-kill but doesn't deactivate the mark."
+	(interactive "r")
+	(if (eq last-command 'kill-region)
+		(kill-append (filter-buffer-substring start end) (< end start))
+		(kill-new (filter-buffer-substring start end))))
+
 
 (defun fg-clone (arg)
 	"If no region is active - clone current line.
@@ -53,8 +68,7 @@ ARG specifies the number of copies to make."
 						(fg-copy-region
 							(progn
 								(goto-char start)
-								(forward-line 0)
-								(point))
+								(line-beginning-position))
 							(progn
 								(goto-char end)
 								(if (/= (current-column) 0) (forward-line 1))
@@ -125,19 +139,37 @@ Safe for read-only buffer parts (like prompts). See also delete-word."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Skimming ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TODO: sort this mess out
+;; TODO: integrate this stuff w/ transient selection
 
-; (defadvice fg-page-up (around fga-page-up first act)
-  ; "Keep cursor in the same column."
-  ; (let ((col (current-column)))
-    ; ad-do-it
-    ; (move-to-column col)))
+(defun fg-scroll-up-mark (arg)
+	(interactive "p")
+	(or mark-active (set-mark-command nil))
+	(fg-scroll-up arg))
 
-; (defadvice fg-page-down (around fga-page-down first act)
-  ; "Keep cursor in the same column."
-  ; (let ((col (current-column)))
-    ; ad-do-it
-    ; (move-to-column col)))
+(defun fg-scroll-up (arg)
+	"Scroll or move cursor ARG pages up.
+Optional MARK argument starts selection."
+	(interactive "p")
+	(if
+		(/= (window-start) (buffer-end -1))
+		(scroll-down) ; named for convenience, obviously
+		(let (deactivate-mark)
+				(move-to-window-line 0))))
+
+(defun fg-scroll-down-mark (arg)
+	(interactive "p")
+	(or mark-active (set-mark-command nil))
+	(fg-scroll-down arg))
+
+(defun fg-scroll-down (arg)
+	"Scroll or move cursor ARG pages down.
+Optional MARK argument starts selection."
+	(interactive "p")
+	(if
+		(/= (window-end) (buffer-end 1))
+		(scroll-up) ; named for convenience, obviously
+		(let (deactivate-mark)
+			(move-to-window-line -1))))
 
 (defun fg-beginning-of-line ()
   "Move point to first non-whitespace character or beginning-of-line."
@@ -150,23 +182,10 @@ Safe for read-only buffer parts (like prompts). See also delete-word."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Region ops
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun fg-copy-region (start end)
-	"Same as copy-region-as-kill but doesn't deactivate the mark."
-	(interactive "r")
-	(if (eq last-command 'kill-region)
-		(kill-append (filter-buffer-substring start end) (< end start))
-		(kill-new (filter-buffer-substring start end))))
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Nuke buffer sets
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun nuke-some-buffers (&optional list)
+(defun fg-nuke-some (&optional list)
 	"For each buffer in LIST, kill it silently if unmodified. Otherwise ask.
 LIST defaults to all existing live buffers."
 	(interactive)
@@ -189,10 +208,10 @@ LIST defaults to all existing live buffers."
 				(kill-buffer buffer))))
 		(setq list (cdr list))))
 
-(defun nuke-all-buffers ()
+(defun fg-nuke-all ()
 	"Nuke all buffers, leaving *scratch* only"
 	(interactive)
-	(mapcar (lambda (x) (kill-buffer x))
+	(mapc (lambda (x) (kill-buffer x))
 		(buffer-list))
 	(delete-other-windows))
 
@@ -200,6 +219,18 @@ LIST defaults to all existing live buffers."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Indentation descrimination (tab-only) stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(setq hippie-expand-try-functions-list
+  '(try-complete-file-name-partially
+    try-complete-file-name
+    try-expand-all-abbrevs
+    try-expand-line
+    try-expand-dabbrev
+    try-expand-dabbrev-all-buffers
+    try-expand-dabbrev-from-kill
+    try-expand-list ; it is a disaster w/ large lists, hence the place
+    try-complete-lisp-symbol-partially
+    try-complete-lisp-symbol))
 
 (defun fg-tab (arg)
 	"Needs `transient-mark-mode' to be on. This smart tab is

@@ -23,6 +23,8 @@
 (setq x-select-enable-clipboard t)
 ;; Keep vertical cursor pos during PgUp / PgDn
 (setq scroll-preserve-screen-position t)
+;; Delete active selection w/ transient-mode
+(delete-selection-mode)
 
 ;; Adjust tmp path and use it for all backup and autosave files
 ; (require ’saveplace)
@@ -50,13 +52,15 @@
 (make-directory temporary-file-directory t)
 
 ;; Self-composition
-(defun autocompile nil
-  "compile itself if ~/.emacs"
+(defun autocompile ()
+  "Compile itself if ~/.emacs"
   (interactive)
   (require 'bytecomp)
-  (if (string= (buffer-file-name) (expand-file-name (concat
-		default-directory ".emacs")))
-      (byte-compile-file (buffer-file-name))))
+  (if
+		(string-match
+			"/emacs"
+			(buffer-file-name))
+		(byte-compile-file (buffer-file-name))))
 (add-hook 'after-save-hook 'autocompile)
 
 ;; TODO: look out for (server-start) function
