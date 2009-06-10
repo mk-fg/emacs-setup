@@ -10,9 +10,9 @@
 ;; Copy/Cut/Paste ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun fg-copy (arg)
-	(interactive "p")
-	(if mark-active
+(defun fg-copy ()
+	(interactive)
+	(if (use-region-p)
 		(fg-copy-region
 			(region-beginning)
 			(region-end))
@@ -21,7 +21,7 @@
 
 (defun fg-copy-line (&optional arg)
 	"Copy current line into ring buffer.
-ARG is interpreted as in kill-whole-line, nil is parsed to 1."
+ARG is interpreted as in `kill-whole-line', nil is parsed to 1."
 	(interactive "p")
 	(or arg (setq arg 1))
 	(if
@@ -44,7 +44,7 @@ ARG is interpreted as in kill-whole-line, nil is parsed to 1."
 
 
 (defun fg-copy-region (start end)
-	"Same as copy-region-as-kill but doesn't deactivate the mark."
+	"Same as `copy-region-as-kill' but doesn't deactivate the mark."
 	(interactive "r")
 	(if (eq last-command 'kill-region)
 		(kill-append (filter-buffer-substring start end) (< end start))
@@ -59,7 +59,7 @@ ARG specifies the number of copies to make."
 	(interactive "p")
 	(save-excursion
 		(let (deactivate-mark)
-			(if mark-active
+			(if (use-region-p)
 				(let
 					((start (region-beginning))
 						(end (region-end)))
@@ -98,7 +98,7 @@ Negative arg reverses direction."
 
 (defun fg-del-word-backwards (arg)
 	"Remove chars before point to until the beginning of a word.
-Safe for read-only buffer parts (like prompts). See also delete-word."
+Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 	(interactive "p")
 	(save-excursion
 		(let
@@ -107,7 +107,7 @@ Safe for read-only buffer parts (like prompts). See also delete-word."
 
 (defun fg-del-char (arg)
 	(interactive "p")
-	(if mark-active
+	(if (region-active-p)
 		(delete-region
 			(region-beginning)
 			(region-end))
@@ -141,30 +141,18 @@ Safe for read-only buffer parts (like prompts). See also delete-word."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; TODO: integrate this stuff w/ transient selection
 
-(defun fg-scroll-up-mark (arg)
-	(interactive "p")
-	(or mark-active (set-mark-command nil))
-	(fg-scroll-up arg))
-
 (defun fg-scroll-up (arg)
-	"Scroll or move cursor ARG pages up.
-Optional MARK argument starts selection."
-	(interactive "p")
+	"Scroll or move cursor ARG pages up."
+	(interactive "^p")
 	(if
 		(/= (window-start) (buffer-end -1))
 		(scroll-down) ; named for convenience, obviously
 		(let (deactivate-mark)
 				(move-to-window-line 0))))
 
-(defun fg-scroll-down-mark (arg)
-	(interactive "p")
-	(or mark-active (set-mark-command nil))
-	(fg-scroll-down arg))
-
 (defun fg-scroll-down (arg)
-	"Scroll or move cursor ARG pages down.
-Optional MARK argument starts selection."
-	(interactive "p")
+	"Scroll or move cursor ARG pages down."
+	(interactive "^p")
 	(if
 		(/= (window-end) (buffer-end 1))
 		(scroll-up) ; named for convenience, obviously
@@ -173,11 +161,12 @@ Optional MARK argument starts selection."
 
 (defun fg-beginning-of-line ()
   "Move point to first non-whitespace character or beginning-of-line."
-	(interactive)
+	(interactive "^")
 	(let ((oldpos (point)))
 		(back-to-indentation)
 		(and (= oldpos (point))
 			(beginning-of-line))))
+
 
 
 
@@ -243,7 +232,7 @@ LIST defaults to all existing live buffers."
 	(labels
 		((fg-tab-must-expand (&optional arg)
 			(unless
-				(or (consp arg) mark-active)
+				(or (consp arg) (use-region-p))
 				(looking-at "\\_>"))))
 		(cond
 			((minibufferp)
@@ -256,14 +245,14 @@ LIST defaults to all existing live buffers."
 				(skip-chars-forward " \t")))))
 
 (defun fg-untab (arg)
-	"Reverse of fg-tab (just inverts arg)."
+	"Reverse of `fg-tab' (just inverts arg)."
 	(interactive "p")
 	(fg-tab (- arg)))
 
 (defun fg-indent (arg)
 	"Indents region if mark is active, or current line otherwise."
 	(interactive "p")
-	(if mark-active
+	(if (use-region-p)
 		; indent-region is too dumb: can't take ARG
 		(fg-indent-region
 			(region-beginning)
@@ -272,9 +261,9 @@ LIST defaults to all existing live buffers."
 		(fg-indent-line arg)))
 
 (defun fg-indent-region (start end &optional arg)
-	"Tab-only variant of indent-rigidly.
+	"Tab-only variant of `indent-rigidly'.
 Indent all lines in the region by ARG tabs (\t).
-Can be used by indent-region, since ARG defaults to 1."
+Can be used by `indent-region', since ARG defaults to 1."
 	(interactive "r\np") ; TODO: learn what that means ;)
 	(save-excursion
 		(goto-char end)
@@ -294,7 +283,7 @@ Can be used by indent-region, since ARG defaults to 1."
 
 (defun fg-indent-command (arg &optional check-eol)
 	"Insert ARG tabs w/o deactivating mark if point is in the indent zone.
-If check-eol is set and line is just indent zone, it'll be blanked."
+If CHECK-EOL is set and line is just indent zone, it'll be blanked."
 	(interactive "p")
 	(let
 		((indent (current-indentation))

@@ -22,8 +22,22 @@
 
 (defun transient-wrap (func &optional mode)
 	"Execute FUNC w/o deactivating mark.
-MODE is argument presentation mode (see interactive)."
-	`(lambda (&optional arg) (interactive ,mode) (let (deactivate-mark) (,func arg))))
+MODE is argument presentation mode (see `interactive').
+Not all modes are handled correctly (tested w/ p and r only)."
+	(let ((args(if (string-match "r" mode) '(arg1 arg2) '(arg))))
+		`(lambda (&optional ,@args) (interactive ,mode) (let (deactivate-mark) (list ,func ,@args)))))
+
+;(define-minor-mode fg-scitemacs
+;	"SciTE-like bindings."
+;	:init-value nil
+;	:lighter " SciTE"
+;	:keymap
+;	'(("\C-\^?" . hungry-electric-delete)
+;	("\C-\M-\^?"
+;		. (lambda ()
+;		(interactive)
+;		(hungry-electric-delete t))))
+;	:group 'hunger)
 
 
 ;; Basic ops
@@ -35,9 +49,7 @@ MODE is argument presentation mode (see interactive)."
 (global-set-key (key "<prior>") 'fg-scroll-up) ; pageup
 (global-set-key (key "<next>") 'fg-scroll-down) ; pagedown
 (global-set-key (key "<home>") 'fg-beginning-of-line)
-
-(global-set-key (key "S-<prior>") 'fg-scroll-up-mark)
-(global-set-key (key "S-<next>") 'fg-scroll-down-mark)
+(global-set-key (key "<end>") 'move-end-of-line) ; vanilla works just fine
 
 
 ;; Flux-style pane glide
@@ -57,8 +69,9 @@ MODE is argument presentation mode (see interactive)."
 ;; Tab cycling w/ status in minibuffer
 ;; TODO: Add buffer filtering (only *scratch* and *msgz* form sys-buffz)
 (require 'wcy-swbuff)
-(global-set-key (kbd "<C-tab>") 'wcy-switch-buffer-forward)
-(global-set-key (kbd "<C-S-iso-lefttab>") 'wcy-switch-buffer-backward)
+(global-set-key (key "<C-tab>") 'wcy-switch-buffer-forward)
+(global-set-key (key "<C-S-iso-lefttab>") 'wcy-switch-buffer-backward)
+(global-set-key (key "<M-tab>") 'ibuffer)
 ; (global-set-key (kbd "C-<tab>") 'bury-buffer)
 ; (global-set-key (kbd "C-S-<tab>") 'unbury-buffer)
 
@@ -67,10 +80,9 @@ MODE is argument presentation mode (see interactive)."
 (require 'redo) ; consistent redo, grabbed from XEmacs
 (global-set-key (key "C-z") (transient-wrap 'undo "p"))
 (global-set-key (key "C-S-z") (transient-wrap 'redo "p"))
-(global-set-key (key "C-M-z") 'repeat)
+(global-set-key (key "M-z") 'repeat)
 
 ;; Emacs' clipboard was designed by a bunch of certified lunatics
-;; TODO: bind some key to fg-copy-line
 (global-set-key (key "C-c") 'fg-copy)
 (global-set-key (key "C-x") 'kill-region) ; I hate original binding for this key
 (global-set-key (key "C-v") 'yank)
@@ -86,6 +98,10 @@ MODE is argument presentation mode (see interactive)."
 (global-set-key (key "C-w") 'fg-del-word-backwards)
 (global-set-key (key "C-u") 'fg-kill-line-blank)
 (global-set-key (key "C-S-u") 'fg-kill-line-backwards)
+
+(global-set-key (key "M-u") (transient-wrap 'upcase-region "r"))
+(global-set-key (key "M-l") (transient-wrap 'downcase-region "r"))
+
 
 ;; File/buffer stuff
 (global-set-key (key "C-S-c") 'save-buffers-kill-terminal)

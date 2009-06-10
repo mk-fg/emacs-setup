@@ -26,8 +26,9 @@
 ;; Delete active selection w/ transient-mode
 (delete-selection-mode)
 
+
 ;; Adjust tmp path and use it for all backup and autosave files
-; (require ’saveplace)
+(require 'saveplace)
 (setq
 	temporary-file-directory
 		(concat fg-path "/tmp/")
@@ -51,14 +52,15 @@
 
 (make-directory temporary-file-directory t)
 
+
 ;; Self-composition
 (defun autocompile ()
-  "Compile itself if ~/.emacs"
+  "Compile itself if ~/.emacs or .emacs.d include."
   (interactive)
   (require 'bytecomp)
   (if
 		(string-match
-			"/emacs"
+			"/\.?emacs\\(\.d/.*\.el\\)?$"
 			(buffer-file-name))
 		(byte-compile-file (buffer-file-name))))
 (add-hook 'after-save-hook 'autocompile)

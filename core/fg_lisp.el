@@ -6,3 +6,5 @@
 
 (add-to-list 'auto-mode-alist
 	'("\\.cl$\\|.el$|\\.emacs$" . lisp-mode))
+
+;			"/\.?emacs\\(\.d/.*\.el\\)?$"
