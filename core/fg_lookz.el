@@ -1,7 +1,7 @@
 ;; Font init
-(require 'font-lock)
 (set-frame-font "Luxi Sans-8")
-(global-font-lock-mode t) ; font can only be changed manually
+(set-face-font 'variable-pitch "Luxi Sans-8")
+(set-face-font 'fixed-pitch "Luxi Mono-7")
 
 ;; Time is critical
 (setq-default display-time-day-and-date t
@@ -21,6 +21,7 @@
 	visible-bell t) ; flash on weird stuff
 
 ;; Cosmetic minor modes
+(global-font-lock-mode t) ; syntax highlighting (funny name for it)
 (show-paren-mode) ; show matching parenthesis
 (column-number-mode) ; column numbers at the bottom
 (display-battery-mode) ; show the death clock
@@ -40,55 +41,84 @@
 ; (color-theme-mods)
 
 
-;; Mask for X
+;; Mask for X (inits are bg-agnostic colors)
 (defvar fg-color-fg-core)
 (defvar fg-color-bg-core)
+(defvar fg-color-spell-dupe "Gold3")
+(defvar fg-color-spell-err "OrangeRed")
+(defvar fg-color-comment "DeepSkyBlue4")
+(defvar fg-color-kw "springgreen")
+(defvar fg-color-func "gold")
+(defvar fg-color-type "PaleGreen")
+(defvar fg-color-key "MistyRose4")
+(defvar fg-color-var "Coral")
+(defvar fg-color-static "olive drab")
 
 (defun fg-masq-x ()
 	"Css-like binding."
 	(custom-set-faces
 		`(default
-			((t
+			((,(and
+					(boundp 'fg-color-fg-core)
+					(boundp 'fg-color-bg-core))
 				(:foreground ,fg-color-fg-core
 					:background ,fg-color-bg-core))))
-		`(flyspell-duplicate ((t (:foreground "Gold3" :underline t :weight normal))))
-		`(flyspell-incorrect ((t (:foreground "OrangeRed" :underline t :weight normal))))
-		`(font-lock-comment-face ((t (:foreground "SteelBlue1"))))
-		`(font-lock-function-name-face ((t (:foreground "gold"))))
-		`(font-lock-keyword-face ((t (:foreground "springgreen"))))
-		`(font-lock-type-face ((t (:foreground "PaleGreen"))))
-		`(font-lock-variable-name-face ((t (:foreground "Coral"))))
+		`(flyspell-duplicate ((t (:foreground ,fg-color-spell-dupe :underline t :weight normal))))
+		`(flyspell-incorrect ((t (:foreground ,fg-color-spell-err :underline t :weight normal))))
+		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
+		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))
+		`(font-lock-keyword-face ((t (:foreground ,fg-color-kw))))
+		`(font-lock-type-face ((t (:foreground ,fg-color-type))))
+		`(font-lock-variable-name-face ((t (:foreground ,fg-color-var))))
+		`(font-lock-builtin-face ((t (:foreground ,fg-color-key))))
+		`(font-lock-string-face ((t (:foreground ,fg-color-static))))
 		`(menu
-			((((type x-toolkit))
-			(:background "light slate gray"
-				:foreground ,fg-color-fg-core
-				:box (:line-width 2 :color "grey75" :style released-button)))))
+			((,(and window-system (boundp 'fg-color-fg-core))
+				(:background "light slate gray"
+					:foreground ,fg-color-fg-core
+					:box (:line-width 2 :color "grey75" :style released-button)))))
 		`(mode-line ((t (:foreground "black" :background "light slate gray")))))
 	(tool-bar-mode -1)
 	(scroll-bar-mode -1)
-	(set-cursor-color fg-color-fg-core)
-	(set-foreground-color fg-color-fg-core)
-	(set-background-color fg-color-bg-core)
-	(set-face-foreground 'default fg-color-fg-core)
-	(set-face-background 'default fg-color-bg-core))
+	(when (boundp 'fg-color-fg-core)
+		(set-cursor-color fg-color-fg-core)
+		(set-foreground-color fg-color-fg-core)
+		(setq-default term-default-fg-color fg-color-fg-core))
+	(when (boundp 'fg-color-bg-core)
+		(set-background-color fg-color-bg-core)
+		(setq-default term-default-bg-color fg-color-bg-core)))
 
 (defun fg-masq-x-dark ()
+	"Translucent text on dark background."
 	(interactive)
 	(let*
 		((fg-color-fg-core "#6ad468")
-		 (fg-color-bg-core "#101c10"))
+		 (fg-color-bg-core "#101c10")
+		 (fg-color-key "MistyRose2")
+		 (fg-color-comment "SteelBlue1"))
 		(fg-masq-x)))
 
 (defun fg-masq-x-light ()
+	"Black text on white background."
 	(interactive)
 	(let*
 		((fg-color-fg-core "black")
-		 (fg-color-bg-core "white"))
+		 (fg-color-bg-core "white")
+		 (fg-color-kw "dark green")
+		 (fg-color-func "saddle brown")
+		 (fg-color-var "IndianRed4"))
 		(fg-masq-x)))
 
-;; (defalias 'fg-masq-x-dark 'fg-masq-x-light)
+(defun fg-masq-x-pitch ()
+	"Toggle fixed/variable pitch in current buffer."
+	(interactive)
+	(if
+		(and (boundp 'buffer-face-mode-face) buffer-face-mode-face)
+		(setq buffer-face-mode-face (buffer-face-set nil))
+		(buffer-face-set 'fixed-pitch)))
 
-;; Mask 4 no-X, uniform dark-only
+
+;; Mask 4 no-X, uniform static dark-only
 (defun fg-masq-nox ()
 	(interactive)
 	(custom-set-faces
@@ -141,7 +171,7 @@ should be set before calling the `solar-sunrise-sunset'."
 			(setq fg-sunset-timer (run-at-time sunset-string (* 60 60 24) 'fg-masq-x-dark))
 			(setq fg-sunrise-timer (run-at-time sunrise-string (* 60 60 24) 'fg-masq-x-light)))))
 
-;; Masquerade! :p
+;; Masquerade!
 (if window-system
 	(progn
 		(fg-smart-lookz)

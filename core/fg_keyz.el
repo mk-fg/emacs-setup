@@ -53,6 +53,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 ;; Lookz switching should work everywhere as well
 (global-set-key (key "C-M-/") 'fg-masq-x-light)
 (global-set-key (key "C-M-'") 'fg-masq-x-dark)
+(global-set-key (key "C-M-]") 'fg-masq-x-pitch)
 
 
 (define-minor-mode fg-scite-core
