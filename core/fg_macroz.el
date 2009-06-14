@@ -1,47 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Extra modes
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(require 'setnu)
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Copy/Cut/Paste ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun fg-copy ()
-	(interactive)
-	(if (use-region-p)
-		(fg-copy-region
-			(region-beginning)
-			(region-end))
-		(fg-copy-line)))
-
-
-(defun fg-copy-line (&optional arg)
-	"Copy current line into ring buffer.
-ARG is interpreted as in `kill-whole-line', nil is parsed to 1."
-	(interactive "p")
-	(or arg (setq arg 1))
-	(if
-		(and (> arg 0)
-			(eobp)
-			(save-excursion (forward-visible-line 0) (eobp)))
-		(signal 'end-of-buffer nil))
-	(if
-		(and (< arg 0)
-			(bobp)
-			(save-excursion (end-of-visible-line) (bobp)))
-		(signal 'beginning-of-buffer nil))
-	(unless (eq last-command 'kill-region)
-		(kill-new "")
-		(setq last-command 'kill-region))
-	(if (< arg 0) (setq arg (1+ arg)))
-	(fg-copy-region
-		(line-beginning-position)
-		(line-beginning-position 2)))
-
 
 (defun fg-copy-region (start end)
 	"Same as `copy-region-as-kill' but doesn't deactivate the mark."
@@ -51,33 +10,77 @@ ARG is interpreted as in `kill-whole-line', nil is parsed to 1."
 		(kill-new (filter-buffer-substring start end))))
 
 
+(defun fg-taint (&optional func whole-lines-only)
+	"Smart region interpreter.
+If nothing is marked, work on the whole current line.
+If part of a single line is marked, apply FUNC to this part, unless second
+argument is set.
+Otherwise, apply FUNC to all lines, tainted by the region.
+If FUNC isn't specified, return (START END) of tainted zone.
+Point is moved to the end of affected zone before the call."
+	(setq func (or func 'list))
+	(if (use-region-p)
+		(let
+			((start (region-beginning))
+				(end (region-end)))
+			(if
+				(unless whole-lines-only
+					(= (count-lines start end) 1))
+				(funcall func
+					start
+					(progn
+						(goto-char end)
+						(point)))
+				(funcall func
+					(progn
+						(goto-char start)
+						(line-beginning-position))
+					(progn
+						(goto-char end)
+						(if (/= (current-column) 0) (forward-line 1))
+						(point)))))
+		(progn
+			(funcall func
+				(line-beginning-position)
+				(progn
+					(forward-line 1)
+					(point))))))
+
+
+(defun fg-copy ()
+	"Push selected region or current line into ring-buffer."
+	(interactive)
+	(save-excursion
+		(let (deactivate-mark)
+			(if (use-region-p)
+				(fg-copy-region
+					(region-beginning)
+					(region-end))
+				(fg-taint 'fg-copy-region)))))
+
+
+(defun fg-copy-paragraph ()
+	"Copy full paragraph at the point."
+	(interactive)
+	(unless 
+		(and (not (bobp))
+			(looking-at paragraph-start))
+		(backward-paragraph))
+	(fg-copy-region
+	 (point)
+	 (progn (forward-paragraph) (point))))
+
+
 (defun fg-clone (arg)
 	"If no region is active - clone current line.
 If only part of a single line is selected - clone it inline.
-Otherwise, clone all lines, tainted (even partly) by region.
+Otherwise, clone all lines, tainted (even partly) by the region.
 ARG specifies the number of copies to make."
 	(interactive "p")
 	(save-excursion
 		(let (deactivate-mark)
-			(if (use-region-p)
-				(let
-					((start (region-beginning))
-						(end (region-end)))
-					(if (= (count-lines start end) 1)
-						(fg-copy-region start end)
-						(fg-copy-region
-							(progn
-								(goto-char start)
-								(line-beginning-position))
-							(progn
-								(goto-char end)
-								(if (/= (current-column) 0) (forward-line 1))
-								(if (eobp) (newline))
-								(point)))))
-				(progn
-					(fg-copy-line)
-					(forward-line 1)
-					(if (eobp) (newline))))
+			(fg-taint 'fg-copy-region)
+			(if (eobp) (newline))
 			(while (> arg 0)
 				(yank)
 				(setq arg (1- arg))))))
@@ -106,6 +109,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(fg-del-word (- arg)))))
 
 (defun fg-del-char (arg)
+	"Delete-key-function."
 	(interactive "p")
 	(if (region-active-p)
 		(delete-region
@@ -114,15 +118,43 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 		(delete-char arg)))
 
 (defun fg-del-char-backwards (arg)
+	"Backspace-key-function."
 	(interactive "p")
 	(fg-del-char (- arg)))
 
+
+(defun fg-del-whole-line ()
+	"Like `kill-whole-line', but w/o ring-buffer."
+	(interactive)
+	(delete-region
+		(line-beginning-position)
+		(progn (forward-line 1) (point))))
+	
+
+(defun fg-kill ()
+	"Kill region or line."
+	(interactive)
+	(if (use-region-p)
+		(kill-region
+			(region-beginning)
+			(region-end))
+		(kill-whole-line)))
 
 (defun fg-kill-line-blank ()
 	"Blank current line, mode-safe."
 	(interactive)
 	(execute-kbd-macro (kbd "<home>"))
 	(or (eolp) (kill-line)))
+
+(defun fg-kill-line ()
+	"Remove text after cursor, mode-safe."
+	(interactive)
+	(or (bolp)
+		(kill-region
+			(point)
+			(progn
+				(execute-kbd-macro (kbd "<end>"))
+				(point)))))
 
 (defun fg-kill-line-backwards ()
 	"Remove text before cursor, mode-safe."
@@ -135,29 +167,38 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 				(point)))))
 
 
+(defun fg-kill-whole-paragraph ()
+	"Remove full paragraph at the point."
+	(interactive)
+	(unless 
+		(and (not (bobp))
+			(looking-at paragraph-start))
+		(backward-paragraph))
+	(kill-paragraph nil))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Skimming ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TODO: integrate this stuff w/ transient selection
 
 (defun fg-scroll-up (arg)
 	"Scroll or move cursor ARG pages up."
 	(interactive "^p")
 	(if
-		(/= (window-start) (buffer-end -1))
+		(/= (window-start) (point-min))
 		(scroll-down) ; named for convenience, obviously
 		(let (deactivate-mark)
-				(move-to-window-line 0))))
+			(goto-char (point-min)))))
 
 (defun fg-scroll-down (arg)
 	"Scroll or move cursor ARG pages down."
 	(interactive "^p")
 	(if
-		(/= (window-end) (buffer-end 1))
+		(/= (window-end) (point-max))
 		(scroll-up) ; named for convenience, obviously
 		(let (deactivate-mark)
-			(move-to-window-line -1))))
+			(goto-char (point-max)))))
 
 (defun fg-beginning-of-line ()
   "Move point to first non-whitespace character or beginning-of-line."
@@ -166,7 +207,6 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 		(back-to-indentation)
 		(and (= oldpos (point))
 			(beginning-of-line))))
-
 
 
 
@@ -203,6 +243,23 @@ LIST defaults to all existing live buffers."
 	(mapc (lambda (x) (kill-buffer x))
 		(buffer-list))
 	(delete-other-windows))
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Misc stuff
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun fg-wtf ()
+	"Find whatever I'm pointing at."
+	(interactive)
+	(cond
+		((null (eq (variable-at-point) 0))
+			(describe-variable (variable-at-point)))
+		((function-called-at-point)
+			(describe-function (function-called-at-point)))
+		(t (find-file-at-point))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -264,7 +321,7 @@ LIST defaults to all existing live buffers."
 	"Tab-only variant of `indent-rigidly'.
 Indent all lines in the region by ARG tabs (\t).
 Can be used by `indent-region', since ARG defaults to 1."
-	(interactive "r\np") ; TODO: learn what that means ;)
+	(interactive "r\np")
 	(save-excursion
 		(goto-char end)
 		(setq end (point-marker))
@@ -294,3 +351,22 @@ If CHECK-EOL is set and line is just indent zone, it'll be blanked."
 				(setq arg (if (eolp) 0 arg))))
 		(indent-to (max 0 (+ indent (* arg tab-width))))
 		(delete-region (point) (progn (skip-chars-forward " \t") (point)))))
+
+(defun fg-newline ()
+	"Mode-safe version of newline-and-indent."
+  (interactive)
+  (or buffer-read-only (minibufferp) (delete-horizontal-space t))
+  (newline)
+  (or buffer-read-only (minibufferp) (indent-according-to-mode)))
+
+;; Comment-tabulata
+(defun fg-comment (arg)
+	(interactive "*P")
+	(let
+		((start-m (or (use-region-p) (point-marker)))
+			(taint (fg-taint nil t)))
+		(push-mark (car taint) t t)
+		(goto-char (car (last taint)))
+		(comment-dwim arg)
+		(if (markerp start-m) (progn (deactivate-mark) (goto-char (marker-position start-m))))))
+
