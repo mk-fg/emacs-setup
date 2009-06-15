@@ -59,13 +59,9 @@
 (recentf-mode) ; TODO: bind keys to use it
 
 (setq-default
+	next-line-add-newlines nil ; don't move past eof
 	x-select-enable-clipboard t ; shared clipboard should always be enabled
 	compare-windows-sync t ; advance point in both buffers on comparison
-	; smooth scrolling
-	scroll-preserve-screen-position t ; keep vertical pos
-	line-move-visual t ; keep horizontal pos
-	scroll-conservatively 5
-	isearch-allow-scroll t ; doesn't work for custom PgUp/Dn
 	; find-file tweaks
 	find-file-run-dired nil
 	find-file-visit-truename t
@@ -90,6 +86,27 @@
 		(equal (or (ad-get-arg 0) (buffer-name)) "*scratch*")
 		(bury-buffer)
 		ad-do-it))
+
+;; Auto lookz/keyz switching
+(add-hook 'minibuffer-setup-hook 'fg-scite-aux)
+(defun fg-hook-set-mode ()
+	"Turn fg-scite-code mode on explicitly"
+	(if buffer-file-name ; nil for system buffers and terminals
+		(unless fg-scite-code
+			(fg-scite-code)
+			(setq show-trailing-whitespace t))
+		(or
+			(when
+				(and (eq major-mode 'term-mode) ; term-mode minors can probably also be set via multi-term
+					(null fg-scite-term))
+				(fg-scite-term)
+				(buffer-face-set 'fixed-pitch))
+			(when
+				(and (eq major-mode 'help-mode)
+					(null fg-scite-aux))
+				(fg-scite-aux)))))
+(add-hook 'find-file-hook 'fg-hook-set-mode)
+(add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
 
 ;; TODO: look out for (server-start) function
 ;; TODO: look at http://infolab.stanford.edu/~manku/dotemacs.html

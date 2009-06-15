@@ -1,14 +1,15 @@
 ;; Tabs appearance and formatting basics
-(setq require-final-newline t)
-(setq indent-tabs-mode t)
-(setq default-tab-width 2)
-(setq indent-region-function 'fg-indent-command) ; default one inserts spaces
-(setq py-indent-offset 2)
-(setq tab-width 2)
-(setq fill-column 80)
-(setq basic-indent 2)
-(setq tab-always-indent t) ; overidden by smart-tab
+(setq-default
+	indent-tabs-mode t
+	tab-width 2
+	default-tab-width 2
+	indent-region-function
+		'fg-indent-command ; default one inserts spaces
+	py-indent-offset 2
+	basic-indent 2
+	require-final-newline t
+	tab-always-indent t ; overidden by fg-tab
+	c-syntactic-indentation nil ; stupid ten-tabs indentation
+	fill-column 80)
 
-;; Stop emacs from arbitrarily adding lines to the end of a file when the
-;; cursor is moved past the end of it
-(setq next-line-add-newlines nil)
+(add-hook 'before-save-hook 'delete-trailing-whitespace)

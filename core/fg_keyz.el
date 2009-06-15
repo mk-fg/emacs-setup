@@ -1,3 +1,6 @@
+;; TODO: add py-mode bindings (like eval-line, pi shell)
+;; TODO: revise term-switch bindings, add term-tabs, change default term-font (so it won't lag)
+
 ;; Key translation table and wrappers
 (defvar fg-dict-keys
 	'(("M-<up>" . "\M-[1;3A")
@@ -94,6 +97,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-f") . find-file)
 		(,(key "M-r") . revert-buffer)
 		(,(key "M-s") . save-buffer)
+		(,(key "M-S") . write-file)
 
 		;; -- History --
 		;; Consistent undo/redo
@@ -104,7 +108,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; -- Invokation --
 		;; Pitiful replacement for xterm but it'll have to do...
-		(,(key "C-<return>") . multi-term))
+		(,(key "C-<return>") . multi-term)
+		(,(key "C-S-<return>") . multi-term))
 	:group 'fg-scite)
 
 
@@ -114,12 +119,23 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 	:init-value nil
 	:lighter "/t"
 	:keymap `(
-		;; Terminal-safe block-skimming
+		;; Overrides for stupid emacs keyz
 		(,(key "C-n") . term-send-raw)
+		(,(key "C-c") . term-send-raw)
+		(,(key "C-x") . term-send-raw)
+		(,(key "C-z") . term-send-raw)
+		(,(key "C-r") . term-send-raw)
+		(,(key "ESC") . term-send-raw)
+		(,(key "C-<return>") . ,(iwrap 'term-send-raw-string (make-string 1 13))) ; for nano
+
+		;; Terminal-safe block-skimming
 		(,(key "C-<left>") . ,(iwrap 'term-send-raw-string ";5D"))
-		(,(key "C-<right>") . (iwrap 'term-send-raw-string ";5C"))
+		(,(key "C-<right>") . ,(iwrap 'term-send-raw-string ";5C"))
 		(,(key "C-S-<left>") . ,(iwrap 'term-send-raw-string ";6D"))
-		(,(key "C-S-<right>") . ,(iwrap 'term-send-raw-string ";6C")))
+		(,(key "C-S-<right>") . ,(iwrap 'term-send-raw-string ";6C"))
+
+		(,(key "<C-tab>") . multi-term-next)
+		(,(key "<C-S-iso-lefttab>") . multi-term-prev))
 	:group 'fg-scite)
 (set-keymap-parent fg-scite-term-map fg-scite-core-map)
 
@@ -133,7 +149,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; These don't play nice w/ terminals
 		(,(key "<backspace>") . fg-del-char-backwards)
 		(,(key "<delete>") . fg-del-char)
-		
+
 		;; Emacs' clipboard was designed by a bunch of certified lunatics ;)
 		;; TODO: make sensible ring-buffer controls, so older entries are accessible as well
 		(,(key "C-c") . fg-copy)
@@ -206,7 +222,11 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-<mouse-1>") . ffap-at-mouse)
 
 		;; Lookz
-		(,(key "M-w") . ,(iwrap '(setq truncate-lines (not truncate-lines)))))
+		(,(key "M-w") . ,(iwrap '(setq truncate-lines (not truncate-lines))))
+
+		;; Metacode ops
+		(,(key "C-j") . eval-last-sexp) ; > minibuffer
+		(,(key "C-S-j") . eval-print-last-sexp))
 	:group 'fg-scite)
 (set-keymap-parent fg-scite-code-map fg-scite-aux-map)
 
@@ -227,7 +247,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 
 
-;; -- Some isearch mangling --
+;; -- ISearch mangling --
 (defun fg-isearch-beginning-of-buffer ()
   "Move isearch point to the beginning of the buffer."
   (interactive)
@@ -276,20 +296,15 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 
 
-;; -- Compatibility hooks --
-(add-hook 'minibuffer-setup-hook 'fg-scite-aux)
-;; Code buffers
-(defun fg-hook-set-mode ()
-	"Turn fg-scite-code mode on explicitly"
-	(if buffer-file-name ; nil for system buffers and terminals
-		(unless fg-scite-code
-			(fg-scite-code))
-		(and ; term-mode minors can probably also be set via multi-term
-			;; (string=
-			;; 	(symbol-name major-mode)
-			;; 	"term-mode")
-			(eq major-mode 'term-mode)
-			(null fg-scite-term)
-			(fg-scite-term))))
-(add-hook 'find-file-hook 'fg-hook-set-mode)
-(add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
+;; -- IBuffer mangling --
+(require 'ibuffer)
+(defun fg-ibuffer-mark (&optional move)
+  "Mark the buffer on this line (or ARG lines), w/o moving the point.
+If point is on a group name, this function operates on that group."
+	(if
+		(looking-at "^>")
+		(ibuffer-unmark-forward nil)
+		(ibuffer-mark-forward nil))
+	(unless move (forward-line -1)))
+(define-key ibuffer-mode-map (key "SPC") (iwrap 'fg-ibuffer-mark nil))
+(define-key ibuffer-mode-map (key "<insert>") (iwrap 'fg-ibuffer-mark t))

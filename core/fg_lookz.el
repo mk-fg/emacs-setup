@@ -1,4 +1,7 @@
-;; Font init
+;; Encoding
+(set-default-coding-systems 'utf-8)
+
+;; Font
 (set-frame-font "Luxi Sans-8")
 (set-face-font 'variable-pitch "Luxi Sans-8")
 (set-face-font 'fixed-pitch "Luxi Mono-7")
@@ -14,8 +17,16 @@
 			(if time-zone " (") time-zone (if time-zone ")")))
 (display-time)
 
+;; Smooth scrolling
+(setq-default
+	scroll-preserve-screen-position t ; keep vertical pos
+	line-move-visual t ; keep horizontal pos
+	scroll-conservatively 5
+	isearch-allow-scroll t) ; alas, it doesn't work for custom PgUp/PgDn, TODO: extend
+
 ;; Assorted minor tweaks
-(setq inhibit-startup-screen t
+(setq-default
+	inhibit-startup-screen t
 	frame-title-format "emacs - %b" ; format the title-bar to include buffer name
 	show-paren-style 'mixed ; mark the area in the direction of far parenthesis
 	visible-bell t) ; flash on weird stuff
@@ -49,7 +60,7 @@
 (defvar fg-color-comment "DeepSkyBlue4")
 (defvar fg-color-kw "springgreen")
 (defvar fg-color-func "gold")
-(defvar fg-color-type "PaleGreen")
+(defvar fg-color-type "dark slate gray")
 (defvar fg-color-key "MistyRose4")
 (defvar fg-color-var "Coral")
 (defvar fg-color-static "olive drab")
