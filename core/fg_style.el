@@ -2,7 +2,7 @@
 (setq require-final-newline t)
 (setq indent-tabs-mode t)
 (setq default-tab-width 2)
-(setq indent-region-function 'nazi-tab) ; default one inserts spaces
+(setq indent-region-function 'fg-indent-command) ; default one inserts spaces
 (setq py-indent-offset 2)
 (setq tab-width 2)
 (setq fill-column 80)

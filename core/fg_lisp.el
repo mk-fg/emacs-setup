@@ -5,5 +5,6 @@
 (slime-setup)
 
 (add-to-list 'auto-mode-alist
-	'("\\.cl$" . lisp-mode)
+	'("\\.cl$" . lisp-mode))
+(add-to-list 'auto-mode-alist
 	'("/\\.?emacs\\(\\.d/.*\\.el\\)?$" . lisp-interaction-mode))

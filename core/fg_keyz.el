@@ -115,6 +115,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 	:lighter "/t"
 	:keymap `(
 		;; Terminal-safe block-skimming
+		(,(key "C-n") . term-send-raw)
 		(,(key "C-<left>") . ,(iwrap 'term-send-raw-string ";5D"))
 		(,(key "C-<right>") . (iwrap 'term-send-raw-string ";5C"))
 		(,(key "C-S-<left>") . ,(iwrap 'term-send-raw-string ";6D"))
