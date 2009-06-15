@@ -59,16 +59,12 @@ Point is moved to the end of affected zone before the call."
 				(fg-taint 'fg-copy-region)))))
 
 
-(defun fg-copy-paragraph ()
+(defun fg-copy-paragraph (&optional arg)
 	"Copy full paragraph at the point."
-	(interactive)
-	(unless 
-		(and (not (bobp))
-			(looking-at paragraph-start))
-		(backward-paragraph))
-	(fg-copy-region
-	 (point)
-	 (progn (forward-paragraph) (point))))
+	(interactive "p")
+	(mark-paragraph arg)
+	(forward-line 1) ; skip past blank opening line
+	(fg-copy))
 
 
 (defun fg-clone (arg)
@@ -166,15 +162,11 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 				(execute-kbd-macro (kbd "<home>"))
 				(point)))))
 
-
-(defun fg-kill-whole-paragraph ()
+(defun fg-kill-whole-paragraph (&optional arg)
 	"Remove full paragraph at the point."
-	(interactive)
-	(unless 
-		(and (not (bobp))
-			(looking-at paragraph-start))
-		(backward-paragraph))
-	(kill-paragraph nil))
+	(interactive "p")
+	(mark-paragraph arg)
+	(fg-kill))
 
 
 

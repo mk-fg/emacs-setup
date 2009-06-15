@@ -25,7 +25,7 @@
 		(concat fg-path "/tmp/")
 	; autosave
 	auto-save-list-file-prefix
-		(concat temporary-file-directory "/bakz-")
+		(concat temporary-file-directory "bakz-")
 	auto-save-file-name-transforms
 		(list (cons ".*" (list temporary-file-directory t)))
 	; backups
@@ -39,9 +39,10 @@
 	; save-place-in-file
 	save-place t
 	save-place-file
-		(concat temporary-file-directory "/placez")
+		(concat temporary-file-directory "placez")
 	; buffer list storage
 	desktop-dirname temporary-file-directory
+	desktop-path (list temporary-file-directory)
 	desktop-base-file-name "bufferz"
 	desktop-load-locked-desktop t ; bogus
 	desktop-save t)

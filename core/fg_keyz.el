@@ -64,6 +64,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 	:keymap `(
 		;; -- Movement --
 		;; Basic ops
+		(,(key "M-`") . universal-argument)
 		(,(key "<home>") . fg-beginning-of-line)
 		(,(key "<end>") . move-end-of-line) ; vanilla works just fine
 
@@ -185,10 +186,10 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-/") . ,(transient-wrap 'fg-comment "P"))
 
 		;; Skimming ops
-		(,(key "C-f") . isearch-forward)
-		(,(key "C-S-f") . query-replace)
 		(,(key "<f3>") . isearch-repeat-forward)
-		(,(key "C-M-f") . replace-regexp)
+		(,(key "C-s") . isearch-forward)
+		(,(key "C-S-s") . query-replace)
+		(,(key "C-M-s") . replace-regexp)
 
 		;; File/buffer stuff
 		(,(key "M-c") . save-buffers-kill-terminal)
@@ -256,6 +257,21 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 (define-key isearch-mode-map (key "C-<home>") 'fg-isearch-beginning-of-buffer)
 (define-key isearch-mode-map (key "C-<end>") 'fg-isearch-end-of-buffer)
+
+(define-key isearch-mode-map (key "<f3>") 'isearch-repeat-forward)
+(define-key isearch-mode-map (key "C-s") 'isearch-repeat-forward)
+(define-key isearch-mode-map (key "C-S-s") 'isearch-query-replace)
+(define-key isearch-mode-map (key "C-M-s") 'isearch-query-replace-regexp)
+(define-key isearch-mode-map (key "C-S-h") 'isearch-occur)
+(define-key isearch-mode-map (key "C-M-h") 'isearch-highlight-regexp)
+
+(define-key isearch-mode-map (key "C-<left>") 'isearch-repeat-backward)
+(define-key isearch-mode-map (key "C-<right>") 'isearch-repeat-forward)
+(define-key isearch-mode-map (key "C-<up>") 'isearch-ring-advance)
+(define-key isearch-mode-map (key "C-<down>") 'isearch-ring-retreat)
+
+(define-key isearch-mode-map (key "C-v") 'isearch-yank-word-or-char)
+(define-key isearch-mode-map (key "C-S-v") 'isearch-yank-line)
 
 
 
