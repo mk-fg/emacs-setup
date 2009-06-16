@@ -10,15 +10,15 @@
 		(kill-new (filter-buffer-substring start end))))
 
 
-(defun fg-taint (&optional func whole-lines-only)
+(defun* fg-taint (&key call whole-lines-only)
 	"Smart region interpreter.
 If nothing is marked, work on the whole current line.
-If part of a single line is marked, apply FUNC to this part, unless second
+If part of a single line is marked, apply CALL to this part, unless second
 argument is set.
-Otherwise, apply FUNC to all lines, tainted by the region.
-If FUNC isn't specified, return (START END) of tainted zone.
+Otherwise, apply CALL to all lines, tainted by the region.
+If CALL isn't specified, return (START END) of tainted zone.
 Point is moved to the end of affected zone before the call."
-	(setq func (or func 'list))
+	(setq call (or call 'list))
 	(if (use-region-p)
 		(let
 			((start (region-beginning))
@@ -26,12 +26,12 @@ Point is moved to the end of affected zone before the call."
 			(if
 				(unless whole-lines-only
 					(= (count-lines start end) 1))
-				(funcall func
+				(funcall call
 					start
 					(progn
 						(goto-char end)
 						(point)))
-				(funcall func
+				(funcall call
 					(progn
 						(goto-char start)
 						(line-beginning-position))
@@ -40,7 +40,7 @@ Point is moved to the end of affected zone before the call."
 						(if (/= (current-column) 0) (forward-line 1))
 						(point)))))
 		(progn
-			(funcall func
+			(funcall call
 				(line-beginning-position)
 				(progn
 					(forward-line 1)
@@ -56,7 +56,7 @@ Point is moved to the end of affected zone before the call."
 				(fg-copy-region
 					(region-beginning)
 					(region-end))
-				(fg-taint 'fg-copy-region)))))
+				(fg-taint :call 'fg-copy-region)))))
 
 
 (defun fg-copy-paragraph (&optional arg)
@@ -68,14 +68,14 @@ Point is moved to the end of affected zone before the call."
 
 
 (defun fg-clone (arg)
-	"If no region is active - clone current line.
-If only part of a single line is selected - clone it inline.
+	"If no region is active, clone current line.
+If only part of a single line is selected, clone it inline.
 Otherwise, clone all lines, tainted (even partly) by the region.
 ARG specifies the number of copies to make."
 	(interactive "p")
 	(save-excursion
 		(let (deactivate-mark)
-			(fg-taint 'fg-copy-region)
+			(fg-taint :call 'fg-copy-region)
 			(if (eobp) (newline))
 			(while (> arg 0)
 				(yank)
@@ -125,7 +125,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 	(delete-region
 		(line-beginning-position)
 		(progn (forward-line 1) (point))))
-	
+
 
 (defun fg-kill ()
 	"Kill region or line."
@@ -203,43 +203,6 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Nuke buffer sets
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun fg-nuke-some (&optional list)
-	"For each buffer in LIST, kill it silently if unmodified. Otherwise ask.
-LIST defaults to all existing live buffers."
-	(interactive)
-	(if (null list)
-		(setq list (buffer-list)))
-	(while list
-		(let* ((buffer (car list))
-			(name (buffer-name buffer)))
-		(and (not (string-equal name ""))
-			(not (string-equal name "*Messages*"))
-			; (not (string-equal name "*Buffer List*"))
-			(not (string-equal name "*buffer-selection*"))
-			(not (string-equal name "*Shell Command Output*"))
-			(not (string-equal name "*scratch*"))
-			(/= (aref name 0) ? )
-			(if (buffer-modified-p buffer)
-				(if (yes-or-no-p
-					(format "Buffer %s has been edited. Kill? " name))
-					(kill-buffer buffer))
-				(kill-buffer buffer))))
-		(setq list (cdr list))))
-
-(defun fg-nuke-all ()
-	"Nuke all buffers, leaving *scratch* only"
-	(interactive)
-	(mapc (lambda (x) (kill-buffer x))
-		(buffer-list))
-	(delete-other-windows))
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Misc stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -252,6 +215,14 @@ LIST defaults to all existing live buffers."
 		((function-called-at-point)
 			(describe-function (function-called-at-point)))
 		(t (find-file-at-point))))
+
+(defun fg-nuke-all ()
+	"Nuke all buffers, leaving *scratch* only"
+	(interactive)
+	(mapc (lambda (x) (kill-buffer x))
+		(buffer-list))
+	(delete-other-windows))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -356,9 +327,11 @@ If CHECK-EOL is set and line is just indent zone, it'll be blanked."
 	(interactive "*P")
 	(let
 		((start-m (or (use-region-p) (point-marker)))
-			(taint (fg-taint nil t)))
+			(taint (fg-taint :whole-lines-only t)))
 		(push-mark (car taint) t t)
 		(goto-char (car (last taint)))
 		(comment-dwim arg)
-		(if (markerp start-m) (progn (deactivate-mark) (goto-char (marker-position start-m))))))
+		(when (markerp start-m)
+			(deactivate-mark)
+			(goto-char (marker-position start-m)))))
 

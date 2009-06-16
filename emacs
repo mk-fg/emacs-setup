@@ -107,6 +107,9 @@
 				(fg-scite-aux)))))
 (add-hook 'find-file-hook 'fg-hook-set-mode)
 (add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
+;; (remove-hook 'python-mode-hook (lambda () (modify-syntax-entry ?\n "w")))
 
-;; TODO: look out for (server-start) function
+
+
+(server-start)
 ;; TODO: look at http://infolab.stanford.edu/~manku/dotemacs.html

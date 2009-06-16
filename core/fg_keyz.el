@@ -247,7 +247,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 
 
-;; -- ISearch mangling --
+;; -- ISearch/replace mangling --
 (defun fg-isearch-beginning-of-buffer ()
   "Move isearch point to the beginning of the buffer."
   (interactive)
@@ -294,6 +294,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 (define-key isearch-mode-map (key "C-v") 'isearch-yank-word-or-char)
 (define-key isearch-mode-map (key "C-S-v") 'isearch-yank-line)
 
+(define-key query-replace-map (key "C-<left>") 'backup)
+(define-key query-replace-map (key "C-<right>") 'skip)
+(define-key query-replace-map (key "C-<return>") 'automatic)
 
 
 ;; -- IBuffer mangling --
