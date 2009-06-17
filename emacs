@@ -54,7 +54,7 @@
 (fset 'yes-or-no-p 'y-or-n-p) ; use y or n instead of yes or no
 
 (delete-selection-mode) ; delete active selection w/ transient-mode
-(mouse-wheel-mode)
+(mouse-wheel-mode t) ; ..in case I plug the rodent in
 (auto-image-file-mode)
 (recentf-mode) ; TODO: bind keys to use it
 
@@ -109,7 +109,7 @@
 (add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
 ;; (remove-hook 'python-mode-hook (lambda () (modify-syntax-entry ?\n "w")))
 
-
-
+;; Emacs server (client is bound to zsh ec/ee aliases)
 (server-start)
+
 ;; TODO: look at http://infolab.stanford.edu/~manku/dotemacs.html

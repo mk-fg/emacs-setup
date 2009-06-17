@@ -1,5 +1,7 @@
 ;; TODO: add py-mode bindings (like eval-line, pi shell)
+;; TODO: customize by-word jumps to stop at newlines, punctuation (aka SciTE)
 ;; TODO: revise term-switch bindings, add term-tabs, change default term-font (so it won't lag)
+;; TODO: add Some-Keyz + num for discrete buffer switching (Alt+NUM Alt+B)
 
 ;; Key translation table and wrappers
 (defvar fg-dict-keys
