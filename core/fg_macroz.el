@@ -237,9 +237,35 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
     try-expand-dabbrev
     try-expand-dabbrev-all-buffers
     try-expand-dabbrev-from-kill
-    try-expand-list ; it is a disaster w/ large lists, hence the place
+		try-expand-slime-symbol
     try-complete-lisp-symbol-partially
-    try-complete-lisp-symbol))
+    try-complete-lisp-symbol
+    try-expand-list)) ; it is a disaster w/ large lists, hence the place
+
+
+;; hippie expand for slime
+(defun he-slime-symbol-beg ()
+	(let ((p (slime-symbol-start-pos)))
+		 p))
+
+(defun try-expand-slime-symbol (old)
+	(unless  old
+		(he-init-string (he-slime-symbol-beg) (point))
+		(setq he-expand-list
+			(sort
+				(car (slime-simple-completions
+					(buffer-substring-no-properties (slime-symbol-start-pos) (slime-symbol-end-pos))))
+				'string-lessp)))
+	(while
+		(and he-expand-list
+			(he-string-member (car he-expand-list) he-tried-table))
+		(setq he-expand-list (cdr he-expand-list)))
+	(if (null he-expand-list)
+		(progn (when old (he-reset-string)) nil)
+		(he-substitute-string (car he-expand-list))
+		(setq he-expand-list (cdr he-expand-list))
+		t))
+
 
 (defun fg-tab (arg)
 	"Needs `transient-mark-mode' to be on. This smart tab is

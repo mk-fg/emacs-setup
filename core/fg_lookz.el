@@ -188,3 +188,17 @@ should be set before calling the `solar-sunrise-sunset'."
 		(fg-smart-lookz)
 		(add-to-list 'after-make-frame-functions 'fg-smart-lookz))
 	(fg-masq-nox)) ; time-of-the-day independent, since terms should be plain black
+
+
+
+;; Auto lookz switching
+(defun fg-hook-set-lookz ()
+	"Enable stuff like trailing spacez or fixed-width face."
+	(if buffer-file-name ; nil for system buffers and terminals
+		(setq show-trailing-whitespace t)
+		(when (eq major-mode 'term-mode)
+			(buffer-face-set 'fixed-pitch))))
+
+(add-hook 'find-file-hook 'fg-hook-set-lookz)
+(add-hook 'after-change-major-mode-hook 'fg-hook-set-lookz)
+

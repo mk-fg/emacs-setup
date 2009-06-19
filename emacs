@@ -87,28 +87,6 @@
 		(bury-buffer)
 		ad-do-it))
 
-;; Auto lookz/keyz switching
-(add-hook 'minibuffer-setup-hook 'fg-scite-aux)
-(defun fg-hook-set-mode ()
-	"Turn fg-scite-code mode on explicitly"
-	(if buffer-file-name ; nil for system buffers and terminals
-		(unless fg-scite-code
-			(fg-scite-code)
-			(setq show-trailing-whitespace t))
-		(or
-			(when
-				(and (eq major-mode 'term-mode) ; term-mode minors can probably also be set via multi-term
-					(null fg-scite-term))
-				(fg-scite-term)
-				(buffer-face-set 'fixed-pitch))
-			(when
-				(and (eq major-mode 'help-mode)
-					(null fg-scite-aux))
-				(fg-scite-aux)))))
-(add-hook 'find-file-hook 'fg-hook-set-mode)
-(add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
-;; (remove-hook 'python-mode-hook (lambda () (modify-syntax-entry ?\n "w")))
-
 ;; Emacs server (client is bound to zsh ec/ee aliases)
 (server-start)
 

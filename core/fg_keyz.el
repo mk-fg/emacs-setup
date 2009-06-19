@@ -234,8 +234,20 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 
 
+(define-minor-mode fg-scite-lisp
+	"SciTE-like editing extras (minibuffer-compatible)."
+	:init-value nil
+	:lighter "/L"
+	:keymap `(
+		(,(key "C-j") . slime-compile-defun)
+		(,(key "C-)") . slime-close-all-parens-in-sexp))
+	:group 'fg-scite)
+(set-keymap-parent fg-scite-lisp-map fg-scite-code-map)
+
+
+
 (define-minor-mode fg-scite-pair
-	"Parenthsis auto-insert, feels weird, but..."
+	"Parenthesis auto-insert, feels weird, but..."
 	:init-value nil
 	:lighter "/p"
 	:keymap `(
@@ -313,3 +325,26 @@ If point is on a group name, this function operates on that group."
 	(unless move (forward-line -1)))
 (define-key ibuffer-mode-map (key "SPC") (iwrap 'fg-ibuffer-mark nil))
 (define-key ibuffer-mode-map (key "<insert>") (iwrap 'fg-ibuffer-mark t))
+
+
+;; -- Auto keyz switching --
+(defun fg-hook-set-mode ()
+	"Turn fg-scite-code mode on explicitly"
+	(if buffer-file-name ; nil for system buffers and terminals
+		(unless fg-scite-code (fg-scite-code))
+		(or
+			(when
+				(and (eq major-mode 'term-mode) ; term-mode minors can probably also be set via multi-term
+					(null fg-scite-term))
+				(fg-scite-term))
+			(when
+				(and (eq major-mode 'help-mode)
+					(null fg-scite-aux))
+				(fg-scite-aux)))))
+
+(add-hook 'minibuffer-setup-hook 'fg-scite-aux)
+(add-hook 'slime-lisp-mode-hook 'fg-scite-lisp)
+(add-hook 'find-file-hook 'fg-hook-set-mode)
+(add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
+;; (remove-hook 'python-mode-hook (lambda () (modify-syntax-entry ?\n "w")))
+
