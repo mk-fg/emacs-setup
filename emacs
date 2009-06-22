@@ -44,19 +44,19 @@
 	desktop-dirname temporary-file-directory
 	desktop-path (list temporary-file-directory)
 	desktop-base-file-name "bufferz"
-	desktop-load-locked-desktop t ; bogus
+	desktop-load-locked-desktop t ; bogus check
 	desktop-save t)
 
 (make-directory temporary-file-directory t)
 
 
-;; Default behavior tweaks
+;; Default behavior tweaks / modes
 (fset 'yes-or-no-p 'y-or-n-p) ; use y or n instead of yes or no
 
-(delete-selection-mode) ; delete active selection w/ transient-mode
-(mouse-wheel-mode t) ; ..in case I plug the rodent in
-(auto-image-file-mode)
-(recentf-mode) ; TODO: bind keys to use it
+(delete-selection-mode t) ; delete active selection w/ transient-mode
+(mouse-wheel-mode t) ; ...in case I plug the rodent in
+(auto-image-file-mode t)
+(recentf-mode t) ; TODO: bind keys to use it
 
 (setq-default
 	next-line-add-newlines nil ; don't move past eof
@@ -88,6 +88,7 @@
 		ad-do-it))
 
 ;; Emacs server (client is bound to zsh ec/ee aliases)
+;; TODO: WTF ec still leaves its crap in paths!?
 (server-start)
 
 ;; TODO: look at http://infolab.stanford.edu/~manku/dotemacs.html

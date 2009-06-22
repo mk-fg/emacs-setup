@@ -195,10 +195,12 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 (defun fg-beginning-of-line ()
   "Move point to first non-whitespace character or beginning-of-line."
 	(interactive "^")
-	(let ((oldpos (point)))
-		(back-to-indentation)
-		(and (= oldpos (point))
-			(beginning-of-line))))
+	(if (eq major-mode 'slime-repl-mode)
+		(slime-repl-bol)
+		(let ((oldpos (point)))
+			(back-to-indentation)
+			(and (= oldpos (point))
+				(beginning-of-line)))))
 
 
 
@@ -223,6 +225,15 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 		(buffer-list))
 	(delete-other-windows))
 
+(defun fg-recentf-prompt ()
+	"Completion prompt of recentf list in minibuffer, using only files' basename."
+	(interactive)
+	(let*
+		((tocpl
+				(mapcar (lambda (x) (cons (file-name-nondirectory x) x)) recentf-list))
+			(fname (completing-read "Recent file: " tocpl nil nil)))
+		(when fname
+			(find-file (cdr (assoc-string fname tocpl))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -233,13 +244,13 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
   '(try-complete-file-name-partially
     try-complete-file-name
     try-expand-all-abbrevs
-    try-expand-line
     try-expand-dabbrev
     try-expand-dabbrev-all-buffers
     try-expand-dabbrev-from-kill
 		try-expand-slime-symbol
     try-complete-lisp-symbol-partially
     try-complete-lisp-symbol
+    try-expand-line
     try-expand-list)) ; it is a disaster w/ large lists, hence the place
 
 
@@ -338,15 +349,17 @@ If CHECK-EOL is set and line is just indent zone, it'll be blanked."
 			(save-excursion
 				(skip-chars-forward " \t")
 				(setq arg (if (eolp) 0 arg))))
-		(indent-to (max 0 (+ indent (* arg tab-width))))
+		(indent-to (max 0 (+ indent (* arg tab-width)))) ; max is to drop negative indent to 0
 		(delete-region (point) (progn (skip-chars-forward " \t") (point)))))
 
 (defun fg-newline ()
-	"Mode-safe version of newline-and-indent."
+	"Mode-safe version of newline-and-indent.
+Used to call indent-according-to-mode, but it fucked up way too often."
   (interactive)
-  (or buffer-read-only (minibufferp) (delete-horizontal-space t))
-  (newline)
-  (or buffer-read-only (minibufferp) (indent-according-to-mode)))
+	(let ((indent (unless (or buffer-read-only (minibufferp)) (current-indentation))))
+		(when indent (delete-horizontal-space t))
+		(newline)
+		(when indent (indent-to indent))))
 
 ;; Comment-tabulata
 (defun fg-comment (arg)

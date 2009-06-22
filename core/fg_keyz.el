@@ -51,6 +51,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 ;; Mode setting globals
 (global-set-key (key "M-/") 'fg-scite-code)
+(global-set-key (key "M-?") 'fg-scite-lisp)
 (global-set-key (key "M-'") 'fg-scite-aux)
 (global-set-key (key "M-]") 'fg-scite-core)
 (global-set-key (key "C-?") 'setnu-mode)
@@ -214,6 +215,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-c") . save-buffers-kill-terminal)
 		(,(key "M-b") . switch-to-buffer)
 		(,(key "M-f") . find-file)
+		(,(key "M-F") . fg-recentf-prompt)
 		(,(key "M-r") . revert-buffer)
 		(,(key "M-s") . save-buffer)
 
@@ -239,8 +241,33 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 	:init-value nil
 	:lighter "/L"
 	:keymap `(
-		(,(key "C-j") . slime-compile-defun)
-		(,(key "C-)") . slime-close-all-parens-in-sexp))
+		(,(key "<M-S-iso-lefttab>") . slime-switch-to-output-buffer)
+		;; MacroDebugging ops
+		(,(key "C-i") . slime-interrupt)
+		(,(key "C-S-i") . slime-toggle-trace-fdefinition)
+		(,(key "M-i") . slime-macroexpand-1)
+		(,(key "M-I") . slime-undefine-function)
+		(,(key "C-f") . slime-load-file)
+		(,(key "C-S-f") . slime-sync-package-and-default-directory)
+		(,(key "M-X") . slime-export-symbol-at-point)
+		;; Code inspection
+		(,(key "C-;") . slime-list-callers)
+		(,(key "C-:") . slime-list-callees)
+		(,(key "M-;") . slime-inspect)
+		(,(key "C-'") . slime-edit-definition)
+		(,(key "C-S-'") . slime-edit-value)
+		;; Code evaluation
+		(,(key "C-j") . slime-pprint-eval-last-expression)
+		(,(key "C-S-j") . slime-eval-region)
+		(,(key "C-M-S-j") . slime-interactive-eval)
+		(,(key "C-M-j") . slime-compile-defun)
+		(,(key "M-j") . slime-compile-and-load-file)
+		(,(key "M-J") . slime-call-defun)
+		;; Syntax helpers
+		(,(key "C-)") . slime-close-all-parens-in-sexp)
+		(,(key "C-h C-d") . slime-doc-map)
+		(,(key "C-h C-e") . slime-presentation-map)
+		(,(key "C-h C-w") . slime-who-map))
 	:group 'fg-scite)
 (set-keymap-parent fg-scite-lisp-map fg-scite-code-map)
 
@@ -274,22 +301,6 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
   (goto-char (point-max))
   (isearch-repeat-backward))
 
-;; TODO: convert this crap to skip PgUp / PgDn
-;; (defadvice isearch-update (before fg-isearch-update-noexit activate)
-;; 	(sit-for 0)
-;; 	(when
-;; 		(and
-;; 			(not (eq this-command 'isearch-other-control-char)) ; not the scrolling command
-;; 			(> (length isearch-string) 0) ; not the emptry string
-;; 			(> (length isearch-cmds) 2) ; not the first key (to lazy highlight all matches w/o recenter)
-;; 			(let
-;; 				((line (count-screen-lines (point)
-;; 					(save-excursion (move-to-window-line 0) (point)))))
-;; 				(or (> line (* (/ (window-height) 4) 3))
-;; 					(< line (* (/ (window-height) 9) 1))))) ; the point is within the given window boundaries
-;; 		(let ((recenter-position 0.3))
-;; 			(recenter '(4)))))
-
 (define-key isearch-mode-map (key "C-<home>") 'fg-isearch-beginning-of-buffer)
 (define-key isearch-mode-map (key "C-<end>") 'fg-isearch-end-of-buffer)
 
@@ -305,8 +316,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 (define-key isearch-mode-map (key "C-<up>") 'isearch-ring-advance)
 (define-key isearch-mode-map (key "C-<down>") 'isearch-ring-retreat)
 
-(define-key isearch-mode-map (key "C-v") 'isearch-yank-word-or-char)
-(define-key isearch-mode-map (key "C-S-v") 'isearch-yank-line)
+(define-key isearch-mode-map (key "C-w") 'isearch-delete-char)
+(define-key isearch-mode-map (key "C-v") 'isearch-yank-kill)
+(define-key isearch-mode-map (key "C-S-v") 'isearch-yank-word)
 
 (define-key query-replace-map (key "C-<left>") 'backup)
 (define-key query-replace-map (key "C-<right>") 'skip)
@@ -329,22 +341,19 @@ If point is on a group name, this function operates on that group."
 
 ;; -- Auto keyz switching --
 (defun fg-hook-set-mode ()
-	"Turn fg-scite-code mode on explicitly"
+	"Turn fg-scite-* minor modes, depending on major."
 	(if buffer-file-name ; nil for system buffers and terminals
-		(unless fg-scite-code (fg-scite-code))
-		(or
-			(when
-				(and (eq major-mode 'term-mode) ; term-mode minors can probably also be set via multi-term
-					(null fg-scite-term))
-				(fg-scite-term))
-			(when
-				(and (eq major-mode 'help-mode)
-					(null fg-scite-aux))
-				(fg-scite-aux)))))
+		(cond
+			((eq major-mode 'lisp-mode)
+				(fg-scite-lisp t))
+			(t (fg-scite-code t))) ; if it's a file, then it's at least code
+		(cond
+			((eq major-mode 'term-mode) ; term-mode minors can probably also be set via multi-term
+				(fg-scite-term t))
+			((or (eq major-mode 'help-mode)
+					(eq major-mode 'slime-repl-mode))
+				(fg-scite-aux t)))))
 
 (add-hook 'minibuffer-setup-hook 'fg-scite-aux)
-(add-hook 'slime-lisp-mode-hook 'fg-scite-lisp)
 (add-hook 'find-file-hook 'fg-hook-set-mode)
 (add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
-;; (remove-hook 'python-mode-hook (lambda () (modify-syntax-entry ?\n "w")))
-
