@@ -295,8 +295,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			((minibufferp)
 				(minibuffer-complete))
 			((fg-tab-must-expand arg)
-				(or (hippie-expand arg)
-					(fg-indent arg)))
+				(hippie-expand arg))
 			(t
 				(fg-indent arg)
 				(skip-chars-forward " \t")))))
