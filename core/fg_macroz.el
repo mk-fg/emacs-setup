@@ -67,6 +67,7 @@ Point is moved to the end of affected zone before the call."
 	(fg-copy))
 
 
+;; TODO: don't pollute kill-ring
 (defun fg-clone (arg)
 	"If no region is active, clone current line.
 If only part of a single line is selected, clone it inline.

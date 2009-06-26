@@ -98,9 +98,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-c") . save-buffers-kill-terminal)
 		(,(key "M-b") . switch-to-buffer)
 		(,(key "M-f") . find-file)
+		(,(key "M-F") . fg-recentf-prompt)
 		(,(key "M-r") . revert-buffer)
 		(,(key "M-s") . save-buffer)
-		(,(key "M-S") . write-file)
 
 		;; -- History --
 		;; Consistent undo/redo
@@ -211,14 +211,6 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-S-s") . query-replace)
 		(,(key "C-M-s") . replace-regexp)
 
-		;; File/buffer stuff
-		(,(key "M-c") . save-buffers-kill-terminal)
-		(,(key "M-b") . switch-to-buffer)
-		(,(key "M-f") . find-file)
-		(,(key "M-F") . fg-recentf-prompt)
-		(,(key "M-r") . revert-buffer)
-		(,(key "M-s") . save-buffer)
-
 		;; Metabuffer stuff
 		(,(key "C-=") . compare-windows)
 		(,(key "M-v") . clone-buffer)
@@ -257,12 +249,12 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-'") . slime-edit-definition)
 		(,(key "C-S-'") . slime-edit-value)
 		;; Code evaluation
-		(,(key "C-j") . slime-pprint-eval-last-expression)
+		(,(key "C-j") . slime-eval-last-expression)
 		(,(key "C-S-j") . slime-eval-region)
-		(,(key "C-M-S-j") . slime-interactive-eval)
-		(,(key "C-M-j") . slime-compile-defun)
-		(,(key "M-j") . slime-compile-and-load-file)
-		(,(key "M-J") . slime-call-defun)
+		(,(key "M-j") . slime-call-defun)
+		(,(key "M-J") . slime-compile-defun) ;; not really useful
+		(,(key "C-M-j") . slime-pprint-eval-last-expression)
+		(,(key "C-M-S-j") . slime-compile-and-load-file)
 		;; Syntax helpers
 		(,(key "C-)") . slime-close-all-parens-in-sexp)
 		(,(key "C-h C-d") . slime-doc-map)
