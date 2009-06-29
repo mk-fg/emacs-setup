@@ -1,3 +1,5 @@
+;; TODO: add term-tabs
+
 ;; Encoding
 (set-default-coding-systems 'utf-8)
 

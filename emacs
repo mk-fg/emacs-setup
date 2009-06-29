@@ -68,8 +68,8 @@
 	find-file-existing-other-name t)
 
 
-;; Self-composition
-(defun autocompile ()
+;; Misc hooks
+(defun fg-hook-autocompile ()
   "Compile itself if ~/.emacs or .emacs.d include."
   (interactive)
   (require 'bytecomp)
@@ -78,14 +78,15 @@
 			"/\\.?emacs\\(\\.d/.*\\.el\\)?$"
 			(buffer-file-name))
 		(byte-compile-file (buffer-file-name))))
-(add-hook 'after-save-hook 'autocompile)
+(add-hook 'after-save-hook 'fg-hook-autocompile)
 
-;; Bury *scratch* buffer instead of killing it
 (defadvice kill-buffer (around fg-kill-buffer-persistent-scratch activate)
+	"Bury *scratch* buffer instead of killing it."
 	(if
 		(equal (or (ad-get-arg 0) (buffer-name)) "*scratch*")
 		(bury-buffer)
 		ad-do-it))
+
 
 ;; Emacs server (client is bound to zsh ec/ee aliases)
 ;; TODO: WTF ec still leaves its crap in paths!?

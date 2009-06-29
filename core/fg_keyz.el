@@ -1,7 +1,6 @@
 ;; TODO: add py-mode bindings (like eval-line, pi shell)
 ;; TODO: customize by-word jumps to stop at newlines, punctuation (aka SciTE)
-;; TODO: revise term-switch bindings, add term-tabs, change default term-font (so it won't lag)
-;; TODO: add Some-Keyz + num for discrete buffer switching (Alt+NUM Alt+B)
+;; TODO: add some-keyz + num for discrete buffer switching (Alt+NUM Alt+B)
 
 ;; Key translation table and wrappers
 (defvar fg-dict-keys
@@ -104,7 +103,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; -- History --
 		;; Consistent undo/redo
-		;; C-z is outrighty dangerous otherwise!
+		;; C-z is dangerous otherwise!
 		(,(key "C-z") . ,(transient-wrap 'undo "p"))
 		(,(key "C-S-z") . ,(transient-wrap 'redo "p"))
 		(,(key "M-z") . repeat)
@@ -154,7 +153,6 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "<delete>") . fg-del-char)
 
 		;; Emacs' clipboard was designed by a bunch of certified lunatics ;)
-		;; TODO: make sensible ring-buffer controls, so older entries are accessible as well
 		(,(key "C-c") . fg-copy)
 		(,(key "C-S-c") . fg-copy-paragraph)
 		(,(key "C-x") . fg-kill) ; I hate original binding for this key
@@ -220,7 +218,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; Lookz
 		(,(key "M-w") . ,(iwrap '(setq truncate-lines (not truncate-lines))))
 
-		;; Metacode ops
+		;; Metacode ops (emacs stuff)
 		(,(key "C-j") . eval-last-sexp) ; > minibuffer
 		(,(key "C-S-j") . eval-print-last-sexp))
 	:group 'fg-scite)
@@ -229,7 +227,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 
 (define-minor-mode fg-scite-lisp
-	"SciTE-like editing extras (minibuffer-compatible)."
+	"LI+SLiME overlay mode, not suited for REPL buffer."
 	:init-value nil
 	:lighter "/L"
 	:keymap `(
@@ -266,7 +264,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 
 (define-minor-mode fg-scite-pair
-	"Parenthesis auto-insert, feels weird, but..."
+	"Parenthesis auto-insert mode, not really useful for lisp."
 	:init-value nil
 	:lighter "/p"
 	:keymap `(
@@ -327,11 +325,12 @@ If point is on a group name, this function operates on that group."
 		(ibuffer-unmark-forward nil)
 		(ibuffer-mark-forward nil))
 	(unless move (forward-line -1)))
+
 (define-key ibuffer-mode-map (key "SPC") (iwrap 'fg-ibuffer-mark nil))
 (define-key ibuffer-mode-map (key "<insert>") (iwrap 'fg-ibuffer-mark t))
 
 
-;; -- Auto keyz switching --
+;; -- Auto mode-switching --
 (defun fg-hook-set-mode ()
 	"Turn fg-scite-* minor modes, depending on major."
 	(if buffer-file-name ; nil for system buffers and terminals
@@ -340,10 +339,12 @@ If point is on a group name, this function operates on that group."
 				(fg-scite-lisp t))
 			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond
-			((eq major-mode 'term-mode) ; term-mode minors can probably also be set via multi-term
+			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
+			((eq major-mode 'lisp-interaction) ; *scratch*
+				(fg-scite-code t))
 			((or (eq major-mode 'help-mode)
-					(eq major-mode 'slime-repl-mode))
+					(eq major-mode 'slime-repl-mode)) ; TODO: special mode for REPL (what for?)
 				(fg-scite-aux t)))))
 
 (add-hook 'minibuffer-setup-hook 'fg-scite-aux)

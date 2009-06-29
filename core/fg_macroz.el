@@ -2,6 +2,11 @@
 ;; Copy/Cut/Paste ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defadvice push-mark (before fg-push-mark-silence activate)
+	"Supress minibuffer 'Mark set' messages on kill-ring ops."
+	(ad-set-arg 1 t))
+
+
 (defun fg-copy-region (start end)
 	"Same as `copy-region-as-kill' but doesn't deactivate the mark."
 	(interactive "r")
@@ -67,17 +72,26 @@ Point is moved to the end of affected zone before the call."
 	(fg-copy))
 
 
-;; TODO: don't pollute kill-ring
 (defun fg-clone (arg)
 	"If no region is active, clone current line.
 If only part of a single line is selected, clone it inline.
 Otherwise, clone all lines, tainted (even partly) by the region.
-ARG specifies the number of copies to make."
+ARG specifies the number of copies to make.
+Doesn't pollute the kill-ring, respects x-clip-buffer."
 	(interactive "p")
 	(save-excursion
-		(let (deactivate-mark)
+		(let
+			((x-kill
+				(and interprogram-paste-function
+					(funcall interprogram-paste-function))))
+			(when x-kill
+				(push x-kill kill-ring)
+				(setq kill-ring-yank-pointer kill-ring)))
+		(let
+			(deactivate-mark
+				kill-ring kill-ring-yank-pointer)
 			(fg-taint :call 'fg-copy-region)
-			(if (eobp) (newline))
+			(if (unless (bolp) (eobp)) (newline))
 			(while (> arg 0)
 				(yank)
 				(setq arg (1- arg))))))
@@ -235,6 +249,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(fname (completing-read "Recent file: " tocpl nil nil)))
 		(when fname
 			(find-file (cdr (assoc-string fname tocpl))))))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
