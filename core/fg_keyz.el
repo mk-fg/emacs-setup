@@ -100,6 +100,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-F") . fg-recentf-prompt)
 		(,(key "M-r") . revert-buffer)
 		(,(key "M-s") . save-buffer)
+		(,(key "M-S") . write-file)
 
 		;; -- History --
 		;; Consistent undo/redo
@@ -199,7 +200,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; Region ops
 		(,(key "M-u") . ,(transient-wrap 'upcase-region "r"))
-		(,(key "M-S-u") . ,(transient-wrap 'capitalize-region "r"))
+		(,(key "M-U") . ,(transient-wrap 'capitalize-region "r"))
 		(,(key "M-l") . ,(transient-wrap 'downcase-region "r"))
 		(,(key "C-/") . ,(transient-wrap 'fg-comment "P"))
 
@@ -252,7 +253,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-j") . slime-call-defun)
 		(,(key "M-J") . slime-compile-defun) ;; not really useful
 		(,(key "C-M-j") . slime-pprint-eval-last-expression)
-		(,(key "C-M-S-j") . slime-compile-and-load-file)
+		(,(key "C-M-J") . slime-compile-and-load-file)
 		;; Syntax helpers
 		(,(key "C-)") . slime-close-all-parens-in-sexp)
 		(,(key "C-h C-d") . slime-doc-map)
@@ -333,6 +334,7 @@ If point is on a group name, this function operates on that group."
 ;; -- Auto mode-switching --
 (defun fg-hook-set-mode ()
 	"Turn fg-scite-* minor modes, depending on major."
+	;; (message "%s, %s, %s" major-mode buffer-file-name (buffer-name))
 	(if buffer-file-name ; nil for system buffers and terminals
 		(cond
 			((eq major-mode 'lisp-mode)
@@ -341,7 +343,7 @@ If point is on a group name, this function operates on that group."
 		(cond
 			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
-			((eq major-mode 'lisp-interaction) ; *scratch*
+			((eq major-mode 'lisp-interaction-mode) ; *scratch*
 				(fg-scite-code t))
 			((or (eq major-mode 'help-mode)
 					(eq major-mode 'slime-repl-mode)) ; TODO: special mode for REPL (what for?)
