@@ -314,9 +314,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 				(minibuffer-complete))
 			((fg-tab-must-expand arg)
 				(hippie-expand arg))
-			(t
-				(fg-indent arg)
-				(skip-chars-forward " \t")))))
+			(t (fg-indent arg)))))
 
 (defun fg-untab (arg)
 	"Reverse of `fg-tab' (just inverts arg)."
