@@ -330,7 +330,9 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(region-beginning)
 			(region-end)
 			arg)
-		(fg-indent-line arg)))
+		(progn
+			(fg-indent-line arg)
+			(skip-chars-forward " \t"))))
 
 (defun fg-indent-region (start end &optional arg)
 	"Tab-only variant of `indent-rigidly'.
