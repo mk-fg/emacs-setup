@@ -89,7 +89,8 @@
 
 
 ;; Emacs server (client is bound to zsh ec/ee aliases)
-;; TODO: WTF ec still leaves its crap in paths!?
 (server-start)
 
-;; TODO: look at http://infolab.stanford.edu/~manku/dotemacs.html
+
+;; Starting layout setup
+(split-window-horizontally)
