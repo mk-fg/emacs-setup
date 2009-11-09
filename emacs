@@ -13,6 +13,8 @@
 (load-library "fg_macroz")
 (load-library "fg_lookz")
 (load-library "fg_shell")
+(load-library "fg_jabbra")
+(load-library "fg_emms")
 (load-library "fg_style")
 (load-library "fg_keyz") ; must be the last one
 
@@ -40,6 +42,25 @@
 	save-place t
 	save-place-file
 		(concat temporary-file-directory "placez")
+	; recentf mode
+	recentf-max-saved-items 256
+	recentf-max-menu-items 10
+	recentf-menu-filter 'recentf-arrange-by-rule
+	recentf-save-file
+		(concat temporary-file-directory "recentf")
+	recentf-arrange-rules
+		`(("py (%d)" ".\\.py\\'")
+			("php (%d)" ".\\.php[0-9]?\\'")
+			("sh (%d)" ".\\.sh\\'")
+			("conf (%d)"
+				,(concat ".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\)"
+					"\\(\\.\\(sample\\|example\\|dist\\|documented\\)\\)?\\'"))
+			("perl (%d)" ".\\.pl[0-9]?\\'")
+			("web/tpl (%d)" ".\\.\\(html\\|css\\|htm\\|js\\|tpl\\)\\'")
+			("sql (%d)" ".\\.sql\\'")
+			("C (%d)" ".\\.\\(c\\|h\\)\\'")
+			("(e)lisp (%d)" ".\\.\\(el\\|cl|lisp\\)\\'")
+			("ebuild (%d)" ".\\.ebuild\\'"))
 	; buffer list storage
 	desktop-dirname temporary-file-directory
 	desktop-path (list temporary-file-directory)
@@ -48,7 +69,6 @@
 	desktop-save t)
 
 (make-directory temporary-file-directory t)
-
 
 ;; Default behavior tweaks / modes
 (fset 'yes-or-no-p 'y-or-n-p) ; use y or n instead of yes or no
@@ -91,6 +111,6 @@
 ;; Emacs server (client is bound to zsh ec/ee aliases)
 (server-start)
 
-
 ;; Starting layout setup
 (split-window-horizontally)
+

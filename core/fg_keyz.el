@@ -40,6 +40,17 @@ Not all modes are handled correctly (tested w/ p and r only)."
 	(let ((func (if (not (eq arg 'undefined)) `(,func ,arg) func)))
 		`(lambda () (interactive) ,func)))
 
+(defun define-keys (mode defs)
+	(dolist (def defs)
+		(multiple-value-bind (keydef sym) def
+			(define-key mode (key keydef) sym))))
+
+(defun global-set-keys (defs)
+	(dolist (def defs)
+		(multiple-value-bind (keydef sym) def
+			(global-set-key (key keydef) sym))))
+
+
 
 ;; Includes
 (require 'setnu) ; line numbers mode
@@ -48,17 +59,17 @@ Not all modes are handled correctly (tested w/ p and r only)."
 (require 'multi-term) ; improved ansi-term
 
 
-;; Mode setting globals
-(global-set-key (key "M-/") 'fg-scite-code)
-(global-set-key (key "M-?") 'fg-scite-lisp)
-(global-set-key (key "M-'") 'fg-scite-aux)
-(global-set-key (key "M-]") 'fg-scite-core)
-(global-set-key (key "C-?") 'setnu-mode)
-
-;; Lookz switching should work everywhere as well
-(global-set-key (key "C-M-/") 'fg-masq-x-light)
-(global-set-key (key "C-M-'") 'fg-masq-x-dark)
-(global-set-key (key "C-M-]") 'fg-masq-x-pitch)
+(global-set-keys
+	;; Mode setting globals
+	'(("M-/" fg-scite-code)
+		("M-?" fg-scite-lisp)
+		("M-'" fg-scite-aux)
+		("M-]" fg-scite-core)
+		("C-?" setnu-mode)
+	;; Lookz switching should work everywhere as well
+		("C-M-/" fg-masq-x-light)
+		("C-M-'" fg-masq-x-dark)
+		("C-M-]" fg-masq-x-pitch)))
 
 
 (define-minor-mode fg-scite-core
@@ -98,6 +109,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-b") . switch-to-buffer)
 		(,(key "M-f") . find-file)
 		(,(key "M-F") . fg-recentf-prompt)
+		(,(key "C-M-f") . recentf-open-files)
 		(,(key "M-r") . revert-buffer)
 		(,(key "M-s") . save-buffer)
 		(,(key "M-S") . write-file)
@@ -111,7 +123,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; -- Invokation --
 		;; Pitiful replacement for xterm but it'll have to do...
-		(,(key "C-<return>") . multi-term)
+		;; (,(key "C-<return>") . multi-term)
 		(,(key "C-S-<return>") . multi-term))
 	:group 'fg-scite)
 
@@ -292,28 +304,30 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
   (goto-char (point-max))
   (isearch-repeat-backward))
 
-(define-key isearch-mode-map (key "C-<home>") 'fg-isearch-beginning-of-buffer)
-(define-key isearch-mode-map (key "C-<end>") 'fg-isearch-end-of-buffer)
+(define-keys isearch-mode-map
+	'(("C-<home>" fg-isearch-beginning-of-buffer)
+		("C-<end>" fg-isearch-end-of-buffer)
 
-(define-key isearch-mode-map (key "<f3>") 'isearch-repeat-forward)
-(define-key isearch-mode-map (key "C-s") 'isearch-repeat-forward)
-(define-key isearch-mode-map (key "C-S-s") 'isearch-query-replace)
-(define-key isearch-mode-map (key "C-M-s") 'isearch-query-replace-regexp)
-(define-key isearch-mode-map (key "C-S-h") 'isearch-occur)
-(define-key isearch-mode-map (key "C-M-h") 'isearch-highlight-regexp)
+		("<f3>" isearch-repeat-forward)
+		("C-s" isearch-repeat-forward)
+		("C-S-s" isearch-query-replace)
+		("C-M-s" isearch-query-replace-regexp)
+		("C-S-h" isearch-occur)
+		("C-M-h" isearch-highlight-regexp)
 
-(define-key isearch-mode-map (key "C-<left>") 'isearch-repeat-backward)
-(define-key isearch-mode-map (key "C-<right>") 'isearch-repeat-forward)
-(define-key isearch-mode-map (key "C-<up>") 'isearch-ring-advance)
-(define-key isearch-mode-map (key "C-<down>") 'isearch-ring-retreat)
+		("C-<left>" isearch-repeat-backward)
+		("C-<right>" isearch-repeat-forward)
+		("C-<up>" isearch-ring-advance)
+		("C-<down>" isearch-ring-retreat)
 
-(define-key isearch-mode-map (key "C-w") 'isearch-delete-char)
-(define-key isearch-mode-map (key "C-v") 'isearch-yank-kill)
-(define-key isearch-mode-map (key "C-S-v") 'isearch-yank-word)
+		("C-w" isearch-delete-char)
+		("C-v" isearch-yank-kill)
+		("C-S-v" isearch-yank-word)))
 
-(define-key query-replace-map (key "C-<left>") 'backup)
-(define-key query-replace-map (key "C-<right>") 'skip)
-(define-key query-replace-map (key "C-<return>") 'automatic)
+(define-keys query-replace-map
+	'(("C-<left>" backup)
+		("C-<right>" skip)
+		("C-<return>" automatic)))
 
 
 ;; -- IBuffer mangling --
@@ -327,8 +341,20 @@ If point is on a group name, this function operates on that group."
 		(ibuffer-mark-forward nil))
 	(unless move (forward-line -1)))
 
-(define-key ibuffer-mode-map (key "SPC") (iwrap 'fg-ibuffer-mark nil))
-(define-key ibuffer-mode-map (key "<insert>") (iwrap 'fg-ibuffer-mark t))
+(define-keys ibuffer-mode-map
+	`(("SPC" ,(iwrap 'fg-ibuffer-mark nil))
+		("<insert>" ,(iwrap 'fg-ibuffer-mark t))))
+
+
+;; -- Jabbra submode --
+(require 'jabber)
+(define-keys jabber-roster-mode-map
+	'(("v" jabber-vcard-get)
+		("V" jabber-get-version)
+		("m" jabber-send-message)))
+(define-keys jabber-chat-mode-map
+	'(("<return>" fg-newline)
+		("C-<return>" jabber-chat-buffer-send)))
 
 
 ;; -- Auto mode-switching --

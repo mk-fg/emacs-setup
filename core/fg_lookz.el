@@ -47,11 +47,20 @@
 (or standard-display-table (setq standard-display-table (make-display-table)))
 (aset standard-display-table ?\f (vconcat (make-vector 64 ?-) "^L"))
 
+;; Mode-specific tweaks
+(setq-default
+	ibuffer-formats
+		'((mark modified read-only
+			" " (name 30 30 :left :elide)
+			" " (size 9 -1 :right)
+			" " (mode 16 16 :left :elide)
+			" " filename-and-process)
+		(mark
+			" " (name 16 -1)
+			" " filename)))
 
-;; TODO: M4 keyz for per-buffer mono/sans font switching (see buffer-face-set)
-;; TODO: Pull colors from this stuff:
-; (color-theme-initialize)
-; (color-theme-mods)
+
+
 
 
 ;; Mask for X (inits are bg-agnostic colors)
@@ -59,6 +68,8 @@
 (defvar fg-color-bg-core)
 (defvar fg-color-spell-dupe "Gold3")
 (defvar fg-color-spell-err "OrangeRed")
+(defvar fg-color-irrelevant "medium sea green")
+(defvar fg-color-irrelevant-xtra "sea green")
 (defvar fg-color-comment "DeepSkyBlue4")
 (defvar fg-color-kw "springgreen")
 (defvar fg-color-func "gold")
@@ -68,7 +79,7 @@
 (defvar fg-color-static "olive drab")
 
 (defun fg-masq-x ()
-	"Css-like binding."
+	"CSS-like binding."
 	(custom-set-faces
 		`(default
 			((,(and
@@ -76,8 +87,15 @@
 					(boundp 'fg-color-bg-core))
 				(:foreground ,fg-color-fg-core
 					:background ,fg-color-bg-core))))
+		;; FlySpell
 		`(flyspell-duplicate ((t (:foreground ,fg-color-spell-dupe :underline t :weight normal))))
 		`(flyspell-incorrect ((t (:foreground ,fg-color-spell-err :underline t :weight normal))))
+		;; Jabber
+		`(jabber-title-large ((t (:weight bold :height 1.5))))
+		`(jabber-title-medium ((t (:weight bold :height 1.2))))
+		`(jabber-roster-user-away ((t (:foreground ,fg-color-irrelevant :slant italic :weight normal))))
+		`(jabber-roster-user-xa ((t (:foreground ,fg-color-irrelevant-xtra :slant italic :weight normal))))
+		;; Defaults
 		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
 		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))
 		`(font-lock-keyword-face ((t (:foreground ,fg-color-kw))))
@@ -198,9 +216,12 @@ should be set before calling the `solar-sunrise-sunset'."
 	"Enable stuff like trailing spacez or fixed-width face."
 	(if buffer-file-name ; nil for system buffers and terminals
 		(setq show-trailing-whitespace t)
-		(when (eq major-mode 'term-mode)
+		(when
+			(memq major-mode
+				'(term-mode jabber-roster-mode ibuffer-mode))
 			(buffer-face-set 'fixed-pitch))))
 
 (add-hook 'find-file-hook 'fg-hook-set-lookz)
+(add-hook 'ibuffer-hook 'fg-hook-set-lookz)
 (add-hook 'after-change-major-mode-hook 'fg-hook-set-lookz)
 
