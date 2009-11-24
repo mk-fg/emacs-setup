@@ -97,6 +97,7 @@
 		;; Jabber
 		`(jabber-title-large ((t (:weight bold :height 1.5))))
 		`(jabber-title-medium ((t (:weight bold :height 1.2))))
+		`(jabber-roster-user-online ((t (:foreground ,fg-color-fg-core :slant normal :weight bold))))
 		`(jabber-roster-user-away ((t (:foreground ,fg-color-irrelevant :slant italic :weight normal))))
 		`(jabber-roster-user-xa ((t (:foreground ,fg-color-irrelevant-xtra :slant italic :weight normal))))
 		;; Defaults

@@ -114,6 +114,15 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-s") . save-buffer)
 		(,(key "M-S") . write-file)
 
+		;; -- EMMS controls --
+		;; TODO: Move optional sections like this one to separate define-keys
+		;;  structure w/ exception handling wrapper to handle no-emms case
+		(,(key "s-'") . emms-next)
+		(,(key "s-;") . emms-previous)
+		(,(key "s-:") . emms-stop)
+		(,(key "s-\"") . emms-pause)
+		(,(key "<XF86AudioPlay>") . emms-pause)
+
 		;; -- History --
 		;; Consistent undo/redo
 		;; C-z is dangerous otherwise!
@@ -375,6 +384,7 @@ If point is on a group name, this function operates on that group."
 					(eq major-mode 'slime-repl-mode)) ; TODO: special mode for REPL (what for?)
 				(fg-scite-aux t)))))
 
+(add-hook 'jabber-chat-mode-hook 'fg-scite-aux)
 (add-hook 'minibuffer-setup-hook 'fg-scite-aux)
 (add-hook 'find-file-hook 'fg-hook-set-mode)
 (add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
