@@ -71,7 +71,7 @@
 (defvar fg-color-irrelevant "medium sea green")
 (defvar fg-color-irrelevant-xtra "sea green")
 (defvar fg-color-comment "DeepSkyBlue4")
-(defvar fg-color-kw "springgreen")
+(defvar fg-color-kw "dark green")
 (defvar fg-color-func "gold")
 (defvar fg-color-type "dark slate gray")
 (defvar fg-color-key "MistyRose4")
@@ -87,6 +87,10 @@
 					(boundp 'fg-color-bg-core))
 				(:foreground ,fg-color-fg-core
 					:background ,fg-color-bg-core))))
+		;; Py
+		`(py-builtins-face ((t (:foreground ,fg-color-kw))))
+		`(py-decorators-face ((t (:foreground ,fg-color-kw))))
+		`(py-pseudo-keyword-face ((t (:foreground ,fg-color-kw))))
 		;; FlySpell
 		`(flyspell-duplicate ((t (:foreground ,fg-color-spell-dupe :underline t :weight normal))))
 		`(flyspell-incorrect ((t (:foreground ,fg-color-spell-err :underline t :weight normal))))
@@ -126,6 +130,7 @@
 		((fg-color-fg-core "#6ad468")
 		 (fg-color-bg-core "#101c10")
 		 (fg-color-key "MistyRose2")
+		 (fg-color-kw "springgreen")
 		 (fg-color-comment "SteelBlue1"))
 		(fg-masq-x)))
 
@@ -135,7 +140,6 @@
 	(let*
 		((fg-color-fg-core "black")
 		 (fg-color-bg-core "white")
-		 (fg-color-kw "dark green")
 		 (fg-color-func "saddle brown")
 		 (fg-color-var "IndianRed4"))
 		(fg-masq-x)))
