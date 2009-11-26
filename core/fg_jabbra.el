@@ -36,3 +36,7 @@
 	jabber-roster-show-empty-group t
 	jabber-roster-show-title nil
 	jabber-use-global-history nil)
+
+(defun jabber-notify (from buffer text proposed-alert)
+	(start-process "Notification" nil "notify-send" "-i" "emacs" from text))
+(add-hook 'jabber-alert-message-hooks 'jabber-notify)
