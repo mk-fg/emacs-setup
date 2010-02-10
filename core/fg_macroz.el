@@ -217,6 +217,16 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(and (= oldpos (point))
 				(beginning-of-line)))))
 
+(defun fg-point-to-reg (arg)
+	(interactive "^p")
+	(message "Set register %d" arg)
+	(point-to-register arg))
+
+(defun fg-point-from-reg (arg)
+	(interactive "^p")
+	(message "Restored from register %d" arg)
+	(jump-to-register arg))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

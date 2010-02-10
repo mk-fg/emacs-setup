@@ -182,6 +182,11 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-v") . yank)
 		(,(key "C-S-v") . yank-pop)
 
+		;; Register set/jump
+		(,(key "C-<f2>") . fg-point-to-reg)
+		(,(key "<f2>") . fg-point-from-reg)
+		(,(key "M-<f2>") . fg-point-from-reg)
+
 		;; Line/word ops
 		(,(key "C-d") . fg-clone)
 		(,(key "C-k") . kill-whole-line)
