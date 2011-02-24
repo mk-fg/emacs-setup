@@ -35,10 +35,9 @@ Not all modes are handled correctly (tested w/ p and r only)."
 				(interactive ,mode)
 				(let (deactivate-mark) (,func ,@args)))))
 
-(defun* iwrap (func &optional (arg 'undefined)) ; default val to check if arg is supplied, CL
-	"Return interactive-wrapped FUNC, called w/ ARG, if specified."
-	(let ((func (if (not (eq arg 'undefined)) `(,func ,arg) func)))
-		`(lambda () (interactive) ,func)))
+(defun iwrap (func &rest args)
+	"Return interactive-wrapped FUNC, called w/ ARGS, if specified."
+	`(lambda () (interactive) (,func ,@args)))
 
 (defun define-keys (mode defs)
 	(dolist (def defs)
@@ -53,10 +52,11 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 
 ;; Includes
-(require 'setnu) ; line numbers mode
-(require 'wcy-swbuff) ; buffer cycling thru minibuff
 (require 'redo) ; consistent redo, grabbed from XEmacs
-(require 'multi-term) ; improved ansi-term
+(autoload 'setnu "setnu" nil t) ; line numbers mode
+(dolist
+	(sym '(wcy-switch-buffer-forward wcy-switch-buffer-backward))
+	(autoload sym "wcy-swbuff" nil t)) ; buffer cycling thru minibuff
 
 
 (global-set-keys
@@ -69,7 +69,13 @@ Not all modes are handled correctly (tested w/ p and r only)."
 	;; Lookz switching should work everywhere as well
 		("C-M-/" fg-masq-x-light)
 		("C-M-'" fg-masq-x-dark)
-		("C-M-]" fg-masq-x-pitch)))
+		("C-M-]" fg-masq-x-pitch)
+	;; Stack-buffer hop
+		("C-<return>" fg-stack-buffer)))
+
+
+;;;; Snippet to rebind stuff online
+;; (define-key fg-scite-core-map (key "s-,") 'emms-shuffle)
 
 
 (define-minor-mode fg-scite-core
@@ -86,10 +92,10 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; -- Frame controls --
 		;; Flux-style pane glide
-		(,(key "M-<left>") . windmove-left)
-		(,(key "M-<right>") . windmove-right)
-		(,(key "M-<up>") . windmove-up)
-		(,(key "M-<down>") . windmove-down)
+		(,(key "M-<left>") . ,(iwrap 'windmove-left 1))
+		(,(key "M-<right>") . ,(iwrap 'windmove-right 1))
+		(,(key "M-<up>") . ,(iwrap 'windmove-up 1))
+		(,(key "M-<down>") . ,(iwrap 'windmove-down 1))
 
 		;; Had to leave C-S-NUM bindings reserved for the tentacled aliens from outta space
 		(,(key "C-,") . split-window-horizontally)
@@ -115,13 +121,25 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-S") . write-file)
 
 		;; -- EMMS controls --
-		;; TODO: Move optional sections like this one to separate define-keys
-		;;  structure w/ exception handling wrapper to handle no-emms case
 		(,(key "s-'") . emms-next)
 		(,(key "s-;") . emms-previous)
 		(,(key "s-:") . emms-stop)
 		(,(key "s-\"") . emms-pause)
+		(,(key "s-.") . emms)
+		(,(key "s->") . emms-shuffle)
+		(,(key "s-,") . emms-add-directory-tree)
+		(,(key "s-<") . emms-add-playlist)
+		(,(key "M-s-,") . emms-add-file)
+		(,(key "s-/") . fg-emms-notify)
+		(,(key "s-?") . emms-playlist-save)
+		(,(key "C-s-?") . emms-playlist-mode-clear)
+		(,(key "M-s-;") . emms-seek-forward)
+		(,(key "M-s-'") . emms-seek-backward)
 		(,(key "<XF86AudioPlay>") . emms-pause)
+
+		;; -- Notification controls --
+		(,(key "C-n") . fg-track-switch)
+		(,(key "C-S-n") . fg-track-reset)
 
 		;; -- History --
 		;; Consistent undo/redo
@@ -130,7 +148,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-S-z") . ,(transient-wrap 'redo "p"))
 		(,(key "M-z") . repeat)
 
-		;; -- Invokation --
+		;; -- Invocation --
 		;; Pitiful replacement for xterm but it'll have to do...
 		;; (,(key "C-<return>") . multi-term)
 		(,(key "C-S-<return>") . multi-term))
@@ -194,7 +212,10 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-w") . fg-del-word-backwards)
 		(,(key "C-u") . fg-kill-line-blank)
 		(,(key "C-S-u") . fg-kill-line-backwards)
-		(,(key "C-M-u") . fg-kill-line))
+		(,(key "C-M-u") . fg-kill-line)
+
+		;; Metabuffer stuff
+		(,(key "M-<return>") . fg-wtf))
 	:group 'fg-scite)
 (set-keymap-parent fg-scite-aux-map fg-scite-core-map)
 
@@ -239,7 +260,6 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; Metabuffer stuff
 		(,(key "C-=") . compare-windows)
 		(,(key "M-v") . clone-buffer)
-		(,(key "M-<return>") . fg-wtf)
 		(,(key "C-<mouse-1>") . ffap-at-mouse)
 
 		;; Lookz
@@ -305,18 +325,47 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 
 
+(define-minor-mode fg-scite-emms
+	"Special keymap with holes for emms bindings."
+	:init-value nil
+	:lighter "/!"
+	:keymap `(
+		(,(key "<backspace>") . fg-emms-playlist-mode-del)
+		(,(key "<delete>") . fg-emms-playlist-mode-del)
+		(,(key "C-c") . fg-emms-playlist-mode-copy)
+		(,(key "C-k") . fg-emms-playlist-mode-kill)
+		(,(key "C-x") . fg-emms-playlist-mode-kill)
+		(,(key "C-v") . emms-playlist-mode-yank)
+		(,(key "C-z") . emms-playlist-mode-undo)
+		(,(key "C-d") . fg-emms-playlist-mode-clone)
+		(,(key "M-f") . emms-add-playlist)
+		(,(key "M-s") . emms-playlist-save))
+	:group 'fg-scite)
+(set-keymap-parent fg-scite-emms-map fg-scite-core-map)
+
+
+
+;; -- Basic text-mode overrides (propognates to many other modes) --
+(define-keys text-mode-map
+	`(("<prior>" fg-scroll-up) ; pageup
+		("C-<prior>" ,(iwrap 'move-to-window-line 0))
+		("<next>" fg-scroll-down) ; pagedown
+		("C-<next>" ,(iwrap 'move-to-window-line -1))))
+
+
+
 ;; -- ISearch/replace mangling --
 (defun fg-isearch-beginning-of-buffer ()
-  "Move isearch point to the beginning of the buffer."
-  (interactive)
-  (goto-char (point-min))
-  (isearch-repeat-forward))
+	"Move isearch point to the beginning of the buffer."
+	(interactive)
+	(goto-char (point-min))
+	(isearch-repeat-forward))
 
 (defun fg-isearch-end-of-buffer ()
-  "Move isearch point to the end of the buffer."
-  (interactive)
-  (goto-char (point-max))
-  (isearch-repeat-backward))
+	"Move isearch point to the end of the buffer."
+	(interactive)
+	(goto-char (point-max))
+	(isearch-repeat-backward))
 
 (define-keys isearch-mode-map
 	'(("C-<home>" fg-isearch-beginning-of-buffer)
@@ -344,10 +393,31 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		("C-<return>" automatic)))
 
 
+;; -- Common activity-switch-to/reset routines
+(defun fg-track-reset ()
+	"Drop annoying status line notifications"
+	(interactive)
+	(when (fboundp 'fg-jabber-activity-reset)
+		(fg-jabber-activity-reset))
+	(when (fboundp 'fg-erc-track-reset)
+		(fg-erc-track-reset)))
+
+(defun fg-track-switch (arg)
+	"Switch to jabbra or erc activity buffers"
+	(interactive "p")
+	(let ((buff (current-buffer)))
+		(when (fboundp 'jabber-activity-switch-to)
+			(jabber-activity-switch-to))
+		(when
+			(and (fboundp 'erc-track-switch-buffer)
+				(eq buff (current-buffer)))
+			(erc-track-switch-buffer arg))))
+
+
 ;; -- IBuffer mangling --
 (require 'ibuffer)
 (defun fg-ibuffer-mark (&optional move)
-  "Mark the buffer on this line (or ARG lines), w/o moving the point.
+	"Mark the buffer on this line (or ARG lines), w/o moving the point.
 If point is on a group name, this function operates on that group."
 	(if
 		(looking-at "^>")
@@ -356,19 +426,58 @@ If point is on a group name, this function operates on that group."
 	(unless move (forward-line -1)))
 
 (define-keys ibuffer-mode-map
-	`(("SPC" ,(iwrap 'fg-ibuffer-mark nil))
+	`(("+" ,(iwrap 'ibuffer-mark-by-file-name-regexp ".*"))
+		("-" ,(iwrap 'ibuffer-unmark-all ibuffer-marked-char))
+		("*" ibuffer-toggle-marks)
+		("SPC" ,(iwrap 'fg-ibuffer-mark nil))
 		("<insert>" ,(iwrap 'fg-ibuffer-mark t))))
 
 
 ;; -- Jabbra submode --
-(require 'jabber)
-(define-keys jabber-roster-mode-map
-	'(("v" jabber-vcard-get)
-		("V" jabber-get-version)
-		("m" jabber-send-message)))
-(define-keys jabber-chat-mode-map
-	'(("<return>" fg-newline)
-		("C-<return>" jabber-chat-buffer-send)))
+(eval-after-load "jabber-roster" '(progn
+	(define-keys jabber-roster-mode-map
+		'(("v" jabber-vcard-get)
+			("V" jabber-get-version)
+			("m" jabber-send-message)))
+	(define-keys jabber-chat-mode-map
+		'(("<return>" fg-newline)
+			("C-<return>" jabber-chat-buffer-send)))))
+;; These fix keybindings for URLs in jabber-chat buffers
+(eval-after-load "goto-addr" '(progn
+	(define-key goto-address-highlight-keymap (kbd "C-c RET") nil)
+	(define-key goto-address-highlight-keymap (kbd "C-c") nil)))
+
+
+;; -- JS/Perl mode "special" parenthesis removal --
+(mapc (lambda (lang)
+	(eval-after-load lang '(progn
+		(mapc
+			(lambda (key) (define-key js-mode-map key nil))
+			'("{" "}" "(" ")" ":" ";" ",")))))
+	'("js" "perl-mode"))
+
+
+;; -- PgUp/PgDown in docview --
+(eval-after-load "doc-view" '(progn
+	(define-key doc-view-mode-map (kbd "=") 'doc-view-enlarge) ; holding shift is a pain! ;)
+	(define-key doc-view-mode-map (kbd "<next>") 'doc-view-next-page)
+	(define-key doc-view-mode-map (kbd "<prior>") 'doc-view-previous-page)))
+
+
+;; -- ERC submodes --
+(eval-after-load "erc-track" '(progn
+	;; Get rid of global erc-track C-c bindings
+	(define-key erc-track-minor-mode-map (kbd "C-c C-SPC") nil)
+	(define-key erc-track-minor-mode-map (kbd "C-c C-@") nil)
+	(define-key erc-track-minor-mode-map (kbd "C-c") nil)
+	;; Special "readability" hack, no idea why command is disabled by default
+	(define-key erc-mode-map (kbd "C-f") 'erc-remove-text-properties-region)
+	(put 'erc-remove-text-properties-region 'disabled nil)))
+
+
+;; -- KMacro (ex)globals --
+(global-set-key [f3] nil)
+(global-set-key [f4] nil)
 
 
 ;; -- Auto mode-switching --
@@ -379,17 +488,22 @@ If point is on a group name, this function operates on that group."
 		(cond
 			((eq major-mode 'lisp-mode)
 				(fg-scite-lisp t))
+			((eq major-mode 'doc-view-mode) t) ; it has specific bindings
 			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond
 			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
 			((eq major-mode 'lisp-interaction-mode) ; *scratch*
 				(fg-scite-code t))
-			((or (eq major-mode 'help-mode)
-					(eq major-mode 'slime-repl-mode)) ; TODO: special mode for REPL (what for?)
+			((memq major-mode
+					'(help-mode slime-repl-mode erc-mode))
 				(fg-scite-aux t)))))
 
+;; Hooks can be added w/o loading var definitions
+(add-hook 'erc-mode-hook 'fg-scite-aux)
 (add-hook 'jabber-chat-mode-hook 'fg-scite-aux)
 (add-hook 'minibuffer-setup-hook 'fg-scite-aux)
 (add-hook 'find-file-hook 'fg-hook-set-mode)
 (add-hook 'after-change-major-mode-hook 'fg-hook-set-mode)
+(add-hook 'emms-playlist-mode-hook
+	(lambda () (fg-scite-emms t) (fg-scite-core nil)))

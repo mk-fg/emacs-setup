@@ -1,9 +1,8 @@
-;; TODO: add term-tabs
-
 ;; Encoding
 (set-default-coding-systems 'utf-8)
 
 ;; Font
+;; Note: I always use variable-pitch font for code buffers
 (set-frame-font "Luxi Sans-8")
 (set-face-font 'variable-pitch "Luxi Sans-8")
 (set-face-font 'fixed-pitch "Luxi Mono-7")
@@ -43,11 +42,46 @@
 (when (and (display-mouse-p) (require 'avoid))
   (mouse-avoidance-mode 'animate))
 
-;; Display page delimiter ^L as a horizontal line (plus "^L")
+;; Character display tweaks
 (or standard-display-table (setq standard-display-table (make-display-table)))
+;; Display page delimiter ^L as a horizontal line (plus "^L")
 (aset standard-display-table ?\f (vconcat (make-vector 64 ?-) "^L"))
+;; Tab indentation guides
+(aset standard-display-table ?\t (vconcat "˙ "))
 
-;; Mode-specific tweaks
+;; Color code highlighting mode
+(autoload 'rainbow-mode
+	"rainbow-mode" "Color code highlighting mode" t)
+
+;; Crosshair highlighting modes
+;; (load-library-safe "column-marker")
+(when
+	(and
+		(load-library-safe "vline")
+		(load-library-safe "col-highlight"))
+
+	(setq-default
+		vline-use-timer t
+		vline-idle-time 0.1
+		col-highlight-vline-face-flag nil
+		col-highlight-period 2)
+
+	(defun vline-post-command-hook ()
+		(when (and vline-mode (not (minibufferp))) (flash-column-highlight)))
+	(defalias 'vline-timer-callback 'vline-post-command-hook)
+
+	(defvar col-highlight-flash-timer (timer-create)
+		"Timer for an active column highlihting in `vline-mode'.")
+	(defadvice col-highlight-flash
+		(around fg-col-highlight-flash-cleanup activate)
+		"Flash current column, cancelling previous flash-timer,
+	stored in `col-highlight-flash-timer'.
+	See `col-highlight-flash-set' for details."
+		(cancel-timer col-highlight-flash-timer)
+		(setq col-highlight-flash-timer ad-do-it)))
+
+
+;; Ibuffer tweaks
 (setq-default
 	ibuffer-formats
 		'((mark modified read-only
@@ -62,10 +96,11 @@
 
 
 
-
 ;; Mask for X (inits are bg-agnostic colors)
 (defvar fg-color-fg-core)
 (defvar fg-color-bg-core)
+(defvar fg-color-bg-hl)
+(defvar fg-color-fg-modeline "firebrick")
 (defvar fg-color-spell-dupe "Gold3")
 (defvar fg-color-spell-err "OrangeRed")
 (defvar fg-color-irrelevant "medium sea green")
@@ -94,12 +129,21 @@
 		;; FlySpell
 		`(flyspell-duplicate ((t (:foreground ,fg-color-spell-dupe :underline t :weight normal))))
 		`(flyspell-incorrect ((t (:foreground ,fg-color-spell-err :underline t :weight normal))))
+		;; Vline
+		`(vline ((t (:background ,fg-color-bg-hl))))
+		`(vline-visual ((t (:background ,fg-color-bg-hl))))
 		;; Jabber
 		`(jabber-title-large ((t (:weight bold :height 1.5))))
 		`(jabber-title-medium ((t (:weight bold :height 1.2))))
 		`(jabber-roster-user-online ((t (:foreground ,fg-color-fg-core :slant normal :weight bold))))
 		`(jabber-roster-user-away ((t (:foreground ,fg-color-irrelevant :slant italic :weight normal))))
 		`(jabber-roster-user-xa ((t (:foreground ,fg-color-irrelevant-xtra :slant italic :weight normal))))
+		;; ERC
+		`(erc-timestamp-face ((t (:foreground ,fg-color-comment :weight normal))))
+		`(erc-keyword-face ((t (:foreground ,fg-color-kw :weight bold))))
+		`(erc-current-nick-face ((t (:foreground ,fg-color-kw :weight bold))))
+		`(erc-notice-face ((t (:foreground ,fg-color-fg-modeline))))
+		`(erc-prompt-face ((t (:foreground ,fg-color-fg-core :background nil))))
 		;; Defaults
 		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
 		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))
@@ -129,10 +173,13 @@
 	(interactive)
 	(let*
 		((fg-color-fg-core "#6ad468")
-		 (fg-color-bg-core "#101c10")
-		 (fg-color-key "MistyRose2")
-		 (fg-color-kw "springgreen")
-		 (fg-color-comment "SteelBlue1"))
+			(fg-color-bg-core "#101c10")
+			(fg-color-bg-hl "DarkGreen")
+			(fg-color-key "MistyRose2")
+			(fg-color-kw "springgreen")
+			(fg-color-type "SlateGrey")
+			(fg-color-fg-modeline "tomato")
+			(fg-color-comment "SteelBlue1"))
 		(fg-masq-x)))
 
 (defun fg-masq-x-light ()
@@ -140,9 +187,10 @@
 	(interactive)
 	(let*
 		((fg-color-fg-core "black")
-		 (fg-color-bg-core "white")
-		 (fg-color-func "saddle brown")
-		 (fg-color-var "IndianRed4"))
+			(fg-color-bg-core "white")
+			(fg-color-bg-hl "lavender blush")
+			(fg-color-func "saddle brown")
+			(fg-color-var "IndianRed4"))
 		(fg-masq-x)))
 
 (defun fg-masq-x-pitch ()
@@ -176,6 +224,13 @@
 	(set-background-color "black")
 	(set-face-foreground 'default "white")
 	(set-face-background 'default "black"))
+
+
+;; Lisp highlights
+(when
+	(require 'highlight-parentheses nil t)
+	(setq-default hl-paren-colors
+		'("red1" "OrangeRed1" "orange1" "DarkOrange1")))
 
 
 ;; Set masq depending on time-of-the-day
@@ -223,7 +278,8 @@ should be set before calling the `solar-sunrise-sunset'."
 		(setq show-trailing-whitespace t)
 		(when
 			(memq major-mode
-				'(term-mode jabber-roster-mode ibuffer-mode))
+				'(term-mode jabber-roster-mode ibuffer-mode
+					gnus-group-mode gnus-summary-mode))
 			(buffer-face-set 'fixed-pitch))))
 
 (add-hook 'find-file-hook 'fg-hook-set-lookz)

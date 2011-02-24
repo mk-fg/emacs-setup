@@ -1,4 +1,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Metacode stuff
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun fg-apply-partially-append (fun &rest args)
+	"Like `apply-partially', but appends arguments to a wrapped call."
+	(lexical-let ((fun fun) (args1 args))
+		(lambda (&rest args2) (apply fun (append args2 args1)))))
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Copy/Cut/Paste ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -52,16 +64,18 @@ Point is moved to the end of affected zone before the call."
 					(point))))))
 
 
-(defun fg-copy ()
+(defun fg-copy (&optional whole-lines-only)
 	"Push selected region or current line into ring-buffer."
 	(interactive)
 	(save-excursion
 		(let (deactivate-mark)
-			(if (use-region-p)
+			(if (and (use-region-p) (not whole-lines-only))
 				(fg-copy-region
 					(region-beginning)
 					(region-end))
-				(fg-taint :call 'fg-copy-region)))))
+				(fg-taint
+					:call 'fg-copy-region
+					:whole-lines-only whole-lines-only)))))
 
 
 (defun fg-copy-paragraph (&optional arg)
@@ -208,14 +222,18 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(goto-char (point-max)))))
 
 (defun fg-beginning-of-line ()
-  "Move point to first non-whitespace character or beginning-of-line."
+  "Move point to first non-whitespace character or beginning-of-line.
+Generic way to do this is via `back-to-indentation' or `beginning-of-line',
+but special checks are in place for non-standard buffers like SLIME or ERC,
+which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 	(interactive "^")
-	(if (eq major-mode 'slime-repl-mode)
-		(slime-repl-bol)
-		(let ((oldpos (point)))
+	(case major-mode
+		('slime-repl-mode (slime-repl-bol))
+		('erc-mode (erc-bol))
+		(t (let ((oldpos (point)))
 			(back-to-indentation)
 			(and (= oldpos (point))
-				(beginning-of-line)))))
+				(beginning-of-line))))))
 
 (defun fg-point-to-reg (arg)
 	(interactive "^p")
@@ -234,10 +252,11 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun fg-wtf ()
-	"Find whatever I'm pointing at."
+	"Find info on whatever I'm pointing at."
 	(interactive)
+	(when (eq major-mode 'help-mode) (view-mode-exit))
 	(cond
-		((null (eq (variable-at-point) 0))
+		((not (eq (variable-at-point) 0))
 			(describe-variable (variable-at-point)))
 		((function-called-at-point)
 			(describe-function (function-called-at-point)))
@@ -261,6 +280,73 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(find-file (cdr (assoc-string fname tocpl))))))
 
 
+;; These are to check if X window is active, result is cached since shell-call
+;;  is blocking and will disrupt emacs activity on frequent invocation
+(defvar fg-xactive-check-interval 60)
+(defvar fg-xactive-check-time (float-time))
+(defvar fg-xactive-check-result nil)
+
+(defun fg-xactive-check (&optional force)
+	(let ((time (float-time)))
+		(when
+			(or force (> time
+				(+ fg-xactive-check-time fg-xactive-check-interval)))
+			(setq fg-xactive-check-result
+				(and
+					(eq window-system 'x)
+					(=
+						(string-to-number
+							(shell-command-to-string
+								"exec xdotool getactivewindow getwindowpid"))
+						(emacs-pid)))
+				fg-xactive-check-time time))
+		fg-xactive-check-result))
+
+(defun fg-idle-time ()
+	(if (eq window-system 'x)
+		(string-to-number (shell-command-to-string "exec xprintidle")) 0))
+
+(defun fg-pixmap-path (name)
+	(block :loop
+		(dolist
+			(path
+				(list (concat fg-path "/pixmaps/" name)
+					(concat fg-path "/" name)
+					(concat (expand-file-name "~/.pixmaps/") name)
+					name)
+				name)
+			(progn
+				(when (file-exists-p (concat path ".png"))
+					(return-from :loop (concat path ".png")))
+				(when (file-exists-p path)
+					(return-from :loop path))))))
+
+
+(defvar fg-notify-never-escape nil
+	"Never escape html entities in notification functions")
+
+(defun* fg-notify
+	(header message &key pixmap urgency strip dont-escape)
+	"Send desktop notification about event.
+PIXMAP specifies an icon to use.
+URGENCY can be set to 'low or 'critical.
+STRIP can be specified to trim whitespace chars from text.
+DONT-ESCAPE inhibits escaping html entities in messages."
+	(let ((cli (list "notify-send")))
+		(when urgency
+			(nconc cli (list "-u" (symbol-name urgency))))
+		(when pixmap
+			(nconc cli (list "-i" (fg-pixmap-path pixmap))))
+		(when strip
+			(setq header (fg-string-strip-whitespace header))
+			(setq message (fg-string-strip-whitespace message)))
+		(unless (or dont-escape fg-notify-never-escape)
+			(setq header (fg-string-escape-html header))
+			(setq message (fg-string-escape-html message)))
+		(nconc cli (list header message))
+		(apply 'start-process "Notification" nil cli)))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Indentation descrimination (tab-only) stuff
@@ -282,8 +368,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 
 ;; hippie expand for slime
 (defun he-slime-symbol-beg ()
-	(let ((p (slime-symbol-start-pos)))
-		 p))
+	(let ((p (slime-symbol-start-pos))) p))
 
 (defun try-expand-slime-symbol (old)
 	(condition-case ex
@@ -308,11 +393,11 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 
 (defun fg-tab (arg)
 	"Needs `transient-mark-mode' to be on. This smart tab is
-	minibuffer compliant: it acts as usual in the minibuffer.
+minibuffer compliant: it acts as usual in the minibuffer.
 
-	In all other buffers: if ARG is \\[universal-argument], calls
-	`smart-indent'. Else if point is at the end of a symbol,
-	expands it. Else calls `smart-indent'."
+In all other buffers: if ARG is \\[universal-argument], calls
+`smart-indent'. Else if point is at the end of a symbol,
+expands it. Else calls `smart-indent'."
 	(interactive "p")
 	(labels
 		((fg-tab-must-expand (&optional arg)
@@ -400,4 +485,34 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 		(when (markerp start-m)
 			(deactivate-mark)
 			(goto-char (marker-position start-m)))))
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Processing / conversion / data mangling
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun fg-string-replace-pairs (string pairs)
+	"Replace regex-replacement pairs in string."
+	(mapc
+		(lambda (arg)
+			(setq string (replace-regexp-in-string (car arg) (cadr arg) string)))
+		pairs)
+	string)
+
+(defun fg-string-escape-html (string)
+	"Encode html entities in STRING, returning \"escaped\" version."
+	(fg-string-replace-pairs string
+		'(("&" "&amp;")
+			("<" "&lt;")
+			(">" "&gt;"))))
+
+(defun fg-string-strip-whitespace (string)
+	"Remove whitespace characters from STRING margins, returns the resulting string."
+	(replace-regexp-in-string "\\(^[[:space:]\n]+\\|[[:space:]\n]+$\\)" "" string))
+
+(defun fg-product (list1 list2)
+	"Return a list of the Cartesian product of two lists."
+	(mapcan (lambda (x) (mapcar (lambda (y) (list x y)) list2)) list1))
 
