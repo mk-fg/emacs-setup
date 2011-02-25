@@ -120,6 +120,11 @@
 	desktop-load-locked-desktop t ; bogus check
 	desktop-save t)
 
+;; Obligatory timer to save desktop every now and then - crashes do happen
+(defvar fg-desktop-autosave-timer
+	(run-at-time t 600 'desktop-save-in-desktop-dir) ;; 10 min
+	"Repetitive timer calling `desktop-save-in-desktop-dir'.")
+
 ;; Default behavior tweaks / modes
 (fset 'yes-or-no-p 'y-or-n-p) ; use y or n instead of yes or no
 
