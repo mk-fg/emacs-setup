@@ -20,24 +20,3 @@ See `epa-select-keys-interactive' for the description of other parameters."
 	(if (or static epa-select-keys-inhibit)
 		(epg-list-keys context epa-file-encrypt-to secret)
 		(epa-select-keys-interactive context prompt names secret)))
-
-
-(defvar fg-stack-buffer nil
-	"Buffer with fg-stack opened")
-(defvar fg-stack-return-point nil
-	"Buffer to return to if fg-stack is already active")
-
-(defun fg-stack-buffer (&optional one-way)
-	"Switch to fg-stack buffer and back"
-	(interactive)
-	(if
-		(or one-way
-			(not fg-stack-return-point)
-			(not (eq fg-stack-buffer (current-buffer))))
-		(progn
-			(setq fg-stack-return-point (current-buffer))
-			(find-file "~/media/secure/stack.gpg")
-			(setq fg-stack-buffer (current-buffer)))
-		(bury-buffer)
-		(switch-to-buffer fg-stack-return-point)
-		(setq fg-stack-return-point nil)))

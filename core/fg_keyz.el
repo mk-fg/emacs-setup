@@ -323,6 +323,13 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "\"") . insert-pair))
 	:group 'fg-scite)
 
+(define-minor-mode fg-scite-stack
+	"Special mode for editing stack-buffer."
+	:init-value nil
+	:lighter "/s"
+	:keymap `((,(key "<return>") . fg-newline-stack))
+	:group 'fg-scite)
+
 
 
 (define-minor-mode fg-scite-emms

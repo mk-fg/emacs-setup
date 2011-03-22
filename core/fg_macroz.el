@@ -467,7 +467,7 @@ If CHECK-EOL is set and line is just indent zone, it'll be blanked."
 (defun fg-newline ()
 	"Mode-safe version of newline-and-indent.
 Used to call indent-according-to-mode, but it fucked up way too often."
-  (interactive)
+	(interactive)
 	(let ((indent (unless (or buffer-read-only (minibufferp)) (current-indentation))))
 		(when indent (delete-horizontal-space t))
 		(newline)

@@ -35,6 +35,7 @@
 ;; Basic / custom includes
 (load-library "fg_lisp") ; core language tweaks, should be first
 (load-library "fg_macroz")
+(load-library "fg_stack")
 (load-library "fg_lookz")
 (load-library "fg_sec")
 
