@@ -16,13 +16,13 @@ preceding to TIME and insert note if it isn't."
 		(when err
 			(insert (concat " -- " (propertize
 				"note: time continuity seem to be broken"
-				'font-lock-face 'bold))))))
+				'font-lock-face 'bold)  " --")))))
 
 (defun fg-newline-stack ()
 	(interactive)
 	(lexical-let
 		((sleep-match
-			(string-match "^\\([^\\s-].*\\)?sleep"
+			(string-match "^\\([^[:space:]].*\\)?sleep"
 				(buffer-substring (line-beginning-position) (point)))))
 		(fg-newline)
 		(when sleep-match
