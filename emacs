@@ -159,7 +159,8 @@
 (delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
 (nconc auto-mode-alist
 	'((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'" . sh-mode)
-		("\\.jl\\'" . lisp-mode) ("\\.rkt\\'" . scheme-mode) ("\\.vol\\'" . conf-mode)))
+		("\\.jl\\'" . lisp-mode) ("\\.yaml\\'" . yaml-mode)
+		("\\.rkt\\'" . scheme-mode) ("\\.vol\\'" . conf-mode)))
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
 ;;  retarded  way to expand this list is "!" on confirm and fishing them from custom

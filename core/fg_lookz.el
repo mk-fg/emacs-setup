@@ -49,9 +49,11 @@
 ;; Tab indentation guides
 (aset standard-display-table ?\t (vconcat "˙ "))
 
-;; Color code highlighting mode
+;; Local modes
 (autoload 'rainbow-mode
 	"rainbow-mode" "Color code highlighting mode" t)
+(autoload 'yaml-mode
+	"yaml-mode" "Mode for editing YAML files" t)
 
 ;; Crosshair highlighting modes
 ;; (load-library-safe "column-marker")
