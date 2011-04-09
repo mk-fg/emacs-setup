@@ -146,6 +146,11 @@
 		`(erc-current-nick-face ((t (:foreground ,fg-color-kw :weight bold))))
 		`(erc-notice-face ((t (:foreground ,fg-color-fg-modeline))))
 		`(erc-prompt-face ((t (:foreground ,fg-color-fg-core :background nil))))
+		;; Newsticker
+		`(newsticker-treeview-face ((t (:foreground ,fg-color-fg-core))))
+		`(newsticker-treeview-immortal-face
+			((t (:inherit newsticker-treeview-face :slant italic :weight bold))))
+		`(newsticker-treeview-selection-face ((t (:background ,fg-color-bg-hl))))
 		;; Defaults
 		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
 		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))

@@ -40,7 +40,6 @@
 (load-library "fg_sec")
 
 ; External and non-critical
-;; (load-library "fg_shell")
 (autoload 'multi-term "fg_shell" nil t)
 (dolist
 	(sym '(fg-jabber-activity-reset jabber-activity-switch-to
@@ -60,7 +59,8 @@
 (autoload 'gnus "fg_gnus" nil t)
 (autoload 'w3m-region "fg_w3m" nil t)
 (dolist
-	(sym '(newsticker-start newsticker-show-news))
+	(sym '(fg-feeds newsticker-start
+		newsticker-start-ticker newsticker-show-news))
 	(autoload sym "fg_newsticker" nil t))
 
 ;; Compositing stuff
@@ -135,6 +135,7 @@
 (recentf-mode t) ; TODO: bind keys to use it
 
 (setq-default
+	message-log-max 1000 ; *Messages* scrollback
 	next-line-add-newlines nil ; don't move past eof
 	x-select-enable-clipboard t ; shared clipboard should always be enabled
 	compare-windows-sync t ; advance point in both buffers on comparison
