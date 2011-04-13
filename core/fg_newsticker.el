@@ -41,8 +41,11 @@
 (defun fg-feeds ()
 	(interactive)
 	(if (newsticker-running-p)
-		(if (window-live-p (newsticker--treeview-list-window))
-			(newsticker-treeview-quit) (newsticker-show-news))
+		(let ((win (newsticker--treeview-list-window))) ; return current window if there's none
+			(if
+				(and (window-live-p win)
+					(string-match "Newsticker" (buffer-name (window-buffer win))))
+				(newsticker-treeview-quit) (newsticker-show-news)))
 		(newsticker-start)
 		(newsticker-start-ticker)))
 
