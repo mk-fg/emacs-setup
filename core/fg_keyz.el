@@ -133,8 +133,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "s-/") . fg-emms-notify)
 		(,(key "s-?") . emms-playlist-save)
 		(,(key "C-s-?") . emms-playlist-mode-clear)
-		(,(key "M-s-;") . emms-seek-forward)
-		(,(key "M-s-'") . emms-seek-backward)
+		(,(key "M-s-;") . emms-seek-backward)
+		(,(key "M-s-'") . emms-seek-forward)
 		(,(key "<XF86AudioPlay>") . emms-pause)
 
 		;; -- Notification controls --
