@@ -73,6 +73,18 @@
 	(set-window-point (newsticker--treeview-list-window) 0))
 
 
+;; Advice replaces frame-width function, just for newsticker--display-scroll
+;;  invocation with a custom one - frame-width-static, leaving the old def backed-up
+;; Intended usage is frame with variable-pitch font, where width can't be set reliably
+(defun frame-width-custom (&optional frame) (round (frame-width-real) 1.11))
+(fset 'frame-width-real (symbol-function 'frame-width))
+(defadvice newsticker--display-scroll
+	(around fg-newsticker--display-scroll activate)
+	(fset 'frame-width (symbol-function 'frame-width-custom))
+	ad-do-it
+	(fset 'frame-width (symbol-function 'frame-width-real)))
+
+
 ;; TODO: bind/find a key to toggle this
 ;; newsticker-hide-old-items-in-newsticker-buffer t
 ;; TODO: bind/find a key
