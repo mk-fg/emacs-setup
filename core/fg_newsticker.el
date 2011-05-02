@@ -39,15 +39,25 @@
 
 
 (defun fg-feeds ()
+	"Start newsticker feed fetching and ticker or
+activate newsticker layout (and reset ticker) if it's already started."
 	(interactive)
 	(if (newsticker-running-p)
 		(let ((win (newsticker--treeview-list-window))) ; return current window if there's none
 			(if
 				(and (window-live-p win)
 					(string-match "Newsticker" (buffer-name (window-buffer win))))
-				(newsticker-treeview-quit) (newsticker-show-news)))
+				(newsticker-treeview-quit)
+				(newsticker-show-news)
+				(newsticker--ticker-text-setup))) ; reset ticker, since news are displayed already
 		(newsticker-start)
 		(newsticker-start-ticker)))
+
+
+;; (defun fg-feeds-read ()
+;; 	"Mark all the stuff in newsticker as read (TODO!), reset ticker."
+;; 	(interactive)
+;; 	(newsticker--ticker-text-setup))
 
 
 ;; Doesn't work: every item seem to be considered "new",
