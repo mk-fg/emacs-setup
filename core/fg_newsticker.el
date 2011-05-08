@@ -47,9 +47,10 @@ activate newsticker layout (and reset ticker) if it's already started."
 			(if
 				(and (window-live-p win)
 					(string-match "Newsticker" (buffer-name (window-buffer win))))
-				(newsticker-treeview-quit)
-				(newsticker-show-news)
-				(newsticker--ticker-text-setup))) ; reset ticker, since news are displayed already
+				(progn
+					(newsticker-treeview-quit)
+					(newsticker--ticker-text-setup)) ; reset ticker, since news are displayed already
+				(newsticker-show-news)))
 		(newsticker-start)
 		(newsticker-start-ticker)))
 
