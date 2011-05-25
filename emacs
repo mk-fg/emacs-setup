@@ -18,10 +18,12 @@
 
 
 ;; Auth data
-(save-excursion
-	(find-file (concat fg-path "/auth.el.gpg"))
-	(eval-buffer)
-	(kill-buffer))
+(condition-case err
+	(save-excursion
+		(find-file (concat fg-path "/auth.el.gpg"))
+		(eval-buffer)
+		(kill-buffer))
+	(file-error))
 
 
 ;; Temp/spool path init
