@@ -465,6 +465,11 @@ If point is on a group name, this function operates on that group."
 	'("js" "perl-mode"))
 
 
+;; -- PHP mode-specific actions
+(eval-after-load "php-mode" '(progn
+	(define-key php-mode-map (key "C-'") 'fg-php-tag-line)))
+
+
 ;; -- PgUp/PgDown in docview --
 (eval-after-load "doc-view" '(progn
 	(define-key doc-view-mode-map (kbd "=") 'doc-view-enlarge) ; holding shift is a pain! ;)
