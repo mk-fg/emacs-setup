@@ -221,7 +221,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 		(let (deactivate-mark)
 			(goto-char (point-max)))))
 
-(defun fg-beginning-of-line ()
+(defun fg-beginning-of-line (&optional force-to-indent)
   "Move point to first non-whitespace character or beginning-of-line.
 Generic way to do this is via `back-to-indentation' or `beginning-of-line',
 but special checks are in place for non-standard buffers like SLIME or ERC,
@@ -232,15 +232,26 @@ which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 		('erc-mode (erc-bol))
 		(t (let ((oldpos (point)))
 			(back-to-indentation)
-			(and (= oldpos (point))
+			(when
+				(and
+					(= oldpos (point))
+					(not force-to-indent))
 				(beginning-of-line))))))
 
+(defun fg-end-of-line ()
+	"Move point to the last non-whitespace character in line or bol."
+	(interactive)
+	(end-of-line)
+	(skip-syntax-backward " " (line-beginning-position)))
+
 (defun fg-point-to-reg (arg)
+	"Store current buffer `point' position to register, announcing register id."
 	(interactive "^p")
 	(message "Set register %d" arg)
 	(point-to-register arg))
 
 (defun fg-point-from-reg (arg)
+	"Restore current buffer `point' position from register, announcing register id."
 	(interactive "^p")
 	(message "Restored from register %d" arg)
 	(jump-to-register arg))
