@@ -8,4 +8,6 @@
 			'("embed/style.scss" "embed/route_details.coffee" "route_web.php"))
 		(start-process "fg-push" "fg-push" "/home/fraggod/bin/fgpush")))
 
+
 (add-hook 'after-save-hook 'fg-hook-autopush)
+(remove-hook 'after-save-hook 'fg-hook-autopush)
