@@ -70,6 +70,8 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("C-M-/" fg-masq-x-light)
 		("C-M-'" fg-masq-x-dark)
 		("C-M-]" fg-masq-x-pitch)
+	;; Encoding arg
+		("C-M-[" universal-coding-system-argument)
 	;; Stack-buffer hop
 		("C-<return>" fg-stack-buffer)))
 
