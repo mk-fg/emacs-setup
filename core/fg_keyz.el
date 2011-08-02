@@ -2,25 +2,10 @@
 ;; TODO: customize by-word jumps to stop at newlines, punctuation (aka SciTE)
 ;; TODO: add some-keyz + num for discrete buffer switching (Alt+NUM Alt+B)
 
-;; Key translation table and wrappers
-(defvar fg-dict-keys
-	'(("M-<up>" . "\M-[1;3A")
-		("M-<down>" . "\M-[1;3B")
-		("M-<right>" . "\M-[1;3C")
-		("M-<left>" . "\M-[1;3D")
-		("C-<return>" . "\C-j")
-		("C-<delete>" . "\M-[3;5~")
-		("C-<up>" . "\M-[1;5A")
-		("C-<down>" . "\M-[1;5B")
-		("C-<right>" . "\M-[1;5C")
-		("C-<left>" . "\M-[1;5D"))
-	"An alist of pretty key strings, and their terminal equivalents.")
-
 (defun key (desc)
-	"Return env-dependant (X / term) key sequence."
-	(or (and window-system (read-kbd-macro desc))
-		(or (cdr (assoc desc fg-dict-keys))
-			(read-kbd-macro desc))))
+	"Return env-dependant (X / term) key sequence.
+Obsolete functionality, since keys in newer emacs translate fine in all kinds of terminals."
+	(read-kbd-macro desc))
 
 (defun transient-wrap (func &optional mode)
 	"Execute FUNC w/o deactivating mark.
@@ -61,7 +46,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 (global-set-keys
 	;; Mode setting globals
-	'(("M-/" fg-scite-code)
+	`(("M-/" fg-scite-code)
 		("M-?" fg-scite-lisp)
 		("M-'" fg-scite-aux)
 		("M-]" fg-scite-core)
@@ -70,8 +55,11 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("C-M-/" fg-masq-x-light)
 		("C-M-'" fg-masq-x-dark)
 		("C-M-]" fg-masq-x-pitch)
-	;; Encoding arg
+	;; Encoding stuff
 		("C-M-[" universal-coding-system-argument)
+		("C-M-p" ,(iwrap 'fg-revert-buffer-to-enc ''koi8-r)) ; TODO: should've made iwrap a macro
+		("C-M-S-p" ,(iwrap 'fg-revert-buffer-to-enc ''cp1251))
+		("M-p" ,(iwrap 'fg-revert-buffer-to-enc ''undecided)) ; safe bet
 	;; Stack-buffer hop
 		("C-<return>" fg-stack-buffer)))
 

@@ -5,6 +5,12 @@
 (set-selection-coding-system 'utf-8)
 (prefer-coding-system 'utf-8)
 
+(defun fg-revert-buffer-to-enc (enc)
+	(let
+		((coding-system-for-read enc)
+			(coding-system-for-write enc))
+		(revert-buffer t t)))
+
 ;; Font
 ;; Note: I always use variable-pitch font for code buffers
 (when window-system
