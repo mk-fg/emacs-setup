@@ -64,6 +64,8 @@
 	(sym '(fg-feeds newsticker-start
 		newsticker-start-ticker newsticker-show-news))
 	(autoload sym "fg_newsticker" nil t))
+(dolist (sym '(ediff edirs))
+	(autoload sym "fg_diff" nil t))
 
 ;; Compositing stuff
 (load-library "fg_style")
