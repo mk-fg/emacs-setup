@@ -1,8 +1,5 @@
 ;; Encoding
 (set-default-coding-systems 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(set-selection-coding-system 'utf-8)
 (prefer-coding-system 'utf-8)
 
 (defun fg-revert-buffer-to-enc (enc)
@@ -51,7 +48,7 @@
 
 ;; Rodent banishment (if any)
 (when (and (display-mouse-p) (require 'avoid))
-  (mouse-avoidance-mode 'animate))
+	(mouse-avoidance-mode 'exile))
 
 ;; Character display tweaks
 (or standard-display-table (setq standard-display-table (make-display-table)))
