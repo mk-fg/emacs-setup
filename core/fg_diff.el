@@ -5,4 +5,4 @@
 
 ;; This one always seem to mark my current frame as "unsuitable",
 ;;  while it always is, and it's the only one I really need
-(defun ediff-skip-unsuitable-frames (&optional ok-unsplittable) t)
+(defadvice ediff-skip-unsuitable-frames (around fg-ediff-skip-unsuitable-frames activate) t)
