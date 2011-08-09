@@ -8,6 +8,9 @@
 			(coding-system-for-write enc))
 		(revert-buffer t t)))
 
+(defadvice select-safe-coding-system-interactively
+	(around fg-select-safe-coding-system-interactively activate) 'raw-text)
+
 ;; Font
 ;; Note: I always use variable-pitch font for code buffers
 (when window-system
