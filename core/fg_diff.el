@@ -1,5 +1,5 @@
 (setq-default
-	ediff-diff-options "-a"
+	ediff-diff-program "ediff-prog"
 	ediff-split-window-function 'split-window-horizontally
 	ediff-use-long-help-message t)
 
