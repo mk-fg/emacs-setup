@@ -254,7 +254,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-<mouse-1>") . ffap-at-mouse)
 
 		;; Lookz
-		(,(key "M-w") . ,(iwrap '(setq truncate-lines (not truncate-lines))))
+		(,(key "M-w") . ,(lambda () (interactive) (setq truncate-lines (not truncate-lines))))
 
 		;; Metacode ops (emacs stuff)
 		(,(key "C-j") . eval-last-sexp) ; > minibuffer
