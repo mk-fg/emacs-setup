@@ -245,8 +245,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; Skimming ops
 		(,(key "<f3>") . isearch-repeat-forward)
 		(,(key "C-s") . isearch-forward)
+		(,(key "C-s-s") . isearch-forward-regexp)
 		(,(key "C-S-s") . query-replace)
-		(,(key "C-M-s") . replace-regexp)
+		(,(key "C-M-s") . query-replace-regexp)
 
 		;; Metabuffer stuff
 		(,(key "C-=") . compare-windows)
@@ -447,12 +448,14 @@ If point is on a group name, this function operates on that group."
 
 
 ;; -- JS/Perl mode "special" parenthesis removal --
-(mapc (lambda (lang)
-	(eval-after-load lang '(progn
-		(mapc
-			(lambda (key) (define-key js-mode-map key nil))
-			'("{" "}" "(" ")" ":" ";" ",")))))
-	'("js" "perl-mode"))
+(eval-after-load "js" '(progn
+	(mapc
+		(lambda (key) (define-key js-mode-map key nil))
+		'("{" "}" "(" ")" ":" ";" ","))))
+(eval-after-load "perl" '(progn
+	(mapc
+		(lambda (key) (define-key perl-mode-map key nil))
+		'("{" "}" "(" ")" ":" ";" ","))))
 
 
 ;; -- PHP mode-specific actions
