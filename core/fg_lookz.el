@@ -65,6 +65,8 @@
 	"rainbow-mode" "Color code highlighting mode" t)
 (autoload 'yaml-mode
 	"yaml-mode" "Mode for editing YAML files" t)
+(autoload 'go-mode
+	"go-mode" "Mode for editing Go sources" t)
 
 ;; Crosshair highlighting modes
 ;; (load-library-safe "column-marker")
