@@ -447,15 +447,18 @@ If point is on a group name, this function operates on that group."
 	(define-key goto-address-highlight-keymap (kbd "C-c") nil)))
 
 
-;; -- JS/Perl mode "special" parenthesis removal --
-(eval-after-load "js" '(progn
-	(mapc
-		(lambda (key) (define-key js-mode-map key nil))
-		'("{" "}" "(" ")" ":" ";" ","))))
-(eval-after-load "perl" '(progn
-	(mapc
-		(lambda (key) (define-key perl-mode-map key nil))
-		'("{" "}" "(" ")" ":" ";" ","))))
+;; -- JS/Perl/Go mode "special" parenthesis removal --
+(mapc
+	(lambda (vars)
+		(apply
+			(lambda (file map keys)
+				(eval-after-load file `(progn
+					(mapc
+						(lambda (key) (define-key ,map key nil)) ,keys))))
+			vars))
+	'(("js" js-mode-map '("{" "}" "(" ")" ":" ";" ","))
+		("perl" perl-mode-map '("{" "}" "(" ")" ":" ";" ","))
+		("go-mode" go-mode-map '("}" ")" ":"))))
 
 
 ;; -- PHP mode-specific actions
