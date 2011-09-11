@@ -458,7 +458,7 @@ If point is on a group name, this function operates on that group."
 			vars))
 	'(("js" js-mode-map '("{" "}" "(" ")" ":" ";" ","))
 		("perl" perl-mode-map '("{" "}" "(" ")" ":" ";" ","))
-		("go-mode" go-mode-map '("}" ")" ":"))))
+		("go-mode" go-mode-map '("}" ")" ":" "="))))
 
 
 ;; -- PHP mode-specific actions
