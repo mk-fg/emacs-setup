@@ -69,9 +69,10 @@
 (autoload 'go-mode
 	"go-mode" "Mode for editing Go sources" t)
 
-(autoload 'lambda-mode
-	"lambda-mode" "Minor mode to display 'lambda' as a greek letter" t)
-(add-hook 'python-mode-hook #'(lambda () (lambda-mode t)))
+;; Nice, but crashes current emacs (24.0.50.1)
+;; (autoload 'lambda-mode
+;; 	"lambda-mode" "Minor mode to display 'lambda' as a greek letter" t)
+;; (add-hook 'python-mode-hook #'(lambda () (lambda-mode t)))
 
 
 ;; Crosshair highlighting modes
