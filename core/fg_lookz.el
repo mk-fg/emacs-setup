@@ -60,6 +60,7 @@
 ;; Tab indentation guides
 (aset standard-display-table ?\t (vconcat "˙ "))
 
+
 ;; Local modes
 (autoload 'rainbow-mode
 	"rainbow-mode" "Color code highlighting mode" t)
@@ -67,6 +68,11 @@
 	"yaml-mode" "Mode for editing YAML files" t)
 (autoload 'go-mode
 	"go-mode" "Mode for editing Go sources" t)
+
+(autoload 'lambda-mode
+	"lambda-mode" "Minor mode to display 'lambda' as a greek letter" t)
+(add-hook 'python-mode-hook #'(lambda () (lambda-mode t)))
+
 
 ;; Crosshair highlighting modes
 ;; (load-library-safe "column-marker")
