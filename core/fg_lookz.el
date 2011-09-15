@@ -69,6 +69,10 @@
 (autoload 'go-mode
 	"go-mode" "Mode for editing Go sources" t)
 
+(autoload 'develock-mode
+	"develock-py" "Extraordinary level highlighting for the python-mode" t)
+(add-hook 'python-mode-hook #'(lambda () (develock-mode t)))
+
 ;; Nice, but crashes current emacs (24.0.50.1)
 ;; (autoload 'lambda-mode
 ;; 	"lambda-mode" "Minor mode to display 'lambda' as a greek letter" t)
