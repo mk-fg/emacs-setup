@@ -62,16 +62,13 @@
 
 
 ;; Local modes
+(load-library-safe "develock-py")
 (autoload 'rainbow-mode
 	"rainbow-mode" "Color code highlighting mode" t)
 (autoload 'yaml-mode
 	"yaml-mode" "Mode for editing YAML files" t)
 (autoload 'go-mode
 	"go-mode" "Mode for editing Go sources" t)
-
-(autoload 'develock-mode
-	"develock-py" "Extraordinary level highlighting for the python-mode" t)
-(add-hook 'python-mode-hook #'(lambda () (develock-mode t)))
 
 ;; Nice, but crashes current emacs (24.0.50.1)
 ;; (autoload 'lambda-mode

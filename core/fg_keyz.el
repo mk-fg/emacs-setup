@@ -491,14 +491,14 @@ If point is on a group name, this function operates on that group."
 
 ;; -- Auto mode-switching --
 (defun fg-hook-set-mode ()
-	"Turn fg-scite-* minor modes, depending on major."
+	"Turn fg-scite-* (and various cosmetic) minor modes, depending on major."
 	;; (message "%s, %s, %s" major-mode buffer-file-name (buffer-name))
 	(if buffer-file-name ; nil for system buffers and terminals
 		(cond
 			((eq major-mode 'lisp-mode)
 				(fg-scite-lisp t))
 			((eq major-mode 'doc-view-mode) t) ; it has specific bindings
-			(t (fg-scite-code t))) ; if it's a file, then it's at least code
+			(t (fg-scite-code t) (subword-mode t))) ; if it's a file, then it's at least code
 		(cond
 			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
