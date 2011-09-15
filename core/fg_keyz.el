@@ -44,6 +44,13 @@ Not all modes are handled correctly (tested w/ p and r only)."
 	(autoload sym "wcy-swbuff" nil t)) ; buffer cycling thru minibuff
 
 
+;; Key-related settings
+;; subword-mode doesn't seem to work with transient mark, can probably be fixed
+;; (setq-default global-subword-mode t)
+
+
+;;;; Actual bindings
+
 (global-set-keys
 	;; Mode setting globals
 	`(("M-/" fg-scite-code)
@@ -498,7 +505,7 @@ If point is on a group name, this function operates on that group."
 			((eq major-mode 'lisp-mode)
 				(fg-scite-lisp t))
 			((eq major-mode 'doc-view-mode) t) ; it has specific bindings
-			(t (fg-scite-code t) (subword-mode t))) ; if it's a file, then it's at least code
+			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond
 			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
