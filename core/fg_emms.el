@@ -51,6 +51,8 @@
 			(and
 				(emms-lastfm-scrobbler-allowed-track-type current-track)
 				(> emms-playing-time 60))
+			(unless (emms-track-get current-track 'info-playing-time)
+				(emms-track-set current-track 'info-playing-time emms-playing-time))
 			(emms-lastfm-scrobbler-make-async-submission-call current-track nil))))
 
 
@@ -100,7 +102,7 @@ split numeric prefix, strip file extension."
 				'(("_-_" " - ") ("-_+" ": ") ("_+" " ")))
 			 trackno)))
 
-(defun* fg-emms-track-info (track)
+(defun* fg-emms-track-info-fs (track)
 	"Set TRACK info from fg_core standard pathname.
 Examples:
 		/some/path/Artist/2000_Album_X/07_-_Some_Track_Name.mp3
@@ -127,17 +129,23 @@ Examples:
 					(sym '(info-artist info-album info-title info-tracknumber) track)
 					(emms-track-set track sym (eval sym)))))))
 
-(defun fg-emms-info-track-description (track)
+(defun fg-emms-info-track-description (track &optional no-fallback)
 	"Return a description of TRACK."
-	(mapconcat
-		(apply-partially 'emms-track-get track)
-		'(info-artist info-album info-title) " :: "))
+	(let
+		((desc (mapconcat
+			(apply-partially 'emms-track-get track)
+			'(info-artist info-album info-title) " :: ")))
+		(if (and (not no-fallback) (string= desc " ::  :: "))
+			(progn ;; TODO: check why emms doesn't fetch info immediately, disable it
+				(fg-emms-track-info-fs track)
+				(fg-emms-info-track-description track t))
+			desc)))
 
 (setq-default
 	emms-track-description-function 'fg-emms-info-track-description
 	emms-track-initialize-functions '(emms-info-initialize-track)
 	emms-info-auto-update nil
-	emms-info-functions '(fg-emms-track-info))
+	emms-info-functions '(fg-emms-track-info-fs))
 
 ;; Here's proper info getter. Pity it's so crippled...
 ;; TODO: fix this, not all data gets assigned, check while loop
