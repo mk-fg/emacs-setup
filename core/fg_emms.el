@@ -21,7 +21,7 @@
 
 
 ;;;; Scrobbling
-;;
+
 ;; Auth is kinda complicated there:
 ;; 1. API key/secret_key from http://www.last.fm/api/authentication
 ;; 2. emms-lastfm-client-user-authorization, allow in browser
@@ -29,15 +29,29 @@
 ;;  will store tmp/emms/emms-lastfm-client-sessionkey
 ;;
 ;; "emms-lastfm-scrobbler-nowplaying-data: Track title and artist must be known."
-;;  might mean that track metadata wasn't extracted properly.
-;;
-(when (require 'emms-lastfm-client nil t)
+;;  might mean that track metadata wasn't extracted properly, it should be.
+
+(when
+	(and
+		(require 'emms-lastfm-client nil t)
+		(require 'emms-playing-time nil t))
 	(setq-default
 		emms-lastfm-client-username "FraGGod"
 		emms-lastfm-client-api-key fg-auth-emms-lastfm-client-api-key
-		emms-lastfm-client-api-secret-key fg-auth-emms-lastfm-client-api-secret-key
-		emms-lastfm-client-api-session-key )
+		emms-lastfm-client-api-secret-key fg-auth-emms-lastfm-client-api-secret-key)
+	(emms-playing-time 1)
 	(emms-lastfm-scrobbler-enable))
+
+;; Default hook requires info-playing-time to be known, and I don't store it in a filename
+;; Also it requires *enabling* emms-playing-time, which is kinda undocumented
+(defun emms-lastfm-scrobbler-stop-hook ()
+	"Submit the track to last.fm if it has been played for 60s."
+	(let ((current-track (emms-playlist-current-selected-track)))
+		(when
+			(and
+				(emms-lastfm-scrobbler-allowed-track-type current-track)
+				(> emms-playing-time 60))
+			(emms-lastfm-scrobbler-make-async-submission-call current-track nil))))
 
 
 
