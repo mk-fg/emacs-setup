@@ -51,6 +51,7 @@
 			(and
 				(emms-lastfm-scrobbler-allowed-track-type current-track)
 				(> emms-playing-time 60))
+			;; info-playing-time is mandatory for last.fm submissions
 			(unless (emms-track-get current-track 'info-playing-time)
 				(emms-track-set current-track 'info-playing-time emms-playing-time))
 			(emms-lastfm-scrobbler-make-async-submission-call current-track nil))))
