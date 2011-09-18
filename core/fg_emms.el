@@ -16,18 +16,28 @@
 	emms-source-playlist-default-format 'pls
 	emms-playlist-mode-center-when-go t
 
-	emms-track-description-function 'fg-emms-info-track-description
 	emms-show-format "NP: %s")
 
 
 
 ;;;; Scrobbling
-;; TODO: make scrobbler work, this module doesn't seem to have any obvious hooks for it
-;; (when (require 'emms-lastfm-client nil t)
-;; 	(setq-default
-;; 		emms-lastfm-client-username "FraGGod"
-;; 		emms-lastfm-client-api-key fg-auth-emms-lastfm-client-api-key
-;; 		emms-lastfm-client-api-secret-key fg-auth-emms-lastfm-client-api-secret-key))
+;;
+;; Auth is kinda complicated there:
+;; 1. API key/secret_key from http://www.last.fm/api/authentication
+;; 2. emms-lastfm-client-user-authorization, allow in browser
+;; 3. emms-lastfm-client-get-session,
+;;  will store tmp/emms/emms-lastfm-client-sessionkey
+;;
+;; "emms-lastfm-scrobbler-nowplaying-data: Track title and artist must be known."
+;;  might mean that track metadata wasn't extracted properly.
+;;
+(when (require 'emms-lastfm-client nil t)
+	(setq-default
+		emms-lastfm-client-username "FraGGod"
+		emms-lastfm-client-api-key fg-auth-emms-lastfm-client-api-key
+		emms-lastfm-client-api-secret-key fg-auth-emms-lastfm-client-api-secret-key
+		emms-lastfm-client-api-session-key )
+	(emms-lastfm-scrobbler-enable))
 
 
 
@@ -59,55 +69,69 @@ Uses basic `fg-copy' func internally, not emms-playlist stuff."
 
 
 
-;;;; Track info
+;;;; Track info / description
 (defun* fg-emms-file-track-wash-name (title &key strip-ext)
-	(dolist (sep '("_-_" "_"))
-		(let ((title-parts (split-string title sep t)))
-			(when (string-match-p "^[0-9]+$" (car title-parts))
-				(setq title (mapconcat 'identity (cdr title-parts) sep))
-				(return))))
-	(replace-regexp-in-string "_+" " "
-		(if strip-ext (replace-regexp-in-string "\\.[0-9a-zA-Z]+$" "" title) title)))
+	"Process underscore-encoded spaces in name,
+split numeric prefix, strip file extension."
+	(let
+		((trackno
+			(dolist (sep '("_-_" "_"))
+				(let ((title-parts (split-string title sep t)))
+					(when (string-match-p "^[0-9]+$" (car title-parts))
+						(setq title (mapconcat 'identity (cdr title-parts) sep))
+						(return (setq trackno (car title-parts))))))))
+		(values
+			(fg-string-replace-pairs
+				(if strip-ext (replace-regexp-in-string "\\.[0-9a-zA-Z]+$" "" title) title)
+				'(("_-_" " - ") ("-_+" ": ") ("_+" " ")))
+			 trackno)))
 
-(defun* fg-emms-file-track-description (track)
-	(let ((track (emms-track-name track)))
+(defun* fg-emms-track-info (track)
+	"Set TRACK info from fg_core standard pathname.
+Examples:
+		/some/path/Artist/2000_Album_X/07_-_Some_Track_Name.mp3
+		/some/path/Artist/2001_Album-_Aftercolon/01_Some_Track_Name.ogg
+		/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac"
+	(let ((name (emms-track-name track)))
 		(if
-			(not (string-prefix-p emms-source-file-default-directory track))
-			(car (last (split-string track "/")))
-			(setq track (split-string (substring track
+			(not (string-prefix-p emms-source-file-default-directory name))
+			(car (last (split-string name "/")))
+			(setq name (split-string (substring name
 				(length emms-source-file-default-directory)) "/" t))
-			(let
-				(album artist
-					(title (fg-emms-file-track-wash-name (car (last track)) :strip-ext t)))
-				(if (> (length track) 2)
+			(multiple-value-bind
+				(info-title info-tracknumber info-album info-artist)
+				(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
+				(if (> (length name) 2)
 					(setq
-						album
-							(fg-emms-file-track-wash-name (car (last track 2)))
-						artist (car (last track 3)))
-					(setq artist (car (last track 2))))
-				(setq artist (replace-regexp-in-string "_+" " " artist))
-				(mapconcat 'identity (list artist album title) " :: ")))))
+						info-album
+							(car (fg-emms-file-track-wash-name (car (last name 2))))
+						info-artist (car (last name 3)))
+					(setq info-artist (car (last name 2))))
+				(setq info-artist (replace-regexp-in-string "_+" " " info-artist))
+				;; Actually set the values
+				(dolist
+					(sym '(info-artist info-album info-title info-tracknumber) track)
+					(emms-track-set track sym (eval sym)))))))
 
 (defun fg-emms-info-track-description (track)
 	"Return a description of TRACK."
-	(let
-		((artist (emms-track-get track 'info-artist))
-			(title (emms-track-get track 'info-title)))
-		(cond
-			((and artist title) (concat artist " :: " title))
-			(title title)
-			(t (fg-emms-file-track-description track)))))
+	(mapconcat
+		(apply-partially 'emms-track-get track)
+		'(info-artist info-album info-title) " :: "))
 
-;; Here's true info. Pity it's so crippled...
+(setq-default
+	emms-track-description-function 'fg-emms-info-track-description
+	emms-track-initialize-functions '(emms-info-initialize-track)
+	emms-info-auto-update nil
+	emms-info-functions '(fg-emms-track-info))
+
+;; Here's proper info getter. Pity it's so crippled...
 ;; TODO: fix this, not all data gets assigned, check while loop
 ;; TODO: perfomance impact here is huge, prehaps "call-process" is not async at all?
 ;; TODO: synchronous crap, I should either make it async or drop it altogether
 ;; (when (require 'emms-info-libtag nil t)
 ;; 	(setq-default
 ;; 		;; TODO: VERY slow over NFS, gotta do something about it first
-;; 		;; emms-track-initialize-functions '(emms-info-initialize-track)
-;; 		emms-track-initialize-functions nil
-;; 		emms-info-auto-update nil
 ;; 		emms-info-functions '(emms-info-libtag)))
 
 
