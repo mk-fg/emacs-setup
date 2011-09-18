@@ -40,11 +40,20 @@
 		emms-lastfm-client-api-key fg-auth-emms-lastfm-client-api-key
 		emms-lastfm-client-api-secret-key fg-auth-emms-lastfm-client-api-secret-key)
 	(emms-playing-time 1)
-	(emms-lastfm-scrobbler-enable))
 
-;; Default hook requires info-playing-time to be known, and I don't store it in a filename
+	;; emms-lastfm-scrobbler-enable hooks scrobbling
+	;;  to emms-player-stopped-hook, which scrobbles the wrong track
+	(emms-lastfm-client-initialize-session)
+	(if (not emms-lastfm-scrobbler-submission-session-id)
+		(emms-lastfm-scrobbler-handshake))
+	(add-hook 'emms-player-started-hook
+		'emms-lastfm-scrobbler-start-hook t)
+	(add-hook 'emms-player-finished-hook
+		'fg-emms-lastfm-scrobbler-stop-hook))
+
+;; Default hook requires info-playing-time to be known, and it's hard to get w/o hangs
 ;; Also it requires *enabling* emms-playing-time, which is kinda undocumented
-(defun emms-lastfm-scrobbler-stop-hook ()
+(defun fg-emms-lastfm-scrobbler-stop-hook ()
 	"Submit the track to last.fm if it has been played for 60s."
 	(let ((current-track (emms-playlist-current-selected-track)))
 		(when
