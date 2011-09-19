@@ -488,7 +488,7 @@ If point is on a group name, this function operates on that group."
 			("<up>" previous-line) ("<down>" next-line)
 			("<left>" backward-char) ("<right>" forward-char)
 			("<tab>" w3m-next-anchor) ("<backtab>" w3m-previous-anchor)
-			("<prior>" fg-scroll-up) ("<next>" fg-scroll-down))))
+			("<prior>" fg-scroll-up) ("<next>" fg-scroll-down)))))
 
 ;; -- ERC submodes --
 (eval-after-load "erc-track" '(progn
