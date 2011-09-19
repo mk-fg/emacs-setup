@@ -482,8 +482,13 @@ If point is on a group name, this function operates on that group."
 
 ;; -- w3m keys --
 (eval-after-load "w3m" '(progn
-	(define-key w3m-mode-map (key "<M-return>") 'w3m-close-window)))
-
+	(define-keys w3m-mode-map
+		'(("C-c" nil)
+			("<M-return>" w3m-close-window)
+			("<up>" previous-line) ("<down>" next-line)
+			("<left>" backward-char) ("<right>" forward-char)
+			("<tab>" w3m-next-anchor) ("<backtab>" w3m-previous-anchor)
+			("<prior>" fg-scroll-up) ("<next>" fg-scroll-down))))
 
 ;; -- ERC submodes --
 (eval-after-load "erc-track" '(progn

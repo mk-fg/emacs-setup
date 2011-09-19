@@ -270,7 +270,11 @@ which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 		((and
 				(eq major-mode 'python-mode)
 				(functionp 'pylookup-lookup))
-			(pylookup-lookup (thing-at-point 'word)))
+			(pylookup-lookup
+				(if (use-region-p)
+					(buffer-substring
+						(region-beginning) (region-end))
+					(thing-at-point 'word))))
 		((not (eq (variable-at-point) 0))
 			(describe-variable (variable-at-point)))
 		((function-called-at-point)

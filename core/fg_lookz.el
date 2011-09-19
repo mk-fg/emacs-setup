@@ -174,6 +174,7 @@
 		`(newsticker-treeview-selection-face ((t (:background ,fg-color-bg-hl))))
 		;; Misc
 		`(yaml-tab-face ((t (:inherit default :background ,fg-color-bg-hl))))
+		`(w3m-current-anchor ((t (:inherit w3m-anchor :underline t))))
 		;; Defaults
 		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
 		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))
