@@ -60,11 +60,14 @@
 		'(erc-bol fg-erc fg-erc-track-reset erc-track-switch-buffer))
 	(autoload sym "fg_erc" nil t))
 (autoload 'gnus "fg_gnus" nil t)
-(autoload 'w3m-region "fg_w3m" nil t)
+(dolist
+	(sym '(w3m w3m-region w3m-goto-url w3m-browse-url))
+	(autoload sym "fg_w3m" nil t))
 (dolist
 	(sym '(fg-feeds newsticker-start
 		newsticker-start-ticker newsticker-show-news))
 	(autoload sym "fg_newsticker" nil t))
+(eval-after-load "python-mode" (load-library "fg_py"))
 
 ;; Compositing stuff
 (load-library "fg_style")

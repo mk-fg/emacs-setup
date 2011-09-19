@@ -468,7 +468,7 @@ If point is on a group name, this function operates on that group."
 		("go-mode" go-mode-map '("}" ")" ":" "="))))
 
 
-;; -- PHP mode-specific actions
+;; -- PHP mode-specific actions --
 (eval-after-load "php-mode" '(progn
 	(define-key php-mode-map (key "C-'") 'fg-php-tag-line)))
 
@@ -478,6 +478,11 @@ If point is on a group name, this function operates on that group."
 	(define-key doc-view-mode-map (kbd "=") 'doc-view-enlarge) ; holding shift is a pain! ;)
 	(define-key doc-view-mode-map (kbd "<next>") 'doc-view-next-page)
 	(define-key doc-view-mode-map (kbd "<prior>") 'doc-view-previous-page)))
+
+
+;; -- w3m keys --
+(eval-after-load "w3m" '(progn
+	(define-key w3m-mode-map (key "<M-return>") 'w3m-close-window)))
 
 
 ;; -- ERC submodes --

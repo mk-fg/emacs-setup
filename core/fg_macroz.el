@@ -267,6 +267,10 @@ which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 	(interactive)
 	(when (eq major-mode 'help-mode) (view-mode-exit))
 	(cond
+		((and
+				(eq major-mode 'python-mode)
+				(functionp 'pylookup-lookup))
+			(pylookup-lookup (thing-at-point 'word)))
 		((not (eq (variable-at-point) 0))
 			(describe-variable (variable-at-point)))
 		((function-called-at-point)
