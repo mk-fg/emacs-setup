@@ -122,7 +122,8 @@ split numeric prefix, strip file extension."
 Examples:
 		/some/path/Artist/2000_Album_X/07_-_Some_Track_Name.mp3
 		/some/path/Artist/2001_Album-_Aftercolon/01_Some_Track_Name.ogg
-		/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac"
+		/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac
+		/some/path/Artist/01_Some_Track_Name.ogg (no year in album part - no album info)"
 	(let ((name (emms-track-name track)))
 		(setq name
 			(split-string
@@ -133,17 +134,19 @@ Examples:
 				"/" t))
 		(unless (< (length name) 2)
 			(multiple-value-bind
-				(info-title info-tracknumber info-album info-artist)
+				(info-title info-tracknumber info-album info-year info-artist)
 				(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
-				(if (> (length name) 2)
-					(setq
-						info-album
-							(car (fg-emms-file-track-wash-name (car (last name 2))))
-						info-artist (car (last name 3)))
-					(setq info-artist (car (last name 2))))
-				(setq info-artist (replace-regexp-in-string "_+" " " info-artist))
-				;; Actually set the values
 				(when info-tracknumber
+					(if (<= (length name) 2)
+						(setq info-artist (car (last name 2)))
+						(multiple-value-setq
+							(info-album info-year)
+							(fg-emms-file-track-wash-name (car (last name 2))))
+						(if info-year
+							(setq info-artist (car (last name 3)))
+							(setq info-artist info-album info-album nil)))
+					(setq info-artist (replace-regexp-in-string "_+" " " info-artist))
+					;; Actually set the values
 					(dolist
 						(sym '(info-artist info-album info-title info-tracknumber) track)
 						(emms-track-set track sym (eval sym))))))))
