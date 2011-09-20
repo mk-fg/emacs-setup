@@ -30,6 +30,11 @@
 ;;
 ;; "emms-lastfm-scrobbler-nowplaying-data: Track title and artist must be known."
 ;;  might mean that track metadata wasn't extracted properly, it should be.
+;;
+;; disable (so it'd stop complaining):
+;;  (emms-lastfm-scrobbler-disable)
+;;  (remove-hook 'emms-player-finished-hook
+;;   'fg-emms-lastfm-scrobbler-stop-hook)
 
 (when
 	(and
@@ -119,11 +124,14 @@ Examples:
 		/some/path/Artist/2001_Album-_Aftercolon/01_Some_Track_Name.ogg
 		/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac"
 	(let ((name (emms-track-name track)))
-		(if
-			(not (string-prefix-p emms-source-file-default-directory name))
-			(car (last (split-string name "/")))
-			(setq name (split-string (substring name
-				(length emms-source-file-default-directory)) "/" t))
+		(setq name
+			(split-string
+				(if (not (string-prefix-p emms-source-file-default-directory name))
+					name
+					(substring name
+						(length emms-source-file-default-directory)))
+				"/" t))
+		(unless (< (length name) 2)
 			(multiple-value-bind
 				(info-title info-tracknumber info-album info-artist)
 				(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
@@ -135,9 +143,10 @@ Examples:
 					(setq info-artist (car (last name 2))))
 				(setq info-artist (replace-regexp-in-string "_+" " " info-artist))
 				;; Actually set the values
-				(dolist
-					(sym '(info-artist info-album info-title info-tracknumber) track)
-					(emms-track-set track sym (eval sym)))))))
+				(when info-tracknumber
+					(dolist
+						(sym '(info-artist info-album info-title info-tracknumber) track)
+						(emms-track-set track sym (eval sym))))))))
 
 (defun fg-emms-info-track-description (track &optional no-fallback)
 	"Return a description of TRACK."
@@ -145,8 +154,10 @@ Examples:
 		((desc (mapconcat
 			(apply-partially 'emms-track-get track)
 			'(info-artist info-album info-title) " :: ")))
-		(if (and (not no-fallback) (string= desc " ::  :: "))
-			(progn ;; TODO: check why emms doesn't fetch info immediately, disable it
+		(if (string= desc " ::  :: ")
+			(if no-fallback
+				(emms-track-name track)
+				;; TODO: check why emms doesn't fetch info immediately, disable it
 				(fg-emms-track-info-fs track)
 				(fg-emms-info-track-description track t))
 			desc)))
