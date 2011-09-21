@@ -1,9 +1,5 @@
+(load-library "fg_w3m") ;; see https://savannah.nongnu.org/bugs/index.php?34350
 (require 'newsticker)
-
-(autoload 'w3m-region "w3m"
-	"Render region in current buffer and replace with result." t)
-(autoload 'w3m-toggle-inline-image "w3m"
-	"Toggle the visibility of an image under point." t)
 
 (setq-default
 	newsticker-url-list
