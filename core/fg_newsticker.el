@@ -84,7 +84,7 @@ activate newsticker layout (and reset ticker) if it's already started."
 ;; Advice replaces frame-width function, just for newsticker--display-scroll
 ;;  invocation with a custom one - frame-width-static, leaving the old def backed-up
 ;; Intended usage is frame with variable-pitch font, where width can't be set reliably
-(defun frame-width-custom (&optional frame) (round (frame-width-real) 1.11))
+(defun frame-width-custom (&optional frame) (round (frame-width-real) 1.2))
 (fset 'frame-width-real (symbol-function 'frame-width))
 (defadvice newsticker--display-scroll
 	(around fg-newsticker--display-scroll activate)
