@@ -480,6 +480,15 @@ If point is on a group name, this function operates on that group."
 	(define-key doc-view-mode-map (kbd "<prior>") 'doc-view-previous-page)))
 
 
+;; -- yasnippet --
+(eval-after-load "yasnippet" '(progn
+	(defadvice yas/init-minor-keymap
+		(around fg-yas/init-minor-keymap activate)
+		ad-do-it
+		(define-key ad-return-value (kbd "C-c &") nil)
+		(define-key ad-return-value (kbd "C-c") nil))))
+
+
 ;; -- w3m keys --
 (eval-after-load "w3m" '(progn
 	(define-keys w3m-mode-map

@@ -316,4 +316,3 @@ should be set before calling the `solar-sunrise-sunset'."
 (add-hook 'find-file-hook 'fg-hook-set-lookz)
 (add-hook 'ibuffer-hook 'fg-hook-set-lookz)
 (add-hook 'after-change-major-mode-hook 'fg-hook-set-lookz)
-

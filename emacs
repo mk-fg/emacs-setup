@@ -5,8 +5,9 @@
 
 ;; Extend include path
 (add-to-list 'load-path fg-path)
-(add-to-list 'load-path (concat fg-path "/extz"))
 (add-to-list 'load-path (concat fg-path "/core"))
+(add-to-list 'load-path (concat fg-path "/extz"))
+(add-to-list 'load-path (concat fg-path "/extz/yasnippet"))
 
 
 ;; Basic loading macros
