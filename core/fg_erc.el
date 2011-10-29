@@ -247,5 +247,12 @@ function each time you change `erc-autoaway-idle-seconds'."
 	(remove-hook 'erc-timer-hook 'erc-autoaway-possibly-set-away)) ;; based on emacs-idle-time, bogus
 
 
+;; DCC - ultimate one-liner fix for 'DCC SEND "file name with spaces" ...' issue
+;; Comes in handy in #bookz@undernet.
+;; Sent cleaner [PATCH] upstream (see erc-discuss 2011-10-29).
+(defconst erc-dcc-ctcp-query-send-regexp
+	"^DCC SEND \"?\\(.*+?\\)\"? \\([0-9]+\\) \\([0-9]+\\) *\\([0-9]*\\) *$")
+
+
 ;; Create paths
 (make-directory erc-log-channels-directory t)
