@@ -68,6 +68,7 @@
 	(sym '(fg-feeds newsticker-start
 		newsticker-start-ticker newsticker-show-news))
 	(autoload sym "fg_newsticker" nil t))
+(autoload 'notifications-notify "notifications" nil t)
 (eval-after-load "python-mode" (load-library "fg_py"))
 
 ;; Compositing stuff

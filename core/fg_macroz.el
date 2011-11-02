@@ -351,20 +351,20 @@ PIXMAP specifies an icon to use.
 URGENCY can be set to 'low or 'critical.
 STRIP can be specified to trim whitespace chars from text.
 DONT-ESCAPE inhibits escaping html entities in messages."
-	(let ((cli (list "notify-send")))
+	(let ((keys (list 'notifications-notify)))
 		(when urgency
-			(nconc cli (list "-u" (symbol-name urgency))))
+			(nconc keys (list :urgency urgency)))
 		(when pixmap
-			(nconc cli (list "-i" (fg-pixmap-path pixmap))))
+			(nconc keys (list :image-path
+				(concat "file://" (fg-pixmap-path pixmap)))))
 		(when strip
 			(setq header (fg-string-strip-whitespace header))
 			(setq message (fg-string-strip-whitespace message)))
 		(unless (or dont-escape fg-notify-never-escape)
 			(setq header (fg-string-escape-html header))
 			(setq message (fg-string-escape-html message)))
-		(nconc cli (list header message))
-		(apply 'start-process "Notification" nil cli)))
-
+		(nconc keys (list :title header :body message))
+		(apply (car keys) (cdr keys))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -534,4 +534,3 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 (defun fg-product (list1 list2)
 	"Return a list of the Cartesian product of two lists."
 	(mapcan (lambda (x) (mapcar (lambda (y) (list x y)) list2)) list1))
-
