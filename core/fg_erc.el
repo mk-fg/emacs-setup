@@ -102,6 +102,11 @@
 	erc-notify-signon-hook nil
 	erc-notify-signoff-hook nil)
 
+;; Extra: block msgs by content
+(defcustom fg-erc-msg-block ()
+	"Regexps to match to-be-ignored msgs."
+	:group 'erc :type '(repeat regexp))
+
 ;; Autoaway is only useful when based on X idle time, not emacs/irc
 (when (eq window-system 'x)
 	(setq-default
@@ -167,6 +172,13 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 					(not (fg-xactive-check))))
 			(fg-notify (format "erc: %s" channel) text :pixmap "erc" :strip t))))
 (add-hook 'erc-insert-pre-hook 'fg-erc-notify)
+
+
+;; Message content filter
+(defun fg-erc-msg-content-filter (msg)
+	(when (erc-list-match fg-erc-msg-block msg)
+		(set 'erc-insert-this nil)))
+(add-hook 'erc-insert-pre-hook 'fg-erc-msg-content-filter)
 
 
 ;; Some quick fail right after connection (like "password incorrect")
