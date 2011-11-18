@@ -58,6 +58,12 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("M-'" fg-scite-aux)
 		("M-]" fg-scite-core)
 		("C-?" setnu-mode)
+		("C-M-o" (lambda () (interactive)
+			(multiple-value-bind (action msg)
+				(if (memq 'delete-trailing-whitespace before-save-hook)
+					'(remove-hook "disabled") '(add-hook "enabled"))
+				(apply action '(before-save-hook delete-trailing-whitespace))
+				(message (format "delete-trailing-whitespace: %s" msg)))))
 	;; Lookz switching should work everywhere as well
 		("C-M-/" fg-masq-x-light)
 		("C-M-'" fg-masq-x-dark)
