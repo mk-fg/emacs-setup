@@ -75,11 +75,8 @@
 (load-library "fg_style")
 (load-library "fg_keyz") ; must be the last one
 
-
-;; Release auth data sources
-;; (require 'obarray-fns)
-;; (mapc 'makunbound
-;; 	(find-symbols (lambda (sym) (string-prefix-p "fg-auth-" (symbol-name sym)))))
+;; ELPA
+(load-library "elpa/init")
 
 
 ;; Adjust tmp path and use it for all backup and autosave files
