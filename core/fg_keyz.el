@@ -64,6 +64,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 					'(remove-hook "disabled") '(add-hook "enabled"))
 				(apply action '(before-save-hook delete-trailing-whitespace))
 				(message (format "delete-trailing-whitespace: %s" msg)))))
+		("C-M-S-o" delete-selection-mode)
 	;; Lookz switching should work everywhere as well
 		("C-M-/" fg-masq-x-light)
 		("C-M-'" fg-masq-x-dark)
