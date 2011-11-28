@@ -19,12 +19,15 @@
 
 
 ;; Auth data
+(load-library "fg_sec")
 (condition-case err
 	(save-excursion
 		(find-file (concat fg-path "/auth.el.gpg"))
 		(eval-buffer)
 		(kill-buffer))
 	(file-error))
+(setq-default
+	auth-sources (list (concat fg-path "/authrc.el.gpg")))
 
 
 ;; Temp/spool path init
@@ -41,7 +44,6 @@
 (load-library "fg_stack")
 (load-library "fg_lookz")
 (load-library "fg_diff")
-(load-library "fg_sec")
 
 ; External and non-critical
 (autoload 'multi-term "fg_shell" nil t)

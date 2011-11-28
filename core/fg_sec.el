@@ -20,3 +20,21 @@ See `epa-select-keys-interactive' for the description of other parameters."
 	(if (or static epa-select-keys-inhibit)
 		(epg-list-keys context epa-file-encrypt-to secret)
 		(epa-select-keys-interactive context prompt names secret)))
+
+
+;;;; TRAMP mode
+
+(require 'auth-source)
+(require 'tramp)
+
+(setq-default
+	tramp-default-method "ssh")
+
+(add-to-list 'tramp-default-user-alist
+	'("ssh" ".*\\.\\(mplik\\.ru\\|e1\\)\\'" "mkfg"))
+(add-to-list 'tramp-default-proxies-alist
+	'(".*.\\(mplik\\.ru\\|e1\\)\\'" "\\`root\\'" "/ssh:mkfg@%h:"))
+
+;; (setq auth-source-debug t)
+;; (password-reset)
+;; (auth-source-user-or-password "password" "db-six.mplik.ru" "sudo" "root")
