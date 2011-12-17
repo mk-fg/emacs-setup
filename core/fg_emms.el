@@ -53,23 +53,51 @@
 	(if (not emms-lastfm-scrobbler-submission-session-id)
 		(emms-lastfm-scrobbler-handshake))
 	(add-hook 'emms-player-started-hook
-		'emms-lastfm-scrobbler-start-hook t)
+		'fg-emms-lastfm-scrobbler-start-hook t)
 	(add-hook 'emms-player-finished-hook
 		'fg-emms-lastfm-scrobbler-stop-hook))
 
+
+(defun fg-emms-get-scrobblable-track ()
+	(let ((current-track (emms-playlist-current-selected-track)))
+		(and current-track
+			(if (emms-track-get current-track 'title)
+				current-track
+				(message
+					"Unable to scrobble track - no metadata: %s"
+					(emms-track-get current-track 'name))
+				nil))))
+
 ;; Default hook requires info-playing-time to be known, and it's hard to get w/o hangs
 ;; Also it requires *enabling* emms-playing-time, which is kinda undocumented
+;; And it spits errors on tracks missing info - very annoying (replaced by non-flashy msgs)
 (defun fg-emms-lastfm-scrobbler-stop-hook ()
 	"Submit the track to last.fm if it has been played for 60s."
-	(let ((current-track (emms-playlist-current-selected-track)))
+	(let ((current-track (fg-emms-get-scrobblable-track)))
 		(when
 			(and
+				current-track
 				(emms-lastfm-scrobbler-allowed-track-type current-track)
 				(> emms-playing-time 60))
 			;; info-playing-time is mandatory for last.fm submissions
 			(unless (emms-track-get current-track 'info-playing-time)
 				(emms-track-set current-track 'info-playing-time emms-playing-time))
 			(emms-lastfm-scrobbler-make-async-submission-call current-track nil))))
+
+;; Spits annoying errors on tracks missing info as well
+(defun fg-emms-lastfm-scrobbler-start-hook ()
+	"Update the now playing info displayed on the user's last.fm page.  This
+		doesn't affect the user's profile, so it con be done even for tracks that
+		should not be submitted."
+	;; wait 5 seconds for the stop hook to submit the last track
+	(sit-for 5)
+	(let ((current-track (fg-emms-get-scrobblable-track)))
+		(when current-track
+			(setq
+				emms-lastfm-scrobbler-track-play-start-timestamp
+				(emms-lastfm-scrobbler-timestamp))
+			(when (emms-lastfm-scrobbler-allowed-track-type current-track)
+				(emms-lastfm-scrobbler-make-async-nowplaying-call current-track)))))
 
 
 
