@@ -58,15 +58,19 @@
 		'fg-emms-lastfm-scrobbler-stop-hook))
 
 
+(defvar fg-emms-scrobble-tracks t
+	"Controls whether tracks will be scrobbled to last.fm")
+
 (defun fg-emms-get-scrobblable-track ()
-	(let ((current-track (emms-playlist-current-selected-track)))
-		(and current-track
-			(if (emms-track-get current-track 'title)
-				current-track
-				(message
-					"Unable to scrobble track - no metadata: %s"
-					(emms-track-get current-track 'name))
-				nil))))
+	(when fg-emms-scrobble-tracks
+		(let ((current-track (emms-playlist-current-selected-track)))
+			(and current-track
+				(if (emms-track-get current-track 'title)
+					current-track
+					(message
+						"Unable to scrobble track - no metadata: %s"
+						(emms-track-get current-track 'name))
+					nil)))))
 
 ;; Default hook requires info-playing-time to be known, and it's hard to get w/o hangs
 ;; Also it requires *enabling* emms-playing-time, which is kinda undocumented
