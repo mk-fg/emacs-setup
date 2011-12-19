@@ -65,12 +65,13 @@
 	(when fg-emms-scrobble-tracks
 		(let ((current-track (emms-playlist-current-selected-track)))
 			(and current-track
-				(if (emms-track-get current-track 'title)
+				(if (emms-track-get current-track 'info-title)
 					current-track
 					(message
 						"Unable to scrobble track - no metadata: %s"
 						(emms-track-get current-track 'name))
 					nil)))))
+
 
 ;; Default hook requires info-playing-time to be known, and it's hard to get w/o hangs
 ;; Also it requires *enabling* emms-playing-time, which is kinda undocumented
