@@ -259,9 +259,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; Skimming ops
 		(,(key "<f3>") . isearch-repeat-forward)
 		(,(key "C-s") . isearch-forward)
-		(,(key "C-s-s") . isearch-forward-regexp)
+		(,(key "C-M-s") . isearch-forward-regexp)
 		(,(key "C-S-s") . query-replace)
-		(,(key "C-M-s") . query-replace-regexp)
+		(,(key "C-M-S-s") . query-replace-regexp)
 
 		;; Metabuffer stuff
 		(,(key "C-=") . compare-windows)
