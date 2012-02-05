@@ -6,7 +6,9 @@
 	"Connect to IRC."
 	(interactive)
 	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "freenode"
-		:password fg-auth-erc-password :full-name "Mike Kazantsev"))
+		:password fg-auth-erc-password-freenode :full-name "Mike Kazantsev")
+	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "bitlbee"
+		:password fg-auth-erc-password-bitlbee :full-name "Mike Kazantsev"))
 
 
 ;; Modules
@@ -34,8 +36,9 @@
 
 (setq-default
 	erc-server "irc.fraggod.net"
-	erc-port 6667
-	erc-nick '("freenode")
+
+	;; erc-port 6667
+	;; erc-nick '("freenode")
 
 	erc-user-full-name "Mike Kazantsev"
 	erc-email-userid "mike_dropthis_kazantsev@andthis.fraggod.net"
