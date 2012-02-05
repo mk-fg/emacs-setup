@@ -27,4 +27,5 @@ The rest (my code) I don't really care about. Public Domain, Beerware or GPL
 
 If redistribution of something as a part of this repo should be restricted, I'll
 rebase it out, will be happy not to use it myself (and will probably think of
-author as some kind of copyright fascist or a-hole, but that's irrelevant).
+author as some kind of copyright *censored* or *censored*, but that's
+irrelevant).
