@@ -16,6 +16,7 @@
 	`(condition-case err
 		(load-library ,name)
 		(error (progn (message ,(or msg "Failed to load %s: %s") ,name err) nil))))
+(setq-default vc-follow-symlinks t) ;; it's just a noise anyway
 
 
 ;; Auth data
