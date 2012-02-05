@@ -7,6 +7,8 @@
 	(interactive)
 	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "freenode"
 		:password fg-auth-erc-password-freenode :full-name "Mike Kazantsev")
+	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "quakenet"
+		:password fg-auth-erc-password-quakenet :full-name "Mike Kazantsev")
 	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "bitlbee"
 		:password fg-auth-erc-password-bitlbee :full-name "Mike Kazantsev"))
 
