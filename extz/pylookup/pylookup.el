@@ -8,7 +8,9 @@
 ;; user options
 ;;=================================================================
 
-(defvar pylookup-db-file "pylookup.db" "Pylookup database file")
+(defvar pylookup-db-file
+	(concat fg-path "/tmp/pylookup/pylookup.db")
+	"Pylookup database file")
 (defvar pylookup-program "pylookup.py" "Pylookup execution file")
 
 ;;=================================================================
