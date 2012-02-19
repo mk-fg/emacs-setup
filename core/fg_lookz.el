@@ -45,9 +45,10 @@
 
 ;; Cosmetic minor modes
 (global-font-lock-mode t) ; syntax highlighting (funny name for it)
-(show-paren-mode) ; show matching parenthesis
-(column-number-mode) ; column numbers at the bottom
-(display-battery-mode) ; show the death clock
+(show-paren-mode t) ; show matching parenthesis
+(column-number-mode t) ; column numbers at the bottom
+(display-battery-mode t) ; show the death clock
+(which-function-mode t) ; show which function pointer is in
 
 ;; Rodent banishment (if any)
 (when (and (display-mouse-p) (require 'avoid))
@@ -131,6 +132,7 @@
 (defvar fg-color-comment "DeepSkyBlue4")
 (defvar fg-color-kw "dark green")
 (defvar fg-color-func "gold")
+(defvar fg-color-func-modeline fg-color-func)
 (defvar fg-color-type "dark slate gray")
 (defvar fg-color-key "MistyRose4")
 (defvar fg-color-var "Coral")
@@ -175,6 +177,9 @@
 		;; Misc
 		`(yaml-tab-face ((t (:inherit default :background ,fg-color-bg-hl))))
 		`(w3m-current-anchor ((t (:inherit w3m-anchor :underline t))))
+		`(which-func ((t
+			(:inherit font-lock-function-name-face
+				:foreground ,fg-color-func-modeline t))))
 		;; Defaults
 		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
 		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))
@@ -199,6 +204,9 @@
 		(set-background-color fg-color-bg-core)
 		(setq-default term-default-bg-color fg-color-bg-core)))
 
+;;;; Rainbow mode seem to need a kick here, not sure why
+;; (progn (rainbow-mode t) (rainbow-turn-on))
+
 (defun fg-masq-x-dark ()
 	"Translucent text on dark background."
 	(interactive)
@@ -209,8 +217,11 @@
 			(fg-color-key "MistyRose2")
 			(fg-color-kw "springgreen")
 			(fg-color-type "SlateGrey")
+			(fg-color-func-modeline "yellow")
 			(fg-color-fg-modeline "tomato")
 			(fg-color-comment "SteelBlue1"))
+		(customize-set-variable
+			'frame-background-mode 'dark)
 		(fg-masq-x)))
 
 (defun fg-masq-x-light ()
@@ -221,7 +232,10 @@
 			(fg-color-bg-core "white")
 			(fg-color-bg-hl "lavender blush")
 			(fg-color-func "saddle brown")
+			(fg-color-func-modeline "red4")
 			(fg-color-var "IndianRed4"))
+		(customize-set-variable
+			'frame-background-mode 'light)
 		(fg-masq-x)))
 
 (defun fg-masq-x-pitch ()
