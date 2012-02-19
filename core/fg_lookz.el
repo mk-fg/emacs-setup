@@ -121,6 +121,9 @@
 
 
 ;; Mask for X (inits are bg-agnostic colors)
+;; TODO: rewrite it as a single theme,
+;;  with colors derived from `frame-background-mode'
+
 (defvar fg-color-fg-core)
 (defvar fg-color-bg-core)
 (defvar fg-color-bg-hl)
