@@ -249,7 +249,7 @@ If FILENAME is omitted, the current buffer's file name is used."
     (when buffer
       (kill-buffer buffer)))
 
-  (call-process-region start end 
+  (call-process-region start end
                        js2coffee-command nil
                        (current-buffer)
                        )
@@ -753,9 +753,6 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   ;; imenu
   (make-local-variable 'imenu-create-index-function)
   (setq imenu-create-index-function 'coffee-imenu-create-index)
-
-  ;; no tabs
-  (setq indent-tabs-mode nil)
 
   ;; hooks
   (set (make-local-variable 'before-save-hook) 'coffee-before-save))
