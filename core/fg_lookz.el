@@ -70,6 +70,8 @@
 	"yaml-mode" "Mode for editing YAML files" t)
 (autoload 'go-mode
 	"go-mode" "Mode for editing Go sources" t)
+(autoload 'coffee-mode
+	"coffee-mode" "Mode for editing CoffeeScript sources" t)
 
 ;; Nice, but crashes current emacs (24.0.50.1)
 ;; (autoload 'lambda-mode
