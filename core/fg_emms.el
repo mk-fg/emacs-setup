@@ -60,6 +60,8 @@
 
 (defvar fg-emms-scrobble-tracks t
 	"Controls whether tracks will be scrobbled to last.fm")
+(defvar fg-emms-scrobble-via-dbus t
+	"Use async dbus calls to scrobble tracks")
 
 (defun fg-emms-get-scrobblable-track ()
 	(when fg-emms-scrobble-tracks
@@ -72,6 +74,41 @@
 						(emms-track-get current-track 'name))
 					nil)))))
 
+(defun fg-emms-lastfm-scrobbler-dbus-call
+	(artist album track &optional duration ts timeout)
+	(let*
+		((dbus-call-base
+			(apply-partially 'dbus-call-method
+				:session
+				"net.fraggod.DBusLastFM"
+				"/net/fraggod/DBusLastFM"
+				"net.fraggod.DBusLastFM"))
+			(dbus-call
+				(lambda ()
+					(apply dbus-call-base
+						(if ts "Scrobble" "ReportNowPlaying")
+						:timeout (or timeout 2000) ;; it should be async for a reason!
+						:string artist
+						:string album
+						:string track
+						:uint32 (or duration 0)
+						(when ts (list :double ts))))))
+		(condition-case err
+			(funcall dbus-call)
+			(dbus-error
+				(when (and err (string= (cadr err) "NO-AUTH"))
+					(let
+						((auth
+							(list
+								emms-lastfm-client-api-key
+								emms-lastfm-client-api-secret-key
+								emms-lastfm-client-api-session-key)))
+						(unless
+							(dolist (k auth val)
+								(if k (setq val t) (setq val nil) (return-from nil)))
+							(error (funcall 'format "Missing auth keys: %s" auth)))
+						(apply dbus-call-base "Auth" auth))
+					(funcall dbus-call))))))
 
 ;; Default hook requires info-playing-time to be known, and it's hard to get w/o hangs
 ;; Also it requires *enabling* emms-playing-time, which is kinda undocumented
@@ -87,12 +124,21 @@
 			;; info-playing-time is mandatory for last.fm submissions
 			(unless (emms-track-get current-track 'info-playing-time)
 				(emms-track-set current-track 'info-playing-time emms-playing-time))
-			(emms-lastfm-scrobbler-make-async-submission-call current-track nil))))
+			(if fg-emms-scrobble-via-dbus
+				(apply
+					'fg-emms-lastfm-scrobbler-dbus-call
+					(append
+						(mapcar
+							(lambda (bit) (emms-track-get (fg-emms-get-scrobblable-track) bit))
+							'(info-artist info-album info-title info-playing-time))
+						(list (string-to-number
+							emms-lastfm-scrobbler-track-play-start-timestamp))))
+				(emms-lastfm-scrobbler-make-async-submission-call current-track nil)))))
 
 ;; Spits annoying errors on tracks missing info as well
 (defun fg-emms-lastfm-scrobbler-start-hook ()
 	"Update the now playing info displayed on the user's last.fm page.  This
-		doesn't affect the user's profile, so it con be done even for tracks that
+		doesn't affect the user's profile, so it can be done even for tracks that
 		should not be submitted."
 	;; wait 5 seconds for the stop hook to submit the last track
 	(sit-for 5)
@@ -102,8 +148,13 @@
 				emms-lastfm-scrobbler-track-play-start-timestamp
 				(emms-lastfm-scrobbler-timestamp))
 			(when (emms-lastfm-scrobbler-allowed-track-type current-track)
-				(emms-lastfm-scrobbler-make-async-nowplaying-call current-track)))))
-
+				(if fg-emms-scrobble-via-dbus
+					(apply
+						'fg-emms-lastfm-scrobbler-dbus-call
+						(mapcar
+							(lambda (bit) (emms-track-get current-track bit))
+							'(info-artist info-album info-title info-playing-time)))
+					(emms-lastfm-scrobbler-make-async-nowplaying-call current-track))))))
 
 
 ;;;; Playlist controls
