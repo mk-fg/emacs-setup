@@ -61,7 +61,8 @@
 (defvar fg-emms-scrobble-tracks t
 	"Controls whether tracks will be scrobbled to last.fm")
 (defvar fg-emms-scrobble-via-dbus t
-	"Use async dbus calls to scrobble tracks")
+	"Use async dbus calls to scrobble tracks.
+DBus component: https://github.com/mk-fg/dbus-lastfm-scrobbler")
 
 (defun fg-emms-get-scrobblable-track ()
 	(when fg-emms-scrobble-tracks
