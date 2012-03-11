@@ -117,11 +117,12 @@ DBus component: https://github.com/mk-fg/dbus-lastfm-scrobbler")
 (defun fg-emms-lastfm-scrobbler-stop-hook ()
 	"Submit the track to last.fm if it has been played for 60s."
 	(let ((current-track (fg-emms-get-scrobblable-track)))
-		(when
-			(and
+		(if
+			(not (and
 				current-track
 				(emms-lastfm-scrobbler-allowed-track-type current-track)
-				(> emms-playing-time 60))
+				(> emms-playing-time 60)))
+			(message "Not scrobbling track - invalid type/length/metadata")
 			;; info-playing-time is mandatory for last.fm submissions
 			(unless (emms-track-get current-track 'info-playing-time)
 				(emms-track-set current-track 'info-playing-time emms-playing-time))
