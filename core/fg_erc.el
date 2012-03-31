@@ -91,7 +91,8 @@
 
 	erc-hide-list '("JOIN" "PART" "QUIT") ;; careful, these are completely ignored
 	erc-ignore-list
-		'("^zebrapig!~eir@.*" "^CIA-[[:digit:]]+!~?[cC][iI][aA]@.*" "^PLT_Notify!.*")
+		'("^zebrapig!~eir@.*" "^CIA-[[:digit:]]+!~?[cC][iI][aA]@.*"
+			"^PLT_Notify!.*" "^u!u@kerpia-.*\\.digineo\\.de$")
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
