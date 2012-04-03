@@ -145,6 +145,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-n") . fg-track-switch)
 		(,(key "C-S-n") . fg-track-reset)
 		(,(key "C-M-n") . fg-feeds)
+		(,(key "C-M-S-n") . fg-erc-cycle-channels)
 
 		;; -- History --
 		;; Consistent undo/redo

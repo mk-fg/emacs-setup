@@ -202,6 +202,63 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	(when (eq major-mode 'erc-mode) (fg-erc-mark-put (current-buffer))))
 
 
+;; Iterate over all erc channel buffers
+
+(defvar fg-erc-cycle-channels-return-buffer nil
+	"Non-erc buffer to return to after going full-cycle over buffers.")
+(defvar fg-erc-cycle-channels-pos-start nil)
+
+(defun fg-erc-cycle-channels ()
+	"Iterate (switch-to) over all erc channel buffers,
+returning to the original one in the end."
+	(interactive)
+	(let*
+		;; List of all channel buffers
+		((buffer (current-buffer))
+			(channel-buffers
+				(sort*
+					;; Don't cycle over already-visible buffers
+					(remove-if
+						(lambda (buff)
+							(and
+								(not (eq buffer buff))
+								(erc-buffer-visible buff)))
+						(erc-channel-list nil))
+					;; Sort by buffer (=channel) name,
+					;;  so they'll always be iterated over in roughly the same order
+					'string-lessp :key 'buffer-name))
+			(pos (position buffer channel-buffers)))
+		(when (numberp pos) (setq pos (+ pos 1)))
+		(when (or (not pos) (>= pos (length channel-buffers)))
+			(unless pos
+				;; Set return-buffer and reset pos-start
+				(setq
+					fg-erc-cycle-channels-pos-start nil
+					fg-erc-cycle-channels-return-buffer buffer))
+			(setq pos 0))
+		(if
+			(and
+				fg-erc-cycle-channels-pos-start
+				fg-erc-cycle-channels-return-buffer
+				(buffer-live-p fg-erc-cycle-channels-return-buffer)
+				(= fg-erc-cycle-channels-pos-start pos))
+			;; Full cycle over buffers is complete, switch back to return-buffer
+			(progn
+				(setq
+					buffer fg-erc-cycle-channels-return-buffer
+					fg-erc-cycle-channels-pos-start nil
+					fg-erc-cycle-channels-return-buffer nil)
+				(switch-to-buffer buffer))
+			;; Switch to some channel buffer
+			(unless
+				(and
+					fg-erc-cycle-channels-pos-start
+					fg-erc-cycle-channels-return-buffer)
+				;; Starting a new cycle
+				(setq fg-erc-cycle-channels-pos-start pos))
+			(switch-to-buffer (nth pos channel-buffers)))))
+
+
 ;; Some quick fail right after connection (like "password incorrect")
 ;;  will trigger infinite zero-delay reconnection loop by default.
 ;; This code fixes the problem, raising error for too fast erc-server-reconnect calls
