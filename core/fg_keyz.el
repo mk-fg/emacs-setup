@@ -506,15 +506,21 @@ If point is on a group name, this function operates on that group."
 			("<tab>" w3m-next-anchor) ("<backtab>" w3m-previous-anchor)
 			("<prior>" fg-scroll-up) ("<next>" fg-scroll-down)))))
 
-;; -- ERC submodes --
+
+;; -- ERC + submodes --
+
+(eval-after-load "erc" '(progn
+	;; Put mark-line w/o having to type /mark
+	(define-key erc-mode-map (kbd "C-j") 'fg-erc-mark)
+	;; Special "readability" hack, no idea why command is disabled by default
+	(define-key erc-mode-map (kbd "C-f") 'erc-remove-text-properties-region)
+	(put 'erc-remove-text-properties-region 'disabled nil)))
+
 (eval-after-load "erc-track" '(progn
 	;; Get rid of global erc-track C-c bindings
 	(define-key erc-track-minor-mode-map (kbd "C-c C-SPC") nil)
 	(define-key erc-track-minor-mode-map (kbd "C-c C-@") nil)
-	(define-key erc-track-minor-mode-map (kbd "C-c") nil)
-	;; Special "readability" hack, no idea why command is disabled by default
-	(define-key erc-mode-map (kbd "C-f") 'erc-remove-text-properties-region)
-	(put 'erc-remove-text-properties-region 'disabled nil)))
+	(define-key erc-track-minor-mode-map (kbd "C-c") nil)))
 
 
 ;; -- KMacro (ex)globals --

@@ -146,6 +146,15 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 		(when (> (buffer-size buffer) erc-max-buffer-size-to-act)
 			(erc-truncate-buffer-to-size erc-max-buffer-size buffer))))
 
+
+;; Message content filter
+(defun fg-erc-msg-content-filter (msg)
+	(when (erc-list-match fg-erc-msg-block msg)
+		(set 'erc-insert-this nil)))
+(add-hook 'erc-insert-pre-hook 'fg-erc-msg-content-filter)
+
+
+;; Useful to test new ignore-list masks
 (defun erc-cmd-REIGNORE ()
 	"Drop local changes to ignore-list (or apply global changes)."
 	(erc-display-line
@@ -153,6 +162,7 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 		'active)
 	(erc-with-server-buffer (kill-local-variable 'erc-ignore-list))
 	(erc-cmd-IGNORE))
+
 
 ;; Clears out annoying erc-track-mode stuff when I don't care
 (defun fg-erc-track-reset ()
@@ -177,11 +187,19 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 (add-hook 'erc-insert-pre-hook 'fg-erc-notify)
 
 
-;; Message content filter
-(defun fg-erc-msg-content-filter (msg)
-	(when (erc-list-match fg-erc-msg-block msg)
-		(set 'erc-insert-this nil)))
-(add-hook 'erc-insert-pre-hook 'fg-erc-msg-content-filter)
+;; Putting a mark-lines into the buffers
+
+(defun fg-erc-mark-put (buffer)
+	(erc-display-line " *** -------------------- ***" buffer))
+
+(defun erc-cmd-MARK ()
+	"Put a horizontal marker-line into a buffer. Purely aesthetic."
+	(fg-erc-mark-put 'active))
+
+(defun fg-erc-mark ()
+	"Put a horizontal marker-line into a current buffer."
+	(interactive)
+	(when (eq major-mode 'erc-mode) (fg-erc-mark-put (current-buffer))))
 
 
 ;; Some quick fail right after connection (like "password incorrect")
