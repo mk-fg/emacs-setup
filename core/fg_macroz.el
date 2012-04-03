@@ -289,7 +289,8 @@ which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 	(delete-other-windows))
 
 (defun fg-recentf-prompt ()
-	"Completion prompt of recentf list in minibuffer, using only files' basename."
+	"Completion prompt of recentf list in minibuffer,
+using only files' basename."
 	(interactive)
 	(let*
 		((tocpl
@@ -306,6 +307,10 @@ which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 (defvar fg-xactive-check-result nil)
 
 (defun fg-xactive-check (&optional force)
+	"Returns whether emacs window is visible (or 'active').
+Check result is cached for a small period of time,
+because is performed via external tools.
+FORCE option allows to bypass this caching."
 	(let ((time (float-time)))
 		(when
 			(or force (> time
