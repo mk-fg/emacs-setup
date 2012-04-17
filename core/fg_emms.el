@@ -22,19 +22,10 @@
 
 ;;;; Scrobbling
 
-;; Auth is kinda complicated there:
-;; 1. API key/secret_key from http://www.last.fm/api/authentication
-;; 2. emms-lastfm-client-user-authorization, allow in browser
-;; 3. emms-lastfm-client-get-session,
-;;  will store tmp/emms/emms-lastfm-client-sessionkey
-;;
-;; "emms-lastfm-scrobbler-nowplaying-data: Track title and artist must be known."
-;;  might mean that track metadata wasn't extracted properly, it should be.
-;;
-;; disable (so it'd stop complaining):
-;;  (emms-lastfm-scrobbler-disable)
-;;  (remove-hook 'emms-player-finished-hook
-;;   'fg-emms-lastfm-scrobbler-stop-hook)
+;; Used to have emms-lastfm-scrobbler here,
+;;  but it was sync, so ditched it in favor of a dbus helper,
+;;  statically specifying session key when emms-lastfm-scrobbler
+;;  stopped working at all.
 
 (when
 	(and
@@ -44,14 +35,10 @@
 	(setq-default
 		emms-lastfm-client-username "FraGGod"
 		emms-lastfm-client-api-key fg-auth-emms-lastfm-client-api-key
-		emms-lastfm-client-api-secret-key fg-auth-emms-lastfm-client-api-secret-key)
+		emms-lastfm-client-api-secret-key fg-auth-emms-lastfm-client-api-secret-key
+		emms-lastfm-client-api-session-key fg-auth-emms-lastfm-client-api-session-key)
 	(emms-playing-time 1)
 
-	;; emms-lastfm-scrobbler-enable hooks scrobbling
-	;;  to emms-player-stopped-hook, which scrobbles the wrong track
-	(emms-lastfm-client-initialize-session)
-	(if (not emms-lastfm-scrobbler-submission-session-id)
-		(emms-lastfm-scrobbler-handshake))
 	(add-hook 'emms-player-started-hook
 		'fg-emms-lastfm-scrobbler-start-hook t)
 	(add-hook 'emms-player-finished-hook
