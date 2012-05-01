@@ -173,10 +173,9 @@
 		("\\.rkt\\'" . scheme-mode) ("\\.vol\\'" . conf-mode)))
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
-;;  retarded  way to expand this list is "!" on confirm and fishing them from custom
-(setq-default
-	safe-local-variable-values
-		'((test-case-name . twisted\.test\.test_factories\,twisted\.internet\.test\.test_protocol)))
+;; Simple way to expand this list is "!" on confirm and fishing them from custom
+(add-to-list 'ignored-local-variables 'test-case-name)
+(add-to-list 'safe-local-variable-values '(encoding . utf-8))
 
 
 ;; Misc hooks
