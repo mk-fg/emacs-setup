@@ -2,17 +2,21 @@
 (require 'tls)
 
 
-(defun fg-erc ()
-	"Connect to IRC."
+(defun fg-erc (&rest ignored)
+	"Connect to IRC servers.
+Uses up all the connection commands destructively,
+so can only be called once.
+Enables notifications only after connecting to the last server,
+to avoid spamming them with MOTD entries and notices."
 	(interactive)
-	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "freenode"
-		:password fg-auth-erc-password-freenode :full-name "Mike Kazantsev")
-	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "oftc"
-		:password fg-auth-erc-password-oftc :full-name "Mike Kazantsev")
-	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "cryto"
-		:password fg-auth-erc-password-cryto :full-name "Mike Kazantsev")
-	(erc-tls :server "irc.fraggod.net" :port 6667 :nick "bitlbee"
-		:password fg-auth-erc-password-bitlbee :full-name "Mike Kazantsev"))
+	(if (not fg-erc-links)
+		(progn
+			(remove-hook 'erc-after-connect 'fg-erc)
+			(run-with-timer 20 nil 'add-hook 'erc-insert-pre-hook 'fg-erc-notify))
+		(add-hook 'erc-after-connect 'fg-erc)
+		(let ((link (car fg-erc-links)))
+			(setq fg-erc-links (cdr fg-erc-links))
+			(apply (car link) (cdr link)))))
 
 
 ;; Modules
@@ -184,7 +188,6 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 					(not (erc-buffer-visible buffer))
 					(not (fg-xactive-check))))
 			(fg-notify (format "erc: %s" channel) text :pixmap "erc" :strip t))))
-(add-hook 'erc-insert-pre-hook 'fg-erc-notify)
 
 
 ;; Putting a mark-lines into the buffers
