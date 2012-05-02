@@ -175,6 +175,7 @@
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
 ;; Simple way to expand this list is "!" on confirm and fishing them from custom
 (add-to-list 'ignored-local-variables 'test-case-name)
+(add-to-list 'ignored-local-variables 'jinja2)
 (add-to-list 'safe-local-variable-values '(encoding . utf-8))
 
 
