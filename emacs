@@ -61,7 +61,8 @@
 	(autoload sym "fg_emms" nil t))
 (dolist
 	(sym
-		'(erc-bol fg-erc fg-erc-track-reset erc-track-switch-buffer))
+		'(erc erc-tls erc-bol fg-erc
+			fg-erc-track-reset erc-track-switch-buffer))
 	(autoload sym "fg_erc" nil t))
 (autoload 'gnus "fg_gnus" nil t)
 (dolist
