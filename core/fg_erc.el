@@ -342,12 +342,19 @@ function each time you change `erc-autoaway-idle-seconds'."
 	(remove-hook 'erc-timer-hook 'erc-autoaway-possibly-set-away)) ;; based on emacs-idle-time, bogus
 
 
-;; DCC - ultimate one-liner fix for 'DCC SEND "file name with spaces" ...' issue
-;; Comes in handy in #bookz@undernet.
-;; Sent cleaner [PATCH] upstream (see erc-discuss 2011-10-29).
-(defconst erc-dcc-ctcp-query-send-regexp
-	"^DCC SEND \"?\\(.*+?\\)\"? \\([0-9]+\\) \\([0-9]+\\) *\\([0-9]*\\) *$")
-
-
-;; Create paths
-(make-directory erc-log-channels-directory t)
+;; Since DCC SEND handling in ERC was a bit broken before
+;;  my time, and I managed to "fix" it introducing a new regression
+;;  (which I've submitted a patch for, again)...
+;; It'd only make sense to leave this debug code here, for now.
+;; (setq debug-on-error t)
+;; (erc-dcc-handle-ctcp-send <process erc-Manchester.UK.EU.UnderNet.Org-6667>
+;; 	"DCC SEND SearchBot_results_for_quicksilver.txt.zip 1816743045 58560 2779"
+;; 	"seekbot" "seekbot" "108.73.76.133" "MK_FG")
+;; (let ((query "DCC SEND \"SearchBot results for quicksilver.txt.zip\" 1816743045 58560 2779"))
+;; 	(string-match erc-dcc-ctcp-query-send-regexp query)
+;; 	(or (match-string 5 query)
+;; 		(erc-dcc-unquote-filename (match-string 2 query))))
+;; (let ((query "DCC SEND SearchBot_results_for_quicksilver.txt.zip 1816743045 58560 2779"))
+;; 	(string-match erc-dcc-ctcp-query-send-regexp query)
+;; 	(or (match-string 5 query)
+;; 		(erc-dcc-unquote-filename (match-string 2 query))))
