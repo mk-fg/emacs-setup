@@ -515,6 +515,8 @@ If point is on a group name, this function operates on that group."
 	(define-key erc-mode-map (kbd "C-j") 'fg-erc-mark)
 	;; Special "readability" hack, no idea why command is disabled by default
 	(define-key erc-mode-map (kbd "C-f") 'erc-remove-text-properties-region)
+	(define-key erc-mode-map (kbd "<prior>") 'fg-scroll-up)
+	(define-key erc-mode-map (kbd "<next>") 'fg-scroll-down)
 	(put 'erc-remove-text-properties-region 'disabled nil)))
 
 (eval-after-load "erc-track" '(progn
