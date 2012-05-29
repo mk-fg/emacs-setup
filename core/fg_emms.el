@@ -297,7 +297,10 @@ Examples:
 	(interactive)
 	(fg-notify
 		"emms: now playing"
-		(emms-track-description (emms-playlist-current-selected-track))
+		(concat
+			(emms-track-description (emms-playlist-current-selected-track))
+			(if (= 0 (length emms-playing-time-string))
+				"" (format " (%s)" emms-playing-time-string)))
 		:pixmap "emms"
 		:urgency 'critical))
 
