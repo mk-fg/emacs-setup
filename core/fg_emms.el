@@ -77,7 +77,7 @@ DBus component: https://github.com/mk-fg/dbus-lastfm-scrobbler")
 						(if ts "Scrobble" "ReportNowPlaying")
 						:timeout (or timeout 2000) ;; it should be async for a reason!
 						:string artist
-						:string album
+						:string (or album "")
 						:string track
 						:uint32 (or duration 0)
 						(when ts (list :double ts))))))
@@ -180,11 +180,13 @@ Uses basic `fg-copy' func internally, not emms-playlist stuff."
 split numeric prefix, strip file extension."
 	(let
 		((trackno
-			(dolist (sep '("_-_" "_"))
-				(let ((title-parts (split-string title sep t)))
-					(when (string-match-p "^[0-9]+$" (car title-parts))
-						(setq title (mapconcat 'identity (cdr title-parts) sep))
-						(return (setq trackno (car title-parts))))))))
+			(dolist (sep '("_-_" "_" nil))
+				(if sep
+					(let ((title-parts (split-string title sep t)))
+						(when (string-match-p "^[0-9]+$" (car title-parts))
+							(setq title (mapconcat 'identity (cdr title-parts) sep))
+							(return (setq trackno (car title-parts)))))
+					nil))))
 		(values
 			(fg-string-replace-pairs
 				(if strip-ext (replace-regexp-in-string "\\.[0-9a-zA-Z]+$" "" title) title)
@@ -197,6 +199,7 @@ Examples:
 		/some/path/Artist/2000_Album_X/07_-_Some_Track_Name.mp3
 		/some/path/Artist/2001_Album-_Aftercolon/01_Some_Track_Name.ogg
 		/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac
+		/some/path/Artist/Some_Track_Name.ogg
 		/some/path/Artist/01_Some_Track_Name.ogg (no year in album part - no album info)"
 	(let ((name (emms-track-name track)))
 		(setq name
@@ -210,7 +213,7 @@ Examples:
 			(multiple-value-bind
 				(info-title info-tracknumber info-album info-year info-artist)
 				(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
-				(when info-tracknumber
+				(when info-title
 					(if (<= (length name) 2)
 						(setq info-artist (car (last name 2)))
 						(multiple-value-setq
