@@ -517,6 +517,11 @@ If point is on a group name, this function operates on that group."
 	(define-key erc-mode-map (kbd "C-f") 'erc-remove-text-properties-region)
 	(define-key erc-mode-map (kbd "<prior>") 'fg-scroll-up)
 	(define-key erc-mode-map (kbd "<next>") 'fg-scroll-down)
+	;; Next two are purely because PgUp/PgDn
+	;;  are right next to the arrows on acer laptops I use,
+	;;  and I frequently butterfinger Fn with Ctrl
+	(define-key erc-mode-map (kbd "<C-prior>") 'fg-beginning-of-line)
+	(define-key erc-mode-map (kbd "<C-next>") 'move-end-of-line)
 	(put 'erc-remove-text-properties-region 'disabled nil)))
 
 (eval-after-load "erc-track" '(progn
