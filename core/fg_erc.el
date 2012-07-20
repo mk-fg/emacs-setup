@@ -96,7 +96,7 @@ to avoid spamming them with MOTD entries and notices."
 	erc-hide-list '("JOIN" "PART" "QUIT") ;; careful, these are completely ignored
 	erc-ignore-list
 		'("^zebrapig!~eir@.*" "^CIA-[[:digit:]]+!~?[cC][iI][aA]@.*"
-			"^PLT_Notify!.*" "^u!u@kerpia-" "^u!u@cryto-")
+			"^PLT_Notify!.*" "^u!u@kerpia-" "^u!u@cryto-" "^u!u@u\\.users\\.cryto")
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
