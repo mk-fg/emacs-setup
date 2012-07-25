@@ -39,6 +39,12 @@
 		emms-lastfm-client-api-session-key fg-auth-emms-lastfm-client-api-session-key)
 	(emms-playing-time 1)
 
+	;; Sabotage emms-lastfm network calls, because they block way too often
+	(setq emms-lastfm-client-api-base-url nil)
+	(defun emms-lastfm-client-construct-method-call (method arguments)
+		(let ((debug-on-error t))
+			(error "Call to banned emms-lastfm-client-construct-method-call, check it")))
+
 	(add-hook 'emms-player-started-hook
 		'fg-emms-lastfm-scrobbler-start-hook t)
 	(add-hook 'emms-player-finished-hook
