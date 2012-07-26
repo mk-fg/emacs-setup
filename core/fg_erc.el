@@ -18,6 +18,11 @@ to avoid spamming them with MOTD entries and notices."
 			(setq fg-erc-links (cdr fg-erc-links))
 			(apply (car link) (cdr link)))))
 
+;; Extra: block msgs by content
+(defcustom fg-erc-msg-block ()
+	"Regexps to match to-be-ignored msgs."
+	:group 'erc :type '(repeat regexp))
+
 
 ;; Modules
 (setq
@@ -97,6 +102,10 @@ to avoid spamming them with MOTD entries and notices."
 	erc-ignore-list
 		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@.*" "^PLT_Notify!.*"
 			"^u!u@kerpia-" "^u!u@cryto-" "^u!u@u\\.users\\.cryto")
+	fg-erc-msg-block (list
+		(concat
+			"^\\(\\s-*\\[[0-9:]+\\]\\)?\\s-*<zebrapig>\\(\\s-+\\[[0-9:]+\\]\\)?"
+			"\\s-+[0-9]+ patches in queue \\.\\.\\. slackers!"))
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
@@ -108,11 +117,6 @@ to avoid spamming them with MOTD entries and notices."
 
 	erc-notify-signon-hook nil
 	erc-notify-signoff-hook nil)
-
-;; Extra: block msgs by content
-(defcustom fg-erc-msg-block ()
-	"Regexps to match to-be-ignored msgs."
-	:group 'erc :type '(repeat regexp))
 
 ;; Autoaway is only useful when based on X idle time, not emacs/irc
 (when (eq window-system 'x)
