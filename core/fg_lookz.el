@@ -200,6 +200,7 @@
 					:box (:line-width 2 :color "grey75" :style released-button)))))
 		`(mode-line ((t (:foreground "black" :background "light slate gray")))))
 	(tool-bar-mode -1)
+	(menu-bar-mode -1)
 	(scroll-bar-mode -1)
 	(when (boundp 'fg-color-fg-core)
 		(set-cursor-color fg-color-fg-core)
