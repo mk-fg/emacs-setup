@@ -23,6 +23,13 @@ to avoid spamming them with MOTD entries and notices."
 	"Regexps to match to-be-ignored msgs."
 	:group 'erc :type '(repeat regexp))
 
+(defun fg-erc-msg-block-pattern (nick msg)
+	"Build proper pattern for regular channel messages from
+specified nickname, including ZNC-buffered messages."
+	(concat
+		"^\\(\\s-*\\[[0-9:]+\\]\\)?\\s-*<"
+			nick ">\\(\\s-+\\[[0-9:]+\\]\\)?\\s-+" msg))
+
 
 ;; Modules
 (setq
@@ -102,10 +109,12 @@ to avoid spamming them with MOTD entries and notices."
 	erc-ignore-list
 		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@.*" "^PLT_Notify!.*"
 			"^u!u@kerpia-" "^u!u@cryto-" "^u!u@u\\.users\\.cryto")
-	fg-erc-msg-block (list
-		(concat
-			"^\\(\\s-*\\[[0-9:]+\\]\\)?\\s-*<zebrapig>\\(\\s-+\\[[0-9:]+\\]\\)?"
-			"\\s-+[0-9]+ patches in queue \\.\\.\\. slackers!"))
+	fg-erc-msg-block
+		(mapcar
+			(apply-partially 'apply 'fg-erc-msg-block-pattern)
+			'(("zebrapig" "[0-9]+ patches in queue \\.\\.\\. slackers!")
+				("unposted" "\\[website\\(/master\\)?\\]\\s-+")
+				("DeBot" "\\[URL\\]\\s-+")))
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
