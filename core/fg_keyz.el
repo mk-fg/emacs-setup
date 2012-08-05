@@ -446,6 +446,8 @@ If point is on a group name, this function operates on that group."
 (define-keys ibuffer-mode-map
 	`(("+" ,(iwrap 'ibuffer-mark-by-file-name-regexp ".*"))
 		("-" ,(iwrap 'ibuffer-unmark-all ibuffer-marked-char))
+		("<prior>" fg-scroll-up) ; pageup
+		("<next>" fg-scroll-down) ; pagedown
 		("*" ibuffer-toggle-marks)
 		("SPC" ,(iwrap 'fg-ibuffer-mark nil))
 		("<insert>" ,(iwrap 'fg-ibuffer-mark t))))
