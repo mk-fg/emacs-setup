@@ -203,6 +203,18 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 ;; Skimming ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defadvice forward-word (around fg-forward-word activate)
+	"Make `forward-word' stop at newlines as well."
+	(if (= (char-after) ?\n) ;; already at the EOL
+		ad-do-it
+		(let ((line (line-number-at-pos)))
+			(save-excursion
+				ad-do-it
+				(setq line (= line (line-number-at-pos))))
+			(if line ;; EOL was not crossed
+				ad-do-it
+				(move-end-of-line nil)))))
+
 (defun fg-scroll-up (arg)
 	"Scroll or move cursor ARG pages up."
 	(interactive "^p")
@@ -222,7 +234,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(goto-char (point-max)))))
 
 (defun fg-beginning-of-line (&optional force-to-indent)
-  "Move point to first non-whitespace character or beginning-of-line.
+	"Move point to first non-whitespace character or beginning-of-line.
 Generic way to do this is via `back-to-indentation' or `beginning-of-line',
 but special checks are in place for non-standard buffers like SLIME or ERC,
 which invoke functions like `slime-repl-bol' or `erc-bol' instead."
@@ -251,7 +263,8 @@ which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 	(point-to-register arg))
 
 (defun fg-point-from-reg (arg)
-	"Restore current buffer `point' position from register, announcing register id."
+	"Restore current buffer `point' position from register,
+announcing register id."
 	(interactive "^p")
 	(message "Restored from register %d" arg)
 	(jump-to-register arg))
