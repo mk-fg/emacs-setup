@@ -205,7 +205,7 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 
 (defadvice forward-word (around fg-forward-word activate)
 	"Make `forward-word' stop at newlines as well."
-	(if (= (char-after) ?\n) ;; already at the EOL
+	(if (eolp) ;; already at the EOL
 		ad-do-it
 		(let ((line (line-number-at-pos)))
 			(save-excursion

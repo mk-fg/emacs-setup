@@ -1,5 +1,4 @@
 ;; TODO: add py-mode bindings (like eval-line, pi shell)
-;; TODO: customize by-word jumps to stop at newlines, punctuation (aka SciTE)
 ;; TODO: add some-keyz + num for discrete buffer switching (Alt+NUM Alt+B)
 
 (defun key (desc)
