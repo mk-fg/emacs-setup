@@ -114,7 +114,7 @@ specified nickname, including ZNC-buffered messages."
 			(apply-partially 'apply 'fg-erc-msg-block-pattern)
 			'(("zebrapig" "[0-9]+ patches in queue \\.\\.\\. slackers!")
 				("unposted" "\\[website\\(/master\\)?\\]\\s-+")
-				("DeBot" "\\[URL\\]\\s-+")))
+				("DeBot" "\\[\\(URL\\|feed\\)\\]\\s-+")))
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
