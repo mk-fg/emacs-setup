@@ -390,17 +390,17 @@ DONT-ESCAPE inhibits escaping html entities in messages."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq hippie-expand-try-functions-list
-  '(try-complete-file-name-partially
-    try-complete-file-name
-    try-expand-all-abbrevs
-    try-expand-dabbrev
-    try-expand-dabbrev-all-buffers
-    try-expand-dabbrev-from-kill
+	'(try-complete-file-name-partially
+		try-complete-file-name
+		try-expand-all-abbrevs
+		try-expand-dabbrev
+		try-expand-dabbrev-all-buffers
+		try-expand-dabbrev-from-kill
 		try-expand-slime-symbol
-    try-complete-lisp-symbol-partially
-    try-complete-lisp-symbol
-    try-expand-line
-    try-expand-list)) ; it is a disaster w/ large lists, hence the place
+		try-complete-lisp-symbol-partially
+		try-complete-lisp-symbol
+		try-expand-line
+		try-expand-list)) ; it is a disaster w/ large lists, hence the place
 
 
 ;; hippie expand for slime
@@ -410,12 +410,14 @@ DONT-ESCAPE inhibits escaping html entities in messages."
 (defun try-expand-slime-symbol (old)
 	(condition-case ex
 		(progn
-			(unless  old
+			(unless old
 				(he-init-string (he-slime-symbol-beg) (point))
 				(setq he-expand-list
 					(sort
 						(car (slime-simple-completions
-							(buffer-substring-no-properties (slime-symbol-start-pos) (slime-symbol-end-pos))))
+							(buffer-substring-no-properties
+								(slime-symbol-start-pos)
+								(slime-symbol-end-pos))))
 						'string-lessp)))
 			(while
 				(and he-expand-list
