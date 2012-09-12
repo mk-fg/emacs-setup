@@ -41,6 +41,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 (dolist
 	(sym '(wcy-switch-buffer-forward wcy-switch-buffer-backward))
 	(autoload sym "wcy-swbuff" nil t)) ; buffer cycling thru minibuff
+(autoload 'browse-kill-ring "browse-kill-ring" nil t)
 
 
 ;; Key-related settings
@@ -204,6 +205,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; Emacs' clipboard was designed by a bunch of certified lunatics ;)
 		(,(key "C-c") . fg-copy)
 		(,(key "C-S-c") . fg-copy-paragraph)
+		(,(key "C-M-c") . browse-kill-ring)
 		(,(key "C-x") . fg-kill) ; I hate original binding for this key
 		(,(key "C-S-x") . fg-kill-whole-paragraph)
 		(,(key "C-v") . yank)
@@ -553,6 +555,7 @@ If point is on a group name, this function operates on that group."
 			((eq major-mode 'doc-view-mode) t) ; it has specific bindings
 			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond
+			((eq major-mode 'browse-kill-ring-mode) (fg-scite-aux t))
 			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
 			((eq major-mode 'lisp-interaction-mode) ; *scratch*
