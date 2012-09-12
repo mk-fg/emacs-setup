@@ -224,7 +224,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-M-u") . fg-kill-line)
 
 		;; Metabuffer stuff
-		(,(key "M-<return>") . fg-wtf))
+		(,(key "<C-M-return>") . fg-occur)
+		(,(key "<M-return>") . fg-wtf))
 	:group 'fg-scite)
 (set-keymap-parent fg-scite-aux-map fg-scite-core-map)
 

@@ -294,6 +294,20 @@ announcing register id."
 			(describe-function (function-called-at-point)))
 		(t (find-file-at-point))))
 
+(defun fg-occur (arg)
+	"Display `occur' info for whatever I'm pointing at.
+Prefix argument limits the context (passed as NLINES to `occur'), if set."
+	(interactive "p")
+	(let
+		((thing
+			(if (use-region-p)
+				(buffer-substring
+					(region-beginning) (region-end))
+				(thing-at-point 'word))))
+		(if thing
+			(occur (regexp-quote thing) arg)
+			(call-interactively 'occur))))
+
 (defun fg-nuke-all ()
 	"Nuke all buffers, leaving *scratch* only"
 	(interactive)
