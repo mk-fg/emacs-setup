@@ -1,5 +1,6 @@
 ;;;; Python stuff
 
+
 ;; PyLookup
 (defvar fg-pylookup-dir
 	(concat fg-path "/extz/pylookup") "Pylookup directory")
@@ -19,6 +20,7 @@
 		"Lookup SEARCH-TERM in the Python HTML indexes." t)
 	(autoload 'pylookup-update "pylookup"
 		"Run pylookup-update and create the database at `pylookup-db-file'." t))
+
 
 ;; Ropemacs, Pymacs, Yasnippet
 (when nil (eval-after-load "python" '(progn

@@ -1,4 +1,3 @@
-;; TODO: add py-mode bindings (like eval-line, pi shell)
 ;; TODO: add some-keyz + num for discrete buffer switching (Alt+NUM Alt+B)
 
 (defun key (desc)
@@ -252,10 +251,6 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-<right>") . forward-word)
 		(,(key "C-<up>") . backward-paragraph)
 		(,(key "C-<down>") . forward-paragraph)
-		(,(key "C-M-<left>") . backward-sexp)
-		(,(key "C-M-<right>") . forward-sexp)
-		(,(key "C-M-<up>") . up-list)
-		(,(key "C-M-<down>") . down-list)
 
 		;; Region ops
 		(,(key "M-u") . ,(transient-wrap 'upcase-region "r"))
@@ -466,8 +461,8 @@ If point is on a group name, this function operates on that group."
 			("C-<return>" jabber-chat-buffer-send)))))
 ;; These fix keybindings for URLs in jabber-chat buffers
 (eval-after-load "goto-addr" '(progn
-	(define-key goto-address-highlight-keymap (kbd "C-c RET") nil)
-	(define-key goto-address-highlight-keymap (kbd "C-c") nil)))
+	(define-key goto-address-highlight-keymap (key "C-c RET") nil)
+	(define-key goto-address-highlight-keymap (key "C-c") nil)))
 
 
 ;; -- JS/Perl/Go mode "special" parenthesis removal --
@@ -484,6 +479,12 @@ If point is on a group name, this function operates on that group."
 		("go-mode" go-mode-map '("}" ")" ":" "="))))
 
 
+;; -- Python mode-specific actions --
+(eval-after-load "python" '(progn
+	(define-keys python-mode-map
+		'(("<C-M-up>" python-beginning-of-block)
+			("<C-M-down>" python-end-of-block)))))
+
 ;; -- PHP mode-specific actions --
 (eval-after-load "php-mode" '(progn
 	(define-key php-mode-map (key "C-'") 'fg-php-tag-line)))
@@ -491,9 +492,10 @@ If point is on a group name, this function operates on that group."
 
 ;; -- PgUp/PgDown in docview --
 (eval-after-load "doc-view" '(progn
-	(define-key doc-view-mode-map (kbd "=") 'doc-view-enlarge) ; holding shift is a pain! ;)
-	(define-key doc-view-mode-map (kbd "<next>") 'doc-view-next-page)
-	(define-key doc-view-mode-map (kbd "<prior>") 'doc-view-previous-page)))
+	(define-keys doc-view-mode-map
+		'(("=" doc-view-enlarge) ; holding shift is a pain! ;)
+			("<next>" doc-view-next-page)
+			("<prior>" doc-view-previous-page)))))
 
 
 ;; -- yasnippet --
@@ -501,8 +503,8 @@ If point is on a group name, this function operates on that group."
 	(defadvice yas/init-minor-keymap
 		(around fg-yas/init-minor-keymap activate)
 		ad-do-it
-		(define-key ad-return-value (kbd "C-c &") nil)
-		(define-key ad-return-value (kbd "C-c") nil))))
+		(define-key ad-return-value (key "C-c &") nil)
+		(define-key ad-return-value (key "C-c") nil))))
 
 
 ;; -- w3m keys --
@@ -516,27 +518,41 @@ If point is on a group name, this function operates on that group."
 			("<prior>" fg-scroll-up) ("<next>" fg-scroll-down)))))
 
 
+;; -- Lisp modes --
+(dolist
+	(mode-map
+		(list emacs-lisp-mode-map
+			lisp-interaction-mode-map
+			fg-scite-lisp-map))
+	(define-keys mode-map
+		;; Arrows to navigate sexp blocks
+		'(("C-M-<left>" backward-sexp)
+			("C-M-<right>" forward-sexp)
+			("C-M-<up>" up-list)
+			("C-M-<down>" down-list))))
+
+
 ;; -- ERC + submodes --
 
 (eval-after-load "erc" '(progn
 	;; Put mark-line w/o having to type /mark
-	(define-key erc-mode-map (kbd "C-j") 'fg-erc-mark)
+	(define-key erc-mode-map (key "C-j") 'fg-erc-mark)
 	;; Special "readability" hack, no idea why command is disabled by default
-	(define-key erc-mode-map (kbd "C-f") 'erc-remove-text-properties-region)
-	(define-key erc-mode-map (kbd "<prior>") 'fg-scroll-up)
-	(define-key erc-mode-map (kbd "<next>") 'fg-scroll-down)
+	(define-key erc-mode-map (key "C-f") 'erc-remove-text-properties-region)
+	(define-key erc-mode-map (key "<prior>") 'fg-scroll-up)
+	(define-key erc-mode-map (key "<next>") 'fg-scroll-down)
 	;; Next two are purely because PgUp/PgDn
 	;;  are right next to the arrows on acer laptops I use,
 	;;  and I frequently butterfinger Fn with Ctrl
-	(define-key erc-mode-map (kbd "<C-prior>") 'fg-beginning-of-line)
-	(define-key erc-mode-map (kbd "<C-next>") 'move-end-of-line)
+	(define-key erc-mode-map (key "<C-prior>") 'fg-beginning-of-line)
+	(define-key erc-mode-map (key "<C-next>") 'move-end-of-line)
 	(put 'erc-remove-text-properties-region 'disabled nil)))
 
 (eval-after-load "erc-track" '(progn
 	;; Get rid of global erc-track C-c bindings
-	(define-key erc-track-minor-mode-map (kbd "C-c C-SPC") nil)
-	(define-key erc-track-minor-mode-map (kbd "C-c C-@") nil)
-	(define-key erc-track-minor-mode-map (kbd "C-c") nil)))
+	(define-key erc-track-minor-mode-map (key "C-c C-SPC") nil)
+	(define-key erc-track-minor-mode-map (key "C-c C-@") nil)
+	(define-key erc-track-minor-mode-map (key "C-c") nil)))
 
 
 ;; -- KMacro (ex)globals --
@@ -550,8 +566,7 @@ If point is on a group name, this function operates on that group."
 	;; (message "%s, %s, %s" major-mode buffer-file-name (buffer-name))
 	(if buffer-file-name ; nil for system buffers and terminals
 		(cond
-			((eq major-mode 'lisp-mode)
-				(fg-scite-lisp t))
+			((eq major-mode 'lisp-mode) (fg-scite-lisp t))
 			((eq major-mode 'doc-view-mode) t) ; it has specific bindings
 			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond
