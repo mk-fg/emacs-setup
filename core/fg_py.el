@@ -9,7 +9,7 @@
 	(eval-after-load "pylookup" '(progn
 		(setq-default
 			pylookup-program (concat fg-pylookup-dir "/pylookup.py")
-			pylookup-db-file (concat fg-pylookup-dir "/pylookup.db")
+			pylookup-db-file (concat fg-path "/tmp/pylookup/pylookup.db")
 			browse-url-browser-function 'w3m-browse-url)
 		(defun pylookup-mode-quit-window ()
 			(interactive)
