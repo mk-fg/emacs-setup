@@ -152,6 +152,7 @@ DBus component: https://github.com/mk-fg/dbus-lastfm-scrobbler")
 					(emms-lastfm-scrobbler-make-async-nowplaying-call current-track))))))
 
 
+
 ;;;; Playlist controls
 
 (defun fg-emms-playlist-mode-kill ()
@@ -178,9 +179,27 @@ Uses basic `fg-copy' func internally, not emms-playlist stuff."
 	(interactive "p")
 	(emms-with-inhibit-read-only-t (fg-clone arg)))
 
+(defun fg-emms-add-directory-tree-glob (pattern)
+	"Add all directories matching provided glob pattern."
+	(interactive (list
+		(read-directory-name "Play directory tree (glob): "
+			emms-source-file-default-directory
+			emms-source-file-default-directory)))
+	(dolist (path (file-expand-wildcards pattern))
+		(emms-add-directory-tree path)))
+
+(defun fg-emms-add-file-glob (pattern)
+	"Add all files matching provided glob pattern."
+	(interactive (list
+		(read-file-name "Play file (glob): "
+			emms-source-file-default-directory
+			emms-source-file-default-directory)))
+	(dolist (path (file-expand-wildcards pattern))
+		(emms-add-file path)))
 
 
 ;;;; Track info / description
+
 (defun* fg-emms-file-track-wash-name (title &key strip-ext)
 	"Process underscore-encoded spaces in name,
 split numeric prefix, strip file extension."
