@@ -115,7 +115,7 @@ specified nickname, including ZNC-buffered messages."
 			`(("zebrapig" "[0-9]+ patches in queue \\.\\.\\. slackers!")
 				("unposted"
 					,(concat "\\[\\(" "website\\(/master\\)?"
-						"\\|remoteStorage\\.js\\(/\sw+\\)?" "\\)\\]\\s-+"))
+						"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+"))
 				("DeBot" "\\[\\(URL\\|feed\\)\\]\\s-+")))
 
 	erc-server-auto-reconnect t
