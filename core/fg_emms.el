@@ -179,14 +179,24 @@ Uses basic `fg-copy' func internally, not emms-playlist stuff."
 	(interactive "p")
 	(emms-with-inhibit-read-only-t (fg-clone arg)))
 
+
+(defun fg-emms-call-something-on-glob (func pattern)
+	"Expand glob pattern (unless exact-match path exists),
+calling FUNC for every path result."
+	(dolist
+		(path
+			(if (file-exists-p pattern)
+				(list pattern)
+				(file-expand-wildcards pattern)))
+		(funcall func path)))
+
 (defun fg-emms-add-directory-tree-glob (pattern)
 	"Add all directories matching provided glob pattern."
 	(interactive (list
 		(read-directory-name "Play directory tree (glob): "
 			emms-source-file-default-directory
 			emms-source-file-default-directory)))
-	(dolist (path (file-expand-wildcards pattern))
-		(emms-add-directory-tree path)))
+	(fg-emms-call-something-on-glob 'emms-add-directory-tree pattern))
 
 (defun fg-emms-add-file-glob (pattern)
 	"Add all files matching provided glob pattern."
@@ -194,8 +204,7 @@ Uses basic `fg-copy' func internally, not emms-playlist stuff."
 		(read-file-name "Play file (glob): "
 			emms-source-file-default-directory
 			emms-source-file-default-directory)))
-	(dolist (path (file-expand-wildcards pattern))
-		(emms-add-file path)))
+	(fg-emms-call-something-on-glob 'emms-add-file pattern))
 
 
 ;;;; Track info / description
