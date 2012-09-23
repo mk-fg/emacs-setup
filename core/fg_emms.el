@@ -1,15 +1,9 @@
 ;; Basic setup
 (require 'emms-source-file)
 (require 'emms-source-playlist)
-(require 'emms-player-mplayer)
 (require 'emms-playlist-mode)
 
 (setq-default
-	emms-player-list
-		'(emms-player-mplayer-playlist emms-player-mplayer)
-	;; emms-player-mplayer-parameters
-	;; 	(append emms-player-mplayer-parameters '("-noconfig" "user"))
-
 	emms-directory (concat fg-path "/tmp/emms")
 	emms-source-file-default-directory "/mnt/db/mediaCore/sound_music"
 
@@ -17,6 +11,24 @@
 	emms-playlist-mode-center-when-go t
 
 	emms-show-format "NP: %s")
+
+
+
+;;;; Player
+
+(require 'emms-player-vlc)
+(setq-default
+	emms-player-list
+		'(emms-player-vlc-playlist emms-player-vlc)
+	emms-player-vlc-parameters '("--intf=oldrc")
+	emms-player-vlc-playlist-parameters '("--intf=oldrc"))
+
+;; (require 'emms-player-mplayer)
+;; (setq-default
+;; 	emms-player-list
+;; 		'(emms-player-mplayer-playlist emms-player-mplayer)
+;; 	emms-player-mplayer-parameters
+;; 		(append emms-player-mplayer-parameters '("-noconfig" "user")))
 
 
 
