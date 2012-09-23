@@ -43,6 +43,7 @@
 	(and
 		(require 'url-vars nil t) ;; otherwise it's "url-request-method is let-bound"
 		(require 'emms-lastfm-client nil t)
+		(require 'emms-lastfm-scrobbler nil t)
 		(require 'emms-playing-time nil t))
 	(setq-default
 		emms-lastfm-client-username "FraGGod"
