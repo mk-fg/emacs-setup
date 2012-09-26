@@ -14,9 +14,9 @@
 ;; Font
 ;; Note: I always use variable-pitch font for code buffers
 (when window-system
-	(set-frame-font "Luxi Sans-11")
-	(set-face-font 'variable-pitch "Luxi Sans-11")
-	(set-face-font 'fixed-pitch "Luxi Mono-10"))
+	(set-frame-font "Luxi Sans-8")
+	(set-face-font 'variable-pitch "Luxi Sans-8")
+	(set-face-font 'fixed-pitch "Luxi Mono-7"))
 
 ;; Time is critical
 (setq-default display-time-day-and-date t
