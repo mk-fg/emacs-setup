@@ -115,8 +115,10 @@
 			("php (%d)" ".\\.php[0-9]?\\'")
 			("sh (%d)" ".\\.sh\\'")
 			("conf (%d)"
-				,(concat ".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\)"
-					"\\(\\.\\(sample\\|example\\|dist\\|documented\\)\\)?\\'"))
+				,(concat
+					".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol"
+						"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
+					"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'"))
 			("perl (%d)" ".\\.pl[0-9]?\\'")
 			("web/tpl (%d)" ".\\.\\(html\\|css\\|htm\\|js\\|tpl\\)\\'")
 			("sql (%d)" ".\\.sql\\'")
@@ -168,10 +170,14 @@
 ;; Auto-mode tweaks
 (delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
 (nconc auto-mode-alist
-	'((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'" . sh-mode)
-		("\\.jl\\'" . lisp-mode) ("\\.yaml\\'" . yaml-mode)
+	`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'" . sh-mode)
+		("\\.jl\\'" . lisp-mode) ("\\.rkt\\'" . scheme-mode)
+		("\\.yaml\\'" . yaml-mode)
 		("\\.coffee\\'" . coffee-mode) ("\\.go\\'" . go-mode)
-		("\\.rkt\\'" . scheme-mode) ("\\.vol\\'" . conf-mode)))
+		(,(concat
+			".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol"
+				"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
+			"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'") . conf-mode)))
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
 ;; Simple way to expand this list is "!" on confirm and fishing them from custom
