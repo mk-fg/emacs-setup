@@ -74,7 +74,14 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("C-M-S-p" ,(iwrap 'fg-revert-buffer-to-enc ''cp1251))
 		("M-p" ,(iwrap 'fg-revert-buffer-to-enc ''undecided)) ; safe bet
 	;; Stack-buffer hop
-		("C-<return>" fg-stack-buffer)))
+		("C-<return>" fg-stack-buffer)
+	;; Jump to often-used ERC buffers with F-keys
+		("<f5>" ,(iwrap 'fg-find-buffer "#bordercamp"))
+		("<f6>" ,(iwrap 'fg-find-buffer "#snort"))
+		("<f7>" ,(iwrap 'fg-find-buffer "#systemd"))
+		("<f8>" ,(iwrap 'fg-find-buffer "#exherbo"))
+		("<f9>" ,(iwrap 'fg-find-buffer "#tahoe-lafs"))
+		("<f10>" ,(iwrap 'fg-find-buffer "#e"))))
 
 
 ;;;; Snippet to rebind stuff online
@@ -556,8 +563,7 @@ If point is on a group name, this function operates on that group."
 
 
 ;; -- KMacro (ex)globals --
-(global-set-key [f3] nil)
-(global-set-key [f4] nil)
+(global-set-keys '(("<f3>" nil) ("<f4>" nil)))
 
 
 ;; -- Auto mode-switching --

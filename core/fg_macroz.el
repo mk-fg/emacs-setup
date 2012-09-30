@@ -373,6 +373,35 @@ FORCE option allows to bypass this caching."
 					(return-from :loop path))))))
 
 
+(defvar fg-find-buffer-state nil
+	"Stores '(buffer-from buffer-to) information for `fg-find-buffer'.")
+
+(defun* fg-find-buffer
+	(name &key error-if-not-found (switch-back t))
+	"Switch to named buffer, without creating it if it doesn't exists.
+SWITCH-BACK allows to reverse the operation with
+the subsequent call with the same NAME in the same window.
+ERROR-IF-NOT-FOUND signals error if named buffer doesn't exist."
+	(interactive)
+	(let
+		((buffer-from (current-buffer))
+			(buffer-to (get-buffer name)))
+		(if buffer-to
+			(multiple-value-bind
+				(buffer-x-from buffer-x-to)
+				fg-find-buffer-state
+				(if
+					(and switch-back
+						(eq buffer-from buffer-to)
+						(eq buffer-x-to buffer-from))
+					(fg-find-buffer buffer-x-from :switch-back nil)
+					(switch-to-buffer buffer-to)
+					(setq fg-find-buffer-state (list buffer-from buffer-to))))
+			(funcall
+				(if error-if-not-found 'error 'message)
+				"No such buffer: %s" name))))
+
+
 (defvar fg-notify-never-escape nil
 	"Never escape html entities in notification functions")
 
