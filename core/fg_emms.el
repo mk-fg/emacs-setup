@@ -16,19 +16,19 @@
 
 ;;;; Player
 
-(require 'emms-player-vlc)
-(setq-default
-	emms-player-list
-		'(emms-player-vlc-playlist emms-player-vlc)
-	emms-player-vlc-parameters '("--intf=oldrc")
-	emms-player-vlc-playlist-parameters '("--intf=oldrc"))
-
-;; (require 'emms-player-mplayer)
+;; (require 'emms-player-vlc)
 ;; (setq-default
 ;; 	emms-player-list
-;; 		'(emms-player-mplayer-playlist emms-player-mplayer)
-;; 	emms-player-mplayer-parameters
-;; 		(append emms-player-mplayer-parameters '("-noconfig" "user")))
+;; 		'(emms-player-vlc-playlist emms-player-vlc)
+;; 	emms-player-vlc-parameters '("--intf=oldrc")
+;; 	emms-player-vlc-playlist-parameters '("--intf=oldrc"))
+
+(require 'emms-player-mplayer)
+(setq-default
+	emms-player-list
+		'(emms-player-mplayer-playlist emms-player-mplayer)
+	emms-player-mplayer-parameters
+		(append emms-player-mplayer-parameters '("-noconfig" "user")))
 
 
 
