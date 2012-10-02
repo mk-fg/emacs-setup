@@ -107,7 +107,8 @@ specified nickname, including ZNC-buffered messages."
 
 	erc-hide-list '("JOIN" "PART" "QUIT") ;; careful, these are completely ignored
 	erc-ignore-list
-		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@.*" "^PLT_Notify!.*"
+		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
+			"^fdo-vcs!~kgb@\\sw+\\.freedesktop\\.org$"
 			"^u!u@kerpia-" "^u!u@cryto-" "^u!u@u\\.users\\.cryto")
 	fg-erc-msg-block
 		(mapcar
