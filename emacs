@@ -55,7 +55,8 @@
 (dolist
 	(sym
 		'(emms emms-stop emms-pause emms-shuffle
-			emms-next emms-previous emms-add-directory-tree
+			emms-next emms-previous
+			fg-emms-add-file-glob fg-emms-add-directory-tree-glob
 			emms-playlist emms-add-playlist emms-playlist-save
 			emms-playlist-mode-clear fg-emms-notify))
 	(autoload sym "fg_emms" nil t))
