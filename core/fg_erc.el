@@ -109,7 +109,8 @@ specified nickname, including ZNC-buffered messages."
 	erc-ignore-list
 		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
 			"^fdo-vcs!~?kgb@\\sw+\\.freedesktop\\.org$"
-			"^irker[[:digit:]]+!~?irker@\\sw+\\.exherbo\\.org"
+			"^irker[[:digit:]]+!~?irker@\\sw+\\.exherbo\\.org$"
+			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$"
 			"^u!u@kerpia-" "^u!u@cryto-" "^u!u@u\\.users\\.cryto")
 	fg-erc-msg-block
 		(mapcar
