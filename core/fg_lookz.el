@@ -16,7 +16,7 @@
 (when window-system
 	(set-frame-font "Luxi Sans-8")
 	(set-face-font 'variable-pitch "Luxi Sans-8")
-	(set-face-font 'fixed-pitch "Luxi Mono-7"))
+	(set-face-font 'fixed-pitch "DejaVu Sans Mono-7.5"))
 
 ;; Time is critical
 (setq-default display-time-day-and-date t
