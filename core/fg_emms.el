@@ -28,7 +28,8 @@
 	emms-player-list
 		'(emms-player-mplayer-playlist emms-player-mplayer)
 	emms-player-mplayer-parameters
-		(append emms-player-mplayer-parameters '("-noconfig" "user")))
+		(append emms-player-mplayer-parameters
+			'("-noconfig" "user" "-vo" "null")))
 
 
 
