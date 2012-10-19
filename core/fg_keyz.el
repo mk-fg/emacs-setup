@@ -574,6 +574,7 @@ If point is on a group name, this function operates on that group."
 			((eq major-mode 'doc-view-mode) t) ; it has specific bindings
 			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond
+			((eq major-mode 'occur-mode) (fg-scite-aux t))
 			((eq major-mode 'browse-kill-ring-mode) (fg-scite-aux t))
 			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
