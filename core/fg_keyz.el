@@ -470,6 +470,11 @@ If point is on a group name, this function operates on that group."
 	(define-key goto-address-highlight-keymap (key "C-c") nil)))
 
 
+;; -- Kill-ring mode fixes --
+(eval-after-load "browse-kill-ring-mode" '(progn
+	(defalias 'browse-kill-ring-quit 'quit-window)))
+
+
 ;; -- JS/Perl/Go mode "special" parenthesis removal --
 (mapc
 	(lambda (vars)
