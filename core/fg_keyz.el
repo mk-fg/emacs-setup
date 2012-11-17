@@ -1,5 +1,13 @@
 ;; TODO: add some-keyz + num for discrete buffer switching (Alt+NUM Alt+B)
 
+(defmacro iwrapm (func &rest args)
+	"Return interactive-wrapped FUNC, called w/ ARGS, if specified."
+	`(lambda () (interactive) (,func ,@args)))
+
+(defun iwrap (func &rest args)
+	"Return interactive-wrapped FUNC, called w/ ARGS, if specified."
+	`(lambda () (interactive) (,func ,@args)))
+
 (defun key (desc)
 	"Return env-dependant (X / term) key sequence.
 Obsolete functionality, since keys in newer emacs translate fine in all kinds of terminals."
@@ -17,10 +25,6 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		`(lambda (&optional ,@args)
 				(interactive ,mode)
 				(let (deactivate-mark) (,func ,@args)))))
-
-(defun iwrap (func &rest args)
-	"Return interactive-wrapped FUNC, called w/ ARGS, if specified."
-	`(lambda () (interactive) (,func ,@args)))
 
 (defun define-keys (mode defs)
 	(dolist (def defs)
@@ -70,16 +74,17 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("C-M-]" fg-masq-x-pitch)
 	;; Encoding stuff
 		("C-M-[" universal-coding-system-argument)
-		("C-M-p" ,(iwrap 'fg-revert-buffer-to-enc ''koi8-r)) ; TODO: should've made iwrap a macro
-		("C-M-S-p" ,(iwrap 'fg-revert-buffer-to-enc ''cp1251))
-		("M-p" ,(iwrap 'fg-revert-buffer-to-enc ''undecided)) ; safe bet
+		("C-M-p" ,(iwrapm fg-revert-buffer-to-enc 'koi8-r))
+		("C-M-S-p" ,(iwrapm fg-revert-buffer-to-enc 'cp1251))
+		("M-P" ,(iwrapm fg-revert-buffer-to-enc 'utf-8-unix)) ; to show ^M things
+		("M-p" ,(iwrapm fg-revert-buffer-to-enc 'undecided)) ; safe bet
 	;; Stack-buffer hop
 		("C-<return>" fg-stack-buffer)
 	;; Jump to often-used ERC buffers with F-keys
-		("<f5>" ,(iwrap 'fg-find-buffer "#bordercamp"))
-		("<f6>" ,(iwrap 'fg-find-buffer "#snort"))
-		("<f8>" ,(iwrap 'fg-find-buffer "#exherbo"))
-		("<f9>" ,(iwrap 'fg-find-buffer "#tahoe-lafs"))))
+		("<f5>" ,(iwrapm fg-find-buffer "#bordercamp"))
+		("<f6>" ,(iwrapm fg-find-buffer "#snort"))
+		("<f8>" ,(iwrapm fg-find-buffer "#exherbo"))
+		("<f9>" ,(iwrapm fg-find-buffer "#tahoe-lafs"))))
 
 
 ;;;; Snippet to rebind stuff online
@@ -100,17 +105,17 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; -- Frame controls --
 		;; Flux-style pane glide
-		(,(key "M-<left>") . ,(iwrap 'windmove-left 1))
-		(,(key "M-<right>") . ,(iwrap 'windmove-right 1))
-		(,(key "M-<up>") . ,(iwrap 'windmove-up 1))
-		(,(key "M-<down>") . ,(iwrap 'windmove-down 1))
+		(,(key "M-<left>") . ,(iwrapm windmove-left 1))
+		(,(key "M-<right>") . ,(iwrapm windmove-right 1))
+		(,(key "M-<up>") . ,(iwrapm windmove-up 1))
+		(,(key "M-<down>") . ,(iwrapm windmove-down 1))
 
 		;; Had to leave C-S-NUM bindings reserved for the tentacled aliens from outta space
 		(,(key "C-,") . split-window-horizontally)
 		(,(key "C-.") . split-window-vertically)
 		(,(key "C-<") . delete-window)
 		(,(key "C->") . delete-other-windows)
-		(,(key "M-,") . ,(iwrap 'kill-buffer nil)) ; kill current buffer w/o asking
+		(,(key "M-,") . ,(iwrapm kill-buffer nil)) ; kill current buffer w/o asking
 		;; (,(key "M-.") . split-window-vertically)
 
 		;; Tab cycling w/ status in minibuffer
@@ -143,7 +148,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "s-/") . fg-emms-notify)
 		(,(key "M-s-/") . ,(lambda () (interactive)
 			(setq fg-emms-scrobble-tracks (not fg-emms-scrobble-tracks))
-			(message "Scrobbbling %s"
+			(message "Scrobbling %s"
 				(if fg-emms-scrobble-tracks "enabled" "disabled"))))
 		(,(key "s-?") . emms-playlist-save)
 		(,(key "C-s-?") . emms-playlist-mode-clear)
@@ -187,10 +192,10 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-<return>") . ,(iwrap 'term-send-raw-string (make-string 1 13))) ; for nano
 
 		;; Terminal-safe block-skimming
-		(,(key "C-<left>") . ,(iwrap 'term-send-raw-string ";5D"))
-		(,(key "C-<right>") . ,(iwrap 'term-send-raw-string ";5C"))
-		(,(key "C-S-<left>") . ,(iwrap 'term-send-raw-string ";6D"))
-		(,(key "C-S-<right>") . ,(iwrap 'term-send-raw-string ";6C"))
+		(,(key "C-<left>") . ,(iwrapm term-send-raw-string ";5D"))
+		(,(key "C-<right>") . ,(iwrapm term-send-raw-string ";5C"))
+		(,(key "C-S-<left>") . ,(iwrapm term-send-raw-string ";6D"))
+		(,(key "C-S-<right>") . ,(iwrapm term-send-raw-string ";6C"))
 
 		(,(key "<C-tab>") . multi-term-next)
 		(,(key "<C-S-iso-lefttab>") . multi-term-prev))
@@ -249,9 +254,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "<tab>") . fg-tab)
 		(,(key "<backtab>") . fg-untab)
 		(,(key "<prior>") . fg-scroll-up) ; pageup
-		(,(key "C-<prior>") . ,(iwrap 'move-to-window-line 0))
+		(,(key "C-<prior>") . ,(iwrapm move-to-window-line 0))
 		(,(key "<next>") . fg-scroll-down) ; pagedown
-		(,(key "C-<next>") . ,(iwrap 'move-to-window-line -1))
+		(,(key "C-<next>") . ,(iwrapm move-to-window-line -1))
 
 		;; Block-skimming (emacs' re-definition, jic)
 		(,(key "C-<left>") . backward-word)
@@ -370,9 +375,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 ;; -- Basic text-mode overrides (propognates to many other modes) --
 (define-keys text-mode-map
 	`(("<prior>" fg-scroll-up) ; pageup
-		("C-<prior>" ,(iwrap 'move-to-window-line 0))
+		("C-<prior>" ,(iwrapm move-to-window-line 0))
 		("<next>" fg-scroll-down) ; pagedown
-		("C-<next>" ,(iwrap 'move-to-window-line -1))))
+		("C-<next>" ,(iwrapm move-to-window-line -1))))
 
 
 
@@ -448,13 +453,13 @@ If point is on a group name, this function operates on that group."
 	(unless move (forward-line -1)))
 
 (define-keys ibuffer-mode-map
-	`(("+" ,(iwrap 'ibuffer-mark-by-file-name-regexp ".*"))
-		("-" ,(iwrap 'ibuffer-unmark-all ibuffer-marked-char))
+	`(("+" ,(iwrapm ibuffer-mark-by-file-name-regexp ".*"))
+		("-" ,(iwrapm ibuffer-unmark-all ibuffer-marked-char))
 		("<prior>" fg-scroll-up) ; pageup
 		("<next>" fg-scroll-down) ; pagedown
 		("*" ibuffer-toggle-marks)
-		("SPC" ,(iwrap 'fg-ibuffer-mark nil))
-		("<insert>" ,(iwrap 'fg-ibuffer-mark t))))
+		("SPC" ,(iwrapm fg-ibuffer-mark nil))
+		("<insert>" ,(iwrapm fg-ibuffer-mark t))))
 
 
 ;; -- Jabbra submode --
