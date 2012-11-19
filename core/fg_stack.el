@@ -16,7 +16,7 @@ preceding to TIME and insert note if it isn't."
 		(when err
 			(insert (concat " -- " (propertize
 				"note: time continuity seem to be broken"
-				'font-lock-face 'bold)  " --")))))
+				'font-lock-face 'bold) " --")))))
 
 (defun fg-newline-stack ()
 	(interactive)
@@ -37,6 +37,8 @@ preceding to TIME and insert note if it isn't."
 			(fg-newline))))
 
 
+(defvar fg-stack-name "~/media/secure/stack.gpg"
+	"Filename of a stack-dump to use")
 (defvar fg-stack-buffer nil
 	"Buffer with fg-stack opened")
 (defvar fg-stack-return-point nil
@@ -51,7 +53,7 @@ preceding to TIME and insert note if it isn't."
 			(not (eq fg-stack-buffer (current-buffer))))
 		(progn
 			(setq fg-stack-return-point (current-buffer))
-			(find-file "~/media/secure/stack.gpg")
+			(find-file fg-stack-name)
 			(ignore-errors (fg-scite-stack t))
 			(setq fg-stack-buffer (current-buffer)))
 		(bury-buffer)
