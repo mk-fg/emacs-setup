@@ -594,6 +594,9 @@ If point is on a group name, this function operates on that group."
 				(fg-scite-code t))
 			((memq major-mode
 					'(help-mode slime-repl-mode erc-mode))
+				(fg-scite-aux t))
+			((string-match "^newsticker-treeview-"
+					(symbol-name major-mode))
 				(fg-scite-aux t)))))
 
 ;; Hooks can be added w/o loading var definitions
