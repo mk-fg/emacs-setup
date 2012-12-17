@@ -110,8 +110,7 @@ specified nickname, including ZNC-buffered messages."
 		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
 			"^fdo-vcs!~?kgb@\\sw+\\.freedesktop\\.org$"
 			"^irker[[:digit:]]+!~?irker@"
-			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$"
-			"^u!u@kerpia-" "^u!u@cryto-" "^u!u@u\\.users\\.cryto")
+			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
 	fg-erc-msg-block
 		(mapcar
 			(apply-partially 'apply 'fg-erc-msg-block-pattern)
