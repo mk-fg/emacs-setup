@@ -141,6 +141,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "s-.") . emms)
 		(,(key "s->") . emms-shuffle)
 		(,(key "s-<") . emms-sort)
+		(,(key "M-s-.") . emms-sort)
 		(,(key "M-s-<") . emms-uniq)
 		(,(key "C-s-,") . emms-add-playlist)
 		(,(key "s-,") . fg-emms-add-directory-tree-glob)
