@@ -10,10 +10,9 @@ Enables notifications only after connecting to the last server,
 to avoid spamming them with MOTD entries and notices."
 	(interactive)
 	(if (not fg-erc-links)
-		(progn
-			(remove-hook 'erc-after-connect 'fg-erc)
-			(run-with-timer 20 nil 'add-hook 'erc-insert-pre-hook 'fg-erc-notify))
+		(remove-hook 'erc-after-connect 'fg-erc)
 		(add-hook 'erc-after-connect 'fg-erc)
+		(run-with-timer 20 nil 'add-hook 'erc-insert-pre-hook 'fg-erc-notify)
 		(let ((link (car fg-erc-links)))
 			(setq fg-erc-links (cdr fg-erc-links))
 			(apply (car link) (cdr link)))))
