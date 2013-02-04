@@ -182,6 +182,7 @@
 		;; Misc
 		`(yaml-tab-face ((t (:inherit default :background ,fg-color-bg-hl))))
 		`(w3m-current-anchor ((t (:inherit w3m-anchor :underline t))))
+		`(rst-level-1-face ((t (:background ,fg-color-bg-hl))))
 		`(rst-level-2-face ((t (:background ,fg-color-bg-hl))))
 		`(rst-level-3-face ((t (:background ,fg-color-bg-hl))))
 		`(which-func ((t
