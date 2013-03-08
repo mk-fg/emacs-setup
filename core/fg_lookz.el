@@ -61,6 +61,19 @@
 ;; Tab indentation guides
 (aset standard-display-table ?\t (vconcat "˙ "))
 
+;; git-gutter
+(when
+	(load-library-safe "git-gutter")
+	(global-git-gutter-mode t)
+	(setq-default
+		git-gutter:window-width 2
+		git-gutter:modified-sign "~"
+		git-gutter:added-sign "+"
+		git-gutter:deleted-sign "--"
+		git-gutter:lighter ""
+		git-gutter:always-show-gutter t
+		git-gutter:diff-option "-w"))
+
 
 ;; Local modes
 (load-library-safe "develock-py")
@@ -72,6 +85,7 @@
 	"go-mode" "Mode for editing Go sources" t)
 (autoload 'coffee-mode
 	"coffee-mode" "Mode for editing CoffeeScript sources" t)
+
 
 ;; Nice, but crashes current emacs (24.0.50.1)
 ;; (autoload 'lambda-mode
@@ -179,6 +193,10 @@
 		`(newsticker-treeview-immortal-face
 			((t (:inherit newsticker-treeview-face :slant italic :weight bold))))
 		`(newsticker-treeview-selection-face ((t (:background ,fg-color-bg-hl))))
+		;; git-gutter
+		`(git-gutter:added ((t (:foreground "dark green"))))
+		`(git-gutter:modified ((t (:foreground "saddle brown"))))
+		`(git-gutter:deleted ((t (:foreground "dark red"))))
 		;; Misc
 		`(yaml-tab-face ((t (:inherit default :background ,fg-color-bg-hl))))
 		`(w3m-current-anchor ((t (:inherit w3m-anchor :underline t))))

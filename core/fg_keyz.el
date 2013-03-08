@@ -260,10 +260,16 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-<next>") . ,(iwrapm move-to-window-line -1))
 
 		;; Block-skimming (emacs' re-definition, jic)
-		(,(key "C-<left>") . backward-word)
-		(,(key "C-<right>") . forward-word)
-		(,(key "C-<up>") . backward-paragraph)
-		(,(key "C-<down>") . forward-paragraph)
+		(,(key "<C-left>") . backward-word)
+		(,(key "<C-right>") . forward-word)
+		(,(key "<C-up>") . backward-paragraph)
+		(,(key "<C-down>") . forward-paragraph)
+
+		;; git-gutter ops
+		(,(key "M-e") . git-gutter:toggle)
+		(,(key "C-M-e") . git-gutter:revert-hunk)
+		(,(key "<C-M-up>") . git-gutter:previous-hunk)
+		(,(key "<C-M-down>") . git-gutter:next-hunk)
 
 		;; Region ops
 		(,(key "M-u") . ,(transient-wrap 'upcase-region "r"))
@@ -285,6 +291,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; Lookz
 		(,(key "M-w") . toggle-truncate-lines)
+		(,(key "C-M-w") . develock-mode)
 
 		;; Metacode ops (emacs stuff)
 		(,(key "C-j") . eval-last-sexp) ; > minibuffer
