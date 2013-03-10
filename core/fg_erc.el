@@ -220,6 +220,54 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	(interactive)
 	(when (eq major-mode 'erc-mode) (fg-erc-mark-put (current-buffer))))
 
+;; Auto mark-lines.
+;; source: http://www.emacswiki.org/emacs/ErcBar
+
+(defvar fg-erc-bar-threshold 1
+	"Display bar when there are more than erc-bar-threshold unread messages.")
+
+(defvar fg-erc-bar-overlay-color "dark red"
+	"Color of the overlay line.")
+
+(defvar fg-erc-bar-overlay nil
+	"Overlay used to set bar.")
+
+(defun fg-erc-bar-move-back (n)
+	"Moves back n message lines. Ignores wrapping, and server messages."
+	(interactive "nHow many lines ? ")
+	(re-search-backward "^.*<.*>" nil t n))
+
+(defun fg-erc-bar-update-overlay ()
+	"Update the overlay for current buffer,
+based on the content of erc-modified-channels-alist.
+Should be executed on window change."
+	(interactive)
+	(let*
+		((info (assq (current-buffer) erc-modified-channels-alist))
+			(count (cadr info)))
+		(if (and info (> count fg-erc-bar-threshold))
+			(save-excursion
+				(end-of-buffer)
+				(when (fg-erc-bar-move-back count)
+					(let ((inhibit-field-text-motion t))
+						(move-overlay fg-erc-bar-overlay
+							(line-beginning-position)
+							(line-end-position)
+							(current-buffer)))))
+			(delete-overlay fg-erc-bar-overlay))))
+
+;; TODO: make face change for light/dark masq's
+(setq fg-erc-bar-overlay (make-overlay 0 0))
+(overlay-put fg-erc-bar-overlay 'face `(:underline ,fg-erc-bar-overlay-color))
+
+;; Put the hook *before* erc-modified-channels-update by remove/add dance
+(defadvice erc-track-mode
+	(after fg-erc-bar-setup-hook (&rest args) activate)
+	(remove-hook 'window-configuration-change-hook 'fg-erc-bar-update-overlay)
+	(add-hook 'window-configuration-change-hook 'fg-erc-bar-update-overlay))
+
+(add-hook 'erc-send-completed-hook (lambda (str) (fg-erc-bar-update-overlay)))
+
 
 ;; Iterate over all erc channel buffers
 
