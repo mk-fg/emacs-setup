@@ -562,6 +562,9 @@ If point is on a group name, this function operates on that group."
 (eval-after-load "erc" '(progn
 	;; Put mark-line w/o having to type /mark
 	(define-key erc-mode-map (key "C-j") 'fg-erc-mark)
+	;; Summon prev/next sent (typed) lines from history
+	(define-key erc-mode-map (key "<C-M-up>") 'erc-previous-command)
+	(define-key erc-mode-map (key "<C-M-down>") 'erc-next-command)
 	;; Special "readability" hack, no idea why command is disabled by default
 	(define-key erc-mode-map (key "C-f") 'erc-remove-text-properties-region)
 	(define-key erc-mode-map (key "<prior>") 'fg-scroll-up)
