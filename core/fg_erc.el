@@ -203,8 +203,11 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 				(or
 					(not (erc-buffer-visible buffer))
 					(not (fg-xactive-check))))
-			(fg-notify (format "erc: %s" channel) text :pixmap "erc" :strip t))))
-
+			(condition-case-unless-debug ex
+				(fg-notify (format "erc: %s" channel) text :pixmap "erc" :strip t)
+				(error
+					(message "ERC notification error: %s" ex)
+					(ding t))))))
 
 ;; Putting a mark-lines into the buffers
 
