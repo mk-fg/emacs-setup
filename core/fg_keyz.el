@@ -83,6 +83,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 	;; Jump to often-used ERC buffers with F-keys
 		("<f5>" ,(iwrapm fg-find-buffer "#bordercamp"))
 		("<f6>" ,(iwrapm fg-find-buffer "#snort"))
+		("<f7>" ,(iwrapm fg-find-buffer "#twitter_bitlbee"))
 		("<f8>" ,(iwrapm fg-find-buffer "#exherbo"))
 		("<f9>" ,(iwrapm fg-find-buffer "#tahoe-lafs"))))
 
