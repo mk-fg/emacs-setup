@@ -68,22 +68,31 @@ Not all modes are handled correctly (tested w/ p and r only)."
 				(apply action '(before-save-hook delete-trailing-whitespace))
 				(message (format "delete-trailing-whitespace: %s" msg)))))
 		("C-M-S-o" delete-selection-mode)
-	;; Lookz switching should work everywhere as well
+
+		;; Lookz switching should work everywhere as well
 		("C-M-/" fg-masq-x-light)
 		("C-M-'" fg-masq-x-dark)
 		("C-M-]" fg-masq-x-pitch)
-	;; Encoding stuff
+
+		;; Encoding stuff
 		("C-M-[" universal-coding-system-argument)
 		("C-M-p" ,(iwrapm fg-revert-buffer-to-enc 'koi8-r))
 		("C-M-S-p" ,(iwrapm fg-revert-buffer-to-enc 'cp1251))
 		("M-P" ,(iwrapm fg-revert-buffer-to-enc 'utf-8-unix)) ; to show ^M things
 		("M-p" ,(iwrapm fg-revert-buffer-to-enc 'undecided)) ; safe bet
-	;; Stack-buffer hop
+
+		;; Stack-buffer hop
 		("C-<return>" fg-stack-buffer)
-	;; Jump to often-used ERC buffers with F-keys
+
+		;; Jump to often-used ERC buffers with F-keys
+		;; local notification channels
 		("<f5>" ,(iwrapm fg-find-buffer "#bordercamp"))
-		("<f6>" ,(iwrapm fg-find-buffer "#snort"))
-		("<f7>" ,(iwrapm fg-find-buffer "#twitter_bitlbee"))
+		("<S-f5>" ,(iwrapm fg-find-buffer "#snort"))
+		;; im and twitter stuff
+		("<f6>" ,(iwrapm fg-find-buffer "&bitlbee"))
+		("<S-f6>" ,(iwrapm fg-find-buffer "#twitter_bitlbee"))
+		("<C-f6>" fg-erc-ddg-define) ; prints the definition of whatever is selected
+		;; irc channel shortcuts
 		("<f8>" ,(iwrapm fg-find-buffer "#exherbo"))
 		("<f9>" ,(iwrapm fg-find-buffer "#tahoe-lafs"))))
 

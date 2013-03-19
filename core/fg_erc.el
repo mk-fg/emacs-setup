@@ -192,6 +192,31 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	(force-mode-line-update t))
 
 
+;; Used to get short definition of
+;;  a selected word or phrase and a link to a longer version
+(defun fg-erc-ddg-define (start end)
+	"Send 'define <selection>' to DuckDuckGo bot via jabber."
+	(interactive "r")
+	(let
+		((erc-buff-ddg (erc-get-buffer "ddg_bot"))
+			(query (filter-buffer-substring start end)))
+		(if erc-buff-ddg
+			(switch-to-buffer erc-buff-ddg)
+			(let*
+				((erc-buff-bitlbee
+						(or (erc-get-buffer "&jabber") (erc-get-buffer "&bitlbee")))
+					(erc-buff-bitlbee
+						(and erc-buff-bitlbee
+							(with-current-buffer erc-buff-bitlbee
+								(car
+									(erc-buffer-list-with-nick "ddg_bot" erc-server-process))))))
+				(when erc-buff-bitlbee
+					(with-current-buffer erc-buff-bitlbee
+						(setq erc-buff-ddg (erc-cmd-QUERY "ddg_bot"))))))
+		(when erc-buff-ddg
+			(erc-send-message (format "define %s" query)))))
+
+
 ;; New message notification hook
 (defun fg-erc-notify (text)
 	(let*
@@ -208,6 +233,7 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 				(error
 					(message "ERC notification error: %s" ex)
 					(ding t))))))
+
 
 ;; Putting a mark-lines into the buffers
 
