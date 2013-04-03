@@ -201,8 +201,7 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	(let
 		((erc-buff-ddg (erc-get-buffer "ddg_bot"))
 			(query (filter-buffer-substring start end)))
-		(if erc-buff-ddg
-			(switch-to-buffer erc-buff-ddg)
+		(unless erc-buff-ddg
 			(let*
 				((erc-buff-bitlbee
 						(or (erc-get-buffer "&jabber") (erc-get-buffer "&bitlbee")))
@@ -215,6 +214,7 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 					(with-current-buffer erc-buff-bitlbee
 						(setq erc-buff-ddg (erc-cmd-QUERY "ddg_bot"))))))
 		(when erc-buff-ddg
+			(switch-to-buffer erc-buff-ddg)
 			(erc-send-message (format "define %s" query)))))
 
 
