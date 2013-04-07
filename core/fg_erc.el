@@ -109,6 +109,7 @@ specified nickname, including ZNC-buffered messages."
 		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
 			"^fdo-vcs!~?kgb@\\sw+\\.freedesktop\\.org$"
 			"^KGB[^!]+!~?Debian-kgb@.*\\.kitenet\\.net$"
+			"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
 			"^irker[[:digit:]]+!~?irker@"
 			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
 	fg-erc-msg-block
