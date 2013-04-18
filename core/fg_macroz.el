@@ -591,6 +591,15 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 			("<" "&lt;")
 			(">" "&gt;"))))
 
+(defun fg-string-join (sep &rest strings) (mapconcat 'identity strings sep))
+
+(defun fg-string-strip (string &rest frags)
+	"Remove characters from STRING margins, returns the resulting string."
+	(let*
+		((frags (apply 'fg-string-join "\\|" (mapcar 'regexp-quote frags)))
+			(regexp (format "\\(^\\(%s\\)+\\|\\(%s\\)+$\\)" frags frags)))
+		(replace-regexp-in-string regexp "" string)))
+
 (defun fg-string-strip-whitespace (string)
 	"Remove whitespace characters from STRING margins, returns the resulting string."
 	(replace-regexp-in-string "\\(^[[:space:]\n]+\\|[[:space:]\n]+$\\)" "" string))
