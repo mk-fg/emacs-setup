@@ -279,7 +279,7 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	(condition-case-unless-debug ex
 		(save-excursion
 			(goto-char (point-min))
-			(while (re-search-forward "[[:graph:]]+" nil t)
+			(while (re-search-forward "[-[:alnum:]_`^|]+" nil t)
 				(let*
 					((bounds (cons (match-beginning 0) (point)))
 						(nick (buffer-substring-no-properties (car bounds) (cdr bounds)))
