@@ -46,11 +46,12 @@ specified nickname, including ZNC-buffered messages."
 (add-to-list 'erc-modules 'autoaway)
 (add-to-list 'erc-modules 'dcc)
 
-
 ;; TODO: should be configured first
 ;; (add-to-list 'erc-modules 'notify)
 ;; TODO: check these out
 ;; (add-to-list 'erc-modules 'keep-place)
+
+(erc-update-modules)
 
 
 (setq-default
@@ -235,6 +236,69 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 				(error
 					(message "ERC notification error: %s" ex)
 					(ding t))))))
+
+
+;; erc-highlight-nicknames mods
+;; idea: from #erc
+;; source: http://www.emacswiki.org/emacs/ErcNickColors
+
+(defmacro fg-erc-unpack-color (color red green blue &rest body)
+	`(let
+		((,red (car ,color))
+			(,green (car (cdr ,color)))
+			(,blue (car (cdr (cdr ,color)))))
+		,@body))
+
+(defun fg-erc-rgb-to-html (color)
+	(fg-erc-unpack-color color red green blue
+		(concat "#" (format "%02x%02x%02x" red green blue))))
+
+(defun fg-erc-hexcolor-luminance (color)
+	(fg-erc-unpack-color color red green blue
+		(floor (+ (* 0.299 red) (* 0.587 green) (* 0.114 blue)))))
+
+(defun fg-erc-invert-color (color)
+	(fg-erc-unpack-color color red green blue
+		`(,(- 255 red) ,(- 255 green) ,(- 255 blue))))
+
+(defun fg-erc-get-color-for-nick (nick dark)
+	(let*
+		((hash (md5 (downcase nick)))
+			(red (mod (string-to-number (substring hash 0 10) 16) 256))
+			(blue (mod (string-to-number (substring hash 10 20) 16) 256))
+			(green (mod (string-to-number (substring hash 20 30) 16) 256))
+			(color `(,red ,green ,blue)))
+		(message "c1: %s" (fg-erc-hexcolor-luminance color))
+		(fg-erc-rgb-to-html
+			(if
+				(if dark
+					(< (fg-erc-hexcolor-luminance color) 85)
+					(> (fg-erc-hexcolor-luminance color) 155))
+				(fg-erc-invert-color color) color))))
+
+(defun fg-erc-highlight-nicknames ()
+	(unwind-protect
+		(save-excursion
+			(goto-char (point-min))
+			(while (re-search-forward "\\w+" nil t)
+				(let*
+					((bounds (bounds-of-thing-at-point 'word))
+						(nick (buffer-substring-no-properties (car bounds) (cdr bounds)))
+						(nick-self (erc-current-nick)))
+					(when
+						(and
+							(or
+								(and (erc-server-buffer-p) (erc-get-server-user nick))
+								(and erc-channel-users (erc-get-channel-user nick)))
+							(not (string-equal nick nick-self)))
+						(put-text-property
+							(car bounds) (cdr bounds) 'face
+							(cons 'foreground-color
+								(fg-erc-get-color-for-nick nick
+									(eq frame-background-mode 'dark))))))))
+		nil))
+
+(add-hook 'erc-insert-modify-hook 'fg-erc-highlight-nicknames)
 
 
 ;; Putting a mark-lines into the buffers
