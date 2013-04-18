@@ -268,7 +268,6 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 			(blue (mod (string-to-number (substring hash 10 20) 16) 256))
 			(green (mod (string-to-number (substring hash 20 30) 16) 256))
 			(color `(,red ,green ,blue)))
-		(message "c1: %s" (fg-erc-hexcolor-luminance color))
 		(fg-erc-rgb-to-html
 			(if
 				(if dark
@@ -277,14 +276,18 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 				(fg-erc-invert-color color) color))))
 
 (defun fg-erc-highlight-nicknames ()
-	(unwind-protect
+	(condition-case-unless-debug ex
 		(save-excursion
 			(goto-char (point-min))
-			(while (re-search-forward "\\w+" nil t)
+			(while (re-search-forward "[[:graph:]]+" nil t)
 				(let*
-					((bounds (bounds-of-thing-at-point 'word))
+					((bounds (cons (match-beginning 0) (point)))
 						(nick (buffer-substring-no-properties (car bounds) (cdr bounds)))
 						(nick-self (erc-current-nick)))
+					(when (string-match "^<\\(.*\\)>$" nick)
+						(setq
+							nick (match-string 1 nick)
+							bounds (cons (1+ (car bounds)) (1- (cdr bounds)))))
 					(when
 						(and
 							(or
@@ -296,7 +299,9 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 							(cons 'foreground-color
 								(fg-erc-get-color-for-nick nick
 									(eq frame-background-mode 'dark))))))))
-		nil))
+		(error
+			(message "ERC highlight error: %s" ex)
+			(ding t))))
 
 (add-hook 'erc-insert-modify-hook 'fg-erc-highlight-nicknames)
 
