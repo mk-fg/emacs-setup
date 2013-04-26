@@ -169,6 +169,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; -- Notification controls --
 		(,(key "C-n") . fg-track-switch)
+		(,(key "M-n") . ,(lambda (arg)
+			(interactive "p") (fg-track-switch (- arg))))
 		(,(key "C-S-n") . fg-track-reset)
 		(,(key "C-M-n") . fg-feeds)
 		(,(key "C-M-S-n") . fg-erc-cycle-channels)
