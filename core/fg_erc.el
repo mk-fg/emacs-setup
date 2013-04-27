@@ -112,6 +112,7 @@ specified nickname, including ZNC-buffered messages."
 			"^KGB[^!]+!~?Debian-kgb@.*\\.kitenet\\.net$"
 			"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
 			"^irker[[:digit:]]+!~?irker@"
+			"^u-u-commits!~?sardemff7@"
 			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
 	fg-erc-msg-block
 		(mapcar
