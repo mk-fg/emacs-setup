@@ -113,6 +113,7 @@ specified nickname, including ZNC-buffered messages."
 			"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
 			"^irker[[:digit:]]+!~?irker@"
 			"^u-u-commits!~?sardemff7@"
+			"^plexdev!~?plexdev@.*\\.espians.com$"
 			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
 	fg-erc-msg-block
 		(mapcar
