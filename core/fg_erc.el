@@ -15,7 +15,7 @@ to avoid spamming them with MOTD entries and notices."
 		(run-with-timer 20 nil 'add-hook 'erc-insert-pre-hook 'fg-erc-notify)
 		(let ((link (car fg-erc-links)))
 			(setq fg-erc-links (cdr fg-erc-links))
-			(apply (car link) (cdr link)))))
+			(apply 'run-with-timer 1 nil (car link) (cdr link)))))
 
 ;; Extra: block msgs by content
 (defcustom fg-erc-msg-block ()
