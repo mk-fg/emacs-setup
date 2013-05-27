@@ -19,6 +19,10 @@
 	#'(lambda () (setq tab-width 2 indent-tabs-mode t)))
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
+;; Short-circuit stupid indentation hacks in newer python.el
+(eval-after-load "python" '(progn
+	(defun python-indent-post-self-insert-function () nil)))
+
 ;; God I hate php, but sometimes they force me to use it
 ;; TODO: regional action, look at fg-comment
 (defun* fg-php-tag-line (&key force-insert force-strip)
