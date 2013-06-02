@@ -520,7 +520,8 @@ If point is on a group name, this function operates on that group."
 (eval-after-load "python" '(progn
 	(define-keys python-mode-map
 		'(("<C-M-up>" python-beginning-of-block)
-			("<C-M-down>" python-end-of-block)))))
+			("<C-M-down>" python-end-of-block)
+			(":" self-insert-command)))))
 
 ;; -- PHP mode-specific actions --
 (eval-after-load "php-mode" '(progn
