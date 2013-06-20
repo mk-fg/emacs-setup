@@ -123,7 +123,7 @@ specified nickname, including ZNC-buffered messages."
 				("unposted"
 					,(concat "\\[\\(" "website\\(/master\\)?"
 						"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+"))
-				("i2p" "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\) ")
+				("i2p" "\\([0-9]+\\)?\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\) ")
 				("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")
 				("DeBot" "\\[\\(URL\\|feed\\)\\]\\s-+")))
 
