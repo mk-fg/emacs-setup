@@ -79,6 +79,9 @@ specified nickname, including ZNC-buffered messages."
 
 	erc-anonymous-login nil
 
+	erc-interpret-mirc-color nil
+	erc-interpret-controls-p nil
+	erc-beep-p nil
 	erc-encoding-coding-alist
 		'(("#debian-ru" . cyrillic-koi8))
 
@@ -123,7 +126,7 @@ specified nickname, including ZNC-buffered messages."
 				("unposted"
 					,(concat "\\[\\(" "website\\(/master\\)?"
 						"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+"))
-				("i2p" "\\([0-9]+\\)?\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\) ")
+				("i2p" "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\) ")
 				("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")
 				("DeBot" "\\[\\(URL\\|feed\\)\\]\\s-+")))
 
@@ -177,7 +180,8 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 
 ;; Message content filter
 (defun fg-erc-msg-content-filter (msg)
-	(when (erc-list-match fg-erc-msg-block msg)
+	(when
+		(erc-list-match fg-erc-msg-block (erc-controls-strip msg))
 		(set 'erc-insert-this nil)))
 (add-hook 'erc-insert-pre-hook 'fg-erc-msg-content-filter)
 
