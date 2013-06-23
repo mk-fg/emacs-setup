@@ -607,3 +607,14 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 (defun fg-product (list1 list2)
 	"Return a list of the Cartesian product of two lists."
 	(mapcan (lambda (x) (mapcar (lambda (y) (list x y)) list2)) list1))
+
+(defadvice wildcard-to-regexp (around fg-wildcard-to-regexp activate)
+	"Make `wildcard-to-regexp' not fail if square brackets are present in the filename."
+	(ad-set-arg 0
+		(fg-string-replace-pairs (ad-get-arg 0)
+			'(("_\\(-+\\)_" "_--\\1_") ("\\[" "_-_") ("\\]" "_--_"))))
+	;; Will fail if original func will add "_-+_", to the resulting regexp, but shouldn't happen
+	ad-do-it
+	(set 'ad-return-value
+		(fg-string-replace-pairs ad-return-value
+			'(("_-_" "\\\\[") ("_--_" "\\\\]") ("_--\\(-+\\)_" "_\\1_")))))
