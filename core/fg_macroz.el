@@ -481,7 +481,6 @@ In all other buffers: if ARG is \\[universal-argument], calls
 `smart-indent'. Else if point is at the end of a symbol,
 expands it. Else calls `smart-indent'."
 	(interactive "p")
-	(setq indent-tabs-mode t)
 	(labels
 		((fg-tab-must-expand (&optional arg)
 			(unless
