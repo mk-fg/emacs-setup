@@ -502,7 +502,7 @@ If point is on a group name, this function operates on that group."
 	(defalias 'browse-kill-ring-quit 'quit-window)))
 
 
-;; -- JS/Perl/Go mode "special" parenthesis removal --
+;; -- JS/Perl/Go/YAML mode eclectic/electric crap removal --
 (mapc
 	(lambda (vars)
 		(apply
@@ -513,6 +513,7 @@ If point is on a group name, this function operates on that group."
 			vars))
 	'(("js" js-mode-map '("{" "}" "(" ")" ":" ";" ","))
 		("perl" perl-mode-map '("{" "}" "(" ")" ":" ";" ","))
+		("yaml-mode" yaml-mode-map '(">" "|"))
 		("go-mode" go-mode-map '("}" ")" ":" "="))))
 
 
