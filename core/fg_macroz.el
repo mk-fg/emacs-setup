@@ -1,4 +1,75 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; REFERENCE - 'cause elisp is for aliens
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;; str
+
+; py:
+;   str.find(s, sub[, start[, end]])
+;   str.rfind(s, sub[, start[, end]])
+;   str1 in str2
+;   str1 == str2
+;   bool(str)
+;   len(str)
+; el:
+;   (position SUB S [:start N] [:end N] [:from-end t])
+;   (member STR1 STR2)
+;   (string= STR1 STR2)
+;   (> (length STR) 0)
+;   (length STR)
+
+; py:
+;   str.strip(s[, chars])
+;   str.lstrip(s[, chars])
+;   str.rstrip(s[, chars])
+; el:
+;   (fg-string-strip-whitespace S)
+;   (fg-string-strip-chars S CHARS [:from WHERE])
+;   (fg-string-strip S SUB... [:from WHERE])
+
+; py:
+;   str.startswith(s, prefix)
+;   str.endswith(s, suffix)
+; el:
+;   (string-prefix-p PREFIX S [IGNORE-CASE])
+;   (fg-string-suffix-p SUFFIX S [IGNORE-CASE])
+
+; py:
+;   str.split(s[, sep[, maxsplit]])
+;   str.rsplit(s[, sep[, maxsplit]])
+;   str.join(words[, sep])
+; el:
+;   (fg-string-split S [:sep SEP-RE]
+;     [:omit-nulls t] [:from WHERE] [:limit MAXSPLIT])
+;   (fg-string-join SEP WORDS...)
+
+; py:
+;   string.replace(s, old, new[, maxreplace])
+; el:
+;   (replace-regexp-in-string OLD-RE NEW-RE S)
+;   (fg-string-replace-pairs S (OLD-RE NEW-RE)...)
+
+; py: str.upper -> el: upcase
+; py: str.lower -> el: downcase
+; py: string.capitalize -> el: capitalize
+
+;;;; list
+
+; py:
+;   list.index(v)
+;   v in list
+; el:
+;   (memq V LIST)
+;   (memql V LIST)
+;   (member V LIST)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Metacode stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6,6 +77,16 @@
 	"Like `apply-partially', but appends arguments to a wrapped call."
 	(lexical-let ((fun fun) (args1 args))
 		(lambda (&rest args2) (apply fun (append args2 args1)))))
+
+(defun fg-keys-from-rest (args)
+	"Remove keywords and their values from ARGS.
+Useful for &rest + &key + &allow-other-keys in `defun*'."
+	(let (res drop)
+		(dolist (v args)
+			(when (not drop)
+				(if (keywordp v) (set 'drop t)
+					(setq res (cons v res) drop nil))))
+		(nreverse res)))
 
 
 
@@ -572,7 +653,7 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Processing / conversion / data mangling
+;; Processing / conversion / string mangling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun fg-string-replace-pairs (string pairs)
@@ -590,14 +671,56 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 			("<" "&lt;")
 			(">" "&gt;"))))
 
+(defun fg-string-reverse (s) (concat (nreverse (string-to-list s))))
+
+(defun fg-string-suffix-p (suffix s &optional ignore-case)
+	(string-prefix-p (fg-string-reverse suffix) (fg-string-reverse s) ignore-case))
+
+(defun* fg-string-split (string &key sep omit-nulls limit (from 'left))
+	"Same as `split-string', but with optional split-limit and direction keys."
+	(when (not (eq from 'left)) (error "Only [:from 'left] is supported now."))
+	(if (and limit (/= limit 0))
+		(let
+			((keep-nulls (not (if sep omit-nulls t)))
+				(rexp (or sep split-string-default-separators))
+				(start 0) notfirst (list nil))
+			(block 'limited
+				(while
+					(and
+						(string-match rexp string
+							(if (and notfirst (= start (match-beginning 0))
+								(< start (length string))) (1+ start) start))
+						(< start (length string)))
+					(set 'notfirst t)
+					(when (or keep-nulls (< start (match-beginning 0)))
+						(set 'list (cons (substring string start (match-beginning 0)) list))
+						(when (and limit (<= (set 'limit (1- limit)) 0))
+							(set 'list (cons (substring string (match-end 0)) list))
+							(return-from 'limited)))
+					(set 'start (match-end 0)))
+				(when (or keep-nulls (< start (length string)))
+					(set 'list (cons (substring string start) list))))
+			(nreverse list))
+		(list string)))
+
 (defun fg-string-join (sep &rest strings) (mapconcat 'identity strings sep))
 
-(defun fg-string-strip (string &rest frags)
-	"Remove characters from STRING margins, returns the resulting string."
+(defun* fg-string-strip (string &rest frags &key (from 'both) &allow-other-keys)
+	"Remove substrings (e.g. characters) from STRING margins.
+FROM can be one of '(both l left r right), 'both being a default.
+Returns the resulting string."
 	(let*
-		((frags (apply 'fg-string-join "\\|" (mapcar 'regexp-quote frags)))
-			(regexp (format "\\(^\\(%s\\)+\\|\\(%s\\)+$\\)" frags frags)))
-		(replace-regexp-in-string regexp "" string)))
+		((frags (apply 'fg-string-join "\\|"
+				(mapcar 'regexp-quote (fg-keys-from-rest frags))))
+			regexp)
+		(when (memq from '(both r right))
+			(set 'regexp (cons (format "\\(%s\\)+$" frags) regexp)))
+		(when (memq from '(both l left))
+			(set 'regexp (cons (format "^\\(%s\\)+" frags) regexp)))
+		(replace-regexp-in-string (apply 'fg-string-join "\\|" regexp) "" string)))
+
+(defun* fg-string-strip-chars (string chars &key (from 'both) &allow-other-keys)
+	(apply 'fg-string-strip string :from from (mapcar 'char-to-string "asddsa")))
 
 (defun fg-string-strip-whitespace (string)
 	"Remove whitespace characters from STRING margins, returns the resulting string."
