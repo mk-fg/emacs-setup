@@ -17,17 +17,33 @@ to avoid spamming them with MOTD entries and notices."
 			(setq fg-erc-links (cdr fg-erc-links))
 			(apply 'run-with-timer 1 nil (car link) (cdr link)))))
 
-;; Extra: block msgs by content
+
+;; Local feature: blocking msgs by a bunch of props
+
 (defcustom fg-erc-msg-block ()
 	"Regexps to match to-be-ignored msgs."
 	:group 'erc :type '(repeat regexp))
 
+(defcustom fg-erc-msg-block-plists ()
+	"Block messages by matching any of
+channel, network, nick or message vs regexp plists.
+
+List of plists with any number of following keys (in each):
+	:net - regexp to match network.
+	:chan - regexp to match erc-target (e.g. channel or nick).
+	:nick - nickname regexp for `fg-erc-msg-block-pattern'.
+	:msg - message regexp for `fg-erc-msg-block-pattern'."
+	:group 'erc :type '(repeat sexp))
+
 (defun fg-erc-msg-block-pattern (nick msg)
-	"Build proper pattern for regular channel messages from
-specified nickname, including ZNC-buffered messages."
+	"Build proper pattern for regular channel messages
+ (including ZNC-buffered messages) from specified NICK
+and MSG regexp patterns. MSG can have $ at the end."
 	(concat
-		"^\\(\\s-*\\[[0-9:]+\\]\\)?\\s-*<"
-			nick ">\\(\\s-+\\[[0-9:]+\\]\\)?\\s-+" msg))
+		"^\\(\\s-*\\[[0-9:]+\\]\\)?\\s-*<" nick
+		">\\(\\s-+\\[[0-9:]+\\]\\)?\\s-+" msg))
+
+(defun fg-erc-re (string) (concat "^" (regexp-quote string) "$"))
 
 
 ;; Modules
@@ -109,26 +125,38 @@ specified nickname, including ZNC-buffered messages."
 	erc-track-enable-keybindings nil
 
 	erc-hide-list '("JOIN" "PART" "QUIT") ;; careful, these are completely ignored
-	erc-ignore-list
+
+	erc-ignore-list ;; global ignore-everywhere list
 		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
 			"^fdo-vcs!~?kgb@\\sw+\\.freedesktop\\.org$"
 			"^KGB[^!]+!~?Debian-kgb@.*\\.kitenet\\.net$"
 			"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
-			"^botpie91!botpie91@.*\\.IP$"
 			"^irker[[:digit:]]+!~?irker@"
-			"^u-u-commits!~?sardemff7@"
-			"^plexdev!~?plexdev@.*\\.espians.com$"
 			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
-	fg-erc-msg-block
+
+	fg-erc-msg-block ;; ignore-patterns with nick and message regexps
 		(mapcar
 			(apply-partially 'apply 'fg-erc-msg-block-pattern)
-			`(("zebrapig" "[0-9]+ patches in queue \\.\\.\\. slackers!")
-				("unposted"
-					,(concat "\\[\\(" "website\\(/master\\)?"
+				'(("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")))
+
+	fg-erc-msg-block-plists ;; net+chan+nick+msg ignore-patterns
+		`((:chan "^#exherbo$"
+				:net "^FreeNode$" :nick "zebrapig"
+				:msg "[0-9]+ patches in queue \\.\\.\\. slackers!")
+			(:chan "^#exherbo$" :net "^FreeNode$" :nick "u-u-commits")
+			(:chan "^#tahoe-lafs$" :net "^FreeNode$" :nick "tahoe-bot")
+			(:chan "^#crytocc$" :net "^CrytoCC$" :nick "botpie91")
+			(:chan "^#esp$" :net "^FreeNode$" :nick "plexdev")
+			(:chan "^#\\(cjdns\\|projectmeshnet\\|hyperboria\\)$"
+				:net "^EFNet$" :nick "i2p"
+				:msg "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
+			(:chan "^#\\(unhosted\\|remotestorage\\)$"
+				:net "^FreeNode$" :nick "unposted"
+				:msg ,(concat "\\[\\(" "website\\(/master\\)?"
 						"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+"))
-				("i2p" "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
-				("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")
-				("DeBot" "\\[\\(URL\\|feed\\)\\]\\s-+")))
+			(:chan "^#\\(unhosted\\|remotestorage\\)$"
+				:net "^FreeNode$" :nick "DeBot"
+				:msg "\\[\\(URL\\|feed\\)\\]\\s-+"))
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
@@ -180,9 +208,46 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 
 ;; Message content filter
 (defun fg-erc-msg-content-filter (msg)
-	(when
-		(erc-list-match fg-erc-msg-block (erc-controls-strip msg))
-		(set 'erc-insert-this nil)))
+	"erc-insert-pre-hook function to match message against
+fg-erc-msg-block and fg-erc-msg-block-channel rulesets
+and block the message if any rule in either matches it."
+	(let ((msg (erc-controls-strip msg)))
+		(when
+			(or
+				;; check fg-erc-msg-block
+				(erc-list-match fg-erc-msg-block msg)
+				;; check fg-erc-msg-block-channel
+				(dolist (rule fg-erc-msg-block-plists)
+					(when (fg-erc-msg-match-rule rule msg) (return-from nil t))))
+			(set 'erc-insert-this nil))))
+
+(defun fg-erc-msg-match-rule (rule msg)
+	"Match RULE against MSG.
+Must be called from an ERC channel buffer, as it also matches
+channel/netwrok parameters."
+	(let*
+		((net (plist-get rule :net))
+			(chan (plist-get rule :chan))
+			(nick (plist-get rule :nick))
+			(line (plist-get rule :msg))
+			(msg-pat (when (or nick line)
+				(fg-erc-msg-block-pattern (or nick "[^>]+") (or line "")))))
+		(and
+			(or (not net)
+				(string-match net (symbol-name (erc-network))))
+			(or (not chan)
+				(string-match chan (erc-default-target)))
+			(or (not msg-pat)
+				(string-match msg-pat (fg-string-strip-whitespace msg))))))
+
+;; (with-current-buffer (erc-get-buffer "#ccnx")
+;; 	(let
+;; 		((msg "[11:49:11]<someuser> some test msg")
+;; 			(fg-erc-msg-block-plists
+;; 				'((:nick "someuser" :net "Hype" :chan "cc"))))
+;; 		(dolist (rule fg-erc-msg-block-plists)
+;; 			(when (fg-erc-msg-match-rule rule msg) (return-from nil t)))))
+
 (add-hook 'erc-insert-pre-hook 'fg-erc-msg-content-filter)
 
 
