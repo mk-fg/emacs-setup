@@ -211,15 +211,17 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	"erc-insert-pre-hook function to match message against
 fg-erc-msg-block and fg-erc-msg-block-channel rulesets
 and block the message if any rule in either matches it."
-	(let ((msg (erc-controls-strip msg)))
-		(when
-			(or
-				;; check fg-erc-msg-block
-				(erc-list-match fg-erc-msg-block msg)
-				;; check fg-erc-msg-block-channel
-				(dolist (rule fg-erc-msg-block-plists)
-					(when (fg-erc-msg-match-rule rule msg) (return-from nil t))))
-			(set 'erc-insert-this nil))))
+	(condition-case-unless-debug ex
+		(let ((msg (erc-controls-strip msg)))
+			(when
+				(or
+					;; check fg-erc-msg-block
+					(erc-list-match fg-erc-msg-block msg)
+					;; check fg-erc-msg-block-channel
+					(dolist (rule fg-erc-msg-block-plists)
+						(when (fg-erc-msg-match-rule rule msg) (return-from nil t))))
+				(set 'erc-insert-this nil)))
+		(t (warn "Error in ERC filter: %s" ex))))
 
 (defun fg-erc-msg-match-rule (rule msg)
 	"Match RULE against MSG.
@@ -234,9 +236,9 @@ channel/netwrok parameters."
 				(fg-erc-msg-block-pattern (or nick "[^>]+") (or line "")))))
 		(and
 			(or (not net)
-				(string-match net (symbol-name (erc-network))))
+				(string-match net (or (symbol-name (erc-network)) "")))
 			(or (not chan)
-				(string-match chan (erc-default-target)))
+				(string-match chan (or (erc-default-target) "")))
 			(or (not msg-pat)
 				(string-match msg-pat (fg-string-strip-whitespace msg))))))
 
