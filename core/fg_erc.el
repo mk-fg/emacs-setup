@@ -150,6 +150,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 			(:chan "^#\\(cjdns\\|projectmeshnet\\|hyperboria\\)$"
 				:net "^EFNet$" :nick "i2p"
 				:msg "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
+			(:chan "^#cjdns$" :net "^HypeIRC$" :nick "finnbot")
 			(:chan "^#\\(unhosted\\|remotestorage\\)$"
 				:net "^FreeNode$" :nick "unposted"
 				:msg ,(concat "\\[\\(" "website\\(/master\\)?"
