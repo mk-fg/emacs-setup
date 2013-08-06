@@ -93,14 +93,12 @@
 		(concat temporary-file-directory "bakz-")
 	auto-save-file-name-transforms
 		(list (cons ".*" (list temporary-file-directory t)))
-	; backups
-	backup-directory-alist
-		(list (cons "." temporary-file-directory))
-	backup-by-copying t
-	delete-old-versions t
-	version-control t
-	kept-new-versions 6
-	kept-old-versions 2
+	; vc integration - hopefully disabled
+	vc-handled-backends nil
+	; backups - don't do these
+	make-backup-files nil
+	backup-inhibited t
+	backup-directory-alist nil
 	; save-place-in-file
 	save-place t
 	save-place-file
