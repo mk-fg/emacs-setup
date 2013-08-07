@@ -94,7 +94,7 @@
 	auto-save-file-name-transforms
 		(list (cons ".*" (list temporary-file-directory t)))
 	; vc integration - hopefully disabled
-	vc-handled-backends nil
+	;vc-handled-backends nil
 	; backups - don't do these
 	make-backup-files nil
 	backup-inhibited t
