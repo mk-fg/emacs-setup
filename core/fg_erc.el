@@ -143,7 +143,8 @@ and MSG regexp patterns. MSG can have $ at the end."
 		`((:chan "^#exherbo$"
 				:net "^FreeNode$" :nick "zebrapig"
 				:msg "[0-9]+ patches in queue \\.\\.\\. slackers!")
-			(:chan "^#exherbo$" :net "^FreeNode$" :nick "u-u-commits")
+			(:chan "^#exherbo$" :net "^FreeNode$"
+				:nick "\\(u-u-commits\\|gerritwk23\\)")
 			(:chan "^#tahoe-lafs$" :net "^FreeNode$" :nick "tahoe-bot")
 			(:chan "^#crytocc$" :net "^Cryto\\(-IRC\\|CC\\)$" :nick "botpie91")
 			(:chan "^#esp$" :net "^FreeNode$" :nick "plexdev")
