@@ -75,6 +75,8 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("C-M-]" fg-masq-x-pitch)
 
 		;; Encoding stuff
+		;; tags: lines, line breaks, \r\n, dos unix mac, line endings, newlines,
+		;;  breaks, line terminator, buffer coding system, undecided-unix
 		("C-M-[" universal-coding-system-argument)
 		("C-M-p" ,(iwrapm fg-revert-buffer-to-enc 'koi8-r))
 		("C-M-S-p" ,(iwrapm fg-revert-buffer-to-enc 'cp1251))
