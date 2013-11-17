@@ -86,7 +86,7 @@ DBus component: https://github.com/mk-fg/dbus-lastfm-scrobbler")
 	(artist album track &optional duration ts timeout)
 	(let*
 		((dbus-call-base
-			(apply-partially 'dbus-call-method
+			(apply-partially 'dbus-call-method-asynchronously
 				:session
 				"net.fraggod.DBusLastFM"
 				"/net/fraggod/DBusLastFM"
@@ -95,6 +95,7 @@ DBus component: https://github.com/mk-fg/dbus-lastfm-scrobbler")
 				(lambda ()
 					(apply dbus-call-base
 						(if ts "Scrobble" "ReportNowPlaying")
+						nil ;; response handler (there should be none)
 						:timeout (or timeout 2000) ;; it should be async for a reason!
 						:string artist
 						:string (or album "")
