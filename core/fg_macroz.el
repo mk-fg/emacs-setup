@@ -492,21 +492,43 @@ ERROR-IF-NOT-FOUND signals error if named buffer doesn't exist."
 PIXMAP specifies an icon to use.
 URGENCY can be set to 'low or 'critical.
 STRIP can be specified to trim whitespace chars from text.
-DONT-ESCAPE inhibits escaping html entities in messages."
-	(let ((keys (list 'notifications-notify)))
+DONT-ESCAPE inhibits escaping html entities in messages.
+
+Uses async dbus call and does not return notification id."
+	(let ((hints '()))
 		(when urgency
-			(nconc keys (list :urgency urgency)))
+			(add-to-list 'hints
+				(list :dict-entry "urgency"
+					(list :variant :byte
+						(case urgency (low 0) (critical 2) (t 1)))) t))
 		(when pixmap
-			(nconc keys (list :image-path
-				(concat "file://" (fg-pixmap-path pixmap)))))
+			(add-to-list 'hints (list :dict-entry "image-path"
+				(list :variant :string (concat "file://" (fg-pixmap-path pixmap)))) t))
 		(when strip
 			(setq header (fg-string-strip-whitespace header))
 			(setq message (fg-string-strip-whitespace message)))
 		(unless (or dont-escape fg-notify-never-escape)
 			(setq header (fg-string-escape-html header))
 			(setq message (fg-string-escape-html message)))
-		(nconc keys (list :title header :body message))
-		(apply (car keys) (cdr keys))))
+
+	(dbus-call-method-asynchronously :session
+		notifications-service
+		notifications-path
+		notifications-interface
+		notifications-notify-method
+		(lambda (note-id) nil)
+		;; :timeout <-- might be useful for controlling whatever lag errors
+		:string notifications-application-name
+		:uint32 0 ;; replaces-id
+		:string notifications-application-icon
+		:string (or header "")
+		:string (or message "")
+		(list :array) ;; actions
+		(or hints '(:array :signature "{sv}"))
+		:int32 -1)) ;; timeout
+
+	;; We don't return notification id syncronously anymore
+	nil)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
