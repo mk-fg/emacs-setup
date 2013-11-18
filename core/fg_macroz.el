@@ -483,6 +483,8 @@ ERROR-IF-NOT-FOUND signals error if named buffer doesn't exist."
 				"No such buffer: %s" name))))
 
 
+(require 'notifications) ;; using vars from there, loads dbus as well
+
 (defvar fg-notify-never-escape nil
 	"Never escape html entities in notification functions")
 
