@@ -161,9 +161,6 @@
 	password-cache-expiry nil)
 ;; doc-view setup
 (setq-default doc-view-continuous t)
-;; Notifications
-;; TODO: check for notification-daemon type here
-(setq-default fg-notify-never-escape t)
 
 
 ;; Auto-mode tweaks
