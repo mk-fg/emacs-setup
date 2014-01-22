@@ -63,6 +63,12 @@
 ;   (memql V LIST)
 ;   (member V LIST)
 
+; py: list_a + list_b
+; el: (append LIST_A LIST_B)
+
+; py: a = list.pop()
+; el: (let* ((A (car (last LIST)))) (nbutlast LIST) ...)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -87,6 +93,11 @@ Useful for &rest + &key + &allow-other-keys in `defun*'."
 				(if (keywordp v) (set 'drop t)
 					(setq res (cons v res) drop nil))))
 		(nreverse res)))
+
+(defun fg-apply-macro (macro &rest args)
+	"Same as `apply', but can apply macro instead of a function."
+	(let ((args (append (nbutlast args) (car (last args)))))
+		(eval (macroexpand-all `(,macro ,@args)))))
 
 
 
