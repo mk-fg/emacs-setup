@@ -78,10 +78,14 @@
 
 ;; Compositing stuff
 (load-library "fg_style")
-(load-library "fg_keyz") ; must be the last one
+(load-library "fg_keyz") ; must be the last one of fg_* stuff
 
 ;; ELPA
 (load-library "elpa/init")
+
+;; "customize" settings (if any) - should be after everything else, ideally
+(setq custom-file (concat fg-path "/customize.el"))
+(when (file-readable-p custom-file) (load custom-file))
 
 
 ;; Adjust tmp path and use it for all backup and autosave files
