@@ -142,7 +142,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	fg-erc-msg-block-plists ;; net+chan+nick+msg ignore-patterns
 		`((:chan "^#exherbo$"
 				:net "^FreeNode$" :nick "zebrapig"
-				:msg "[0-9]+ patches in queue \\.\\.\\. slackers!")
+				:msg "[0-9]+ patch\\(es\\)? in queue \\.\\.\\. slackers!")
 			(:chan "^#exherbo$" :net "^FreeNode$"
 				:nick "\\(u-u-commits\\|gerritwk23\\)")
 			(:chan "^#tahoe-lafs$" :net "^FreeNode$" :nick "tahoe-bot")
