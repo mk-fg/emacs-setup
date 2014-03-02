@@ -169,7 +169,8 @@
 	`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'" . sh-mode)
 		("\\.jl\\'" . lisp-mode) ("\\.rkt\\'" . scheme-mode)
 		("\\.yaml\\'" . yaml-mode)
-		("\\.coffee\\'" . coffee-mode) ("\\.go\\'" . go-mode)
+		("\\.coffee\\'" . coffee-mode) ("\\.scss\\'" . css-mode)
+		("\\.go\\'" . go-mode)
 		(,(concat
 			".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol"
 				"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
