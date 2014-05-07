@@ -95,8 +95,8 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 	erc-anonymous-login nil
 
+	erc-interpret-controls-p t ;; for otr
 	erc-interpret-mirc-color nil
-	erc-interpret-controls-p nil
 	erc-beep-p nil
 	erc-encoding-coding-alist
 		'(("#debian-ru" . cyrillic-koi8))
@@ -303,7 +303,8 @@ channel/netwrok parameters."
 	(let*
 		((buffer (current-buffer))
 			(channel
-				(or (erc-default-target) (buffer-name buffer))))
+				(or (erc-default-target) (buffer-name buffer)))
+			(text (erc-controls-strip text)))
 		(when
 			(and (buffer-live-p buffer)
 				(or
