@@ -85,6 +85,8 @@
 	"go-mode" "Mode for editing Go sources" t)
 (autoload 'coffee-mode
 	"coffee-mode" "Mode for editing CoffeeScript sources" t)
+(autoload 'jade-mode
+	"jade-mode" "Mode for editing JADE templates" t)
 
 
 ;; Nice, but crashes current emacs (24.0.50.1)
