@@ -380,13 +380,23 @@ Examples:
 		(run-at-time t 1200 'fg-emms-history-autosave))) ;; 20 min
 
 
-(defvar emms-playlist-directory "~/media/playlists"
+(defvar fg-emms-playlist-directory "~/media/playlists"
 	"Default path to save/load emms playlists.")
 
 (defadvice emms-playlist-save (around fg-emms-playlist-save (format file) activate)
-	"Store playlists in `emms-playlist-directory' by default."
+	"Store playlists in `fg-emms-playlist-directory' by default."
 	(interactive (list (emms-source-playlist-read-format)
-		(read-file-name "Store as: " emms-playlist-directory emms-playlist-directory nil)))
+		(read-file-name "Store as: "
+			fg-emms-playlist-directory
+			fg-emms-playlist-directory)))
+	ad-do-it)
+
+(defadvice emms-add-playlist (around fg-emms-add-playlist (file) activate)
+	"Load playlists from `fg-emms-playlist-directory' by default."
+	(interactive (list
+		(read-file-name "Playlist file: "
+			fg-emms-playlist-directory
+			fg-emms-playlist-directory)))
 	ad-do-it)
 
 
