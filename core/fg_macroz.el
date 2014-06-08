@@ -69,6 +69,15 @@
 ; py: a = list.pop()
 ; el: (let* ((A (car (last LIST)))) (nbutlast LIST) ...)
 
+; py: list.append(a)
+; el: (push a list)
+
+; py: for a in list:
+; el: (dolist (a list [res]) ...)
+
+; py: reversed(list)
+; el: (nreverse list)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -542,6 +551,11 @@ Uses async dbus call and does not return notification id."
 
 	;; We don't return notification id syncronously anymore
 	nil)
+
+(defun fg-time-string (&optional ts)
+	(unless ts (set 'ts (current-time)))
+	(concat (current-time-string ts) " " (cadr (current-time-zone ts))))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

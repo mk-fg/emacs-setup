@@ -13,9 +13,86 @@ to avoid spamming them with MOTD entries and notices."
 		(remove-hook 'erc-after-connect 'fg-erc)
 		(add-hook 'erc-after-connect 'fg-erc)
 		(run-with-timer 20 nil 'add-hook 'erc-insert-pre-hook 'fg-erc-notify)
+		(setq fg-erc-track-save-timer
+			(run-with-timer fg-erc-track-save-interval
+				fg-erc-track-save-interval 'fg-erc-track-save))
 		(let ((link (car fg-erc-links)))
 			(setq fg-erc-links (cdr fg-erc-links))
 			(apply 'run-with-timer 1 nil (car link) (cdr link)))))
+
+
+;; erc-track state preservation feature
+;; Idea is to have list of unread stuff dumped to some file on timer,
+;;  so that sudden system crash or emacs kill won't loose any important msgs
+;; TODO: auto-restore this into erc-modified-channels-alist maybe?
+
+(defcustom fg-erc-track-save-path (concat fg-path "/tmp/erc-track-state")
+	"Path to save `erc-modified-channels-alist' state to."
+	:group 'erc-track :type 'string)
+
+(defcustom fg-erc-track-save-interval 400
+	"Interval between saving `erc-modified-channels-alist' state,
+so that it can be preserved in an event of emacs getting killed."
+	:group 'erc-track :type 'number)
+
+(defcustom fg-erc-track-save-copies 4
+	"Copies of old `erc-modified-channels-alist' states to keep."
+	:group 'erc-track :type 'number)
+
+(defvar fg-erc-track-save-timer nil
+	"Repeating timer for `fg-erc-track-save'.")
+
+(defvar fg-erc-track-save-seed (format "%d" (random))
+	"Seed for identifying emacs instance for `fg-erc-track-save'.")
+
+(defun fg-erc-track-save-dump ()
+	(apply 'fg-string-join "\n"
+		(append
+			(list
+				fg-erc-track-save-seed
+				""
+				(format "%s (%.0f)" (fg-time-string) (float-time))
+				"")
+			(let (res)
+				(nreverse
+					(dolist (el erc-modified-channels-alist res)
+						(push (format "%s %d"
+							(buffer-name (car el)) (cadr el)) res))))
+			(list ""))))
+
+(defun fg-erc-track-save-bak-name (n)
+	(format "%s.%d" fg-erc-track-save-path n))
+
+(defun fg-erc-track-save ()
+	"Save `erc-modified-channels-alist' to a file,
+making sure to preserve a copies from a few last runs."
+	(let
+		((curr-lines
+			(with-temp-buffer
+				;; Check if current seed matches the one in the file
+				(condition-case ex
+					(progn
+						(insert-file-contents fg-erc-track-save-path)
+						(split-string (buffer-string) "\n" t))
+					('error nil)))))
+		;; Rotate backup copies, if any
+		(when
+			(not (string= (first curr-lines) fg-erc-track-save-seed))
+			(let (fns)
+				(dotimes (n (- fg-erc-track-save-copies 1) fns)
+					(multiple-value-bind (src dst)
+						(mapcar 'fg-erc-track-save-bak-name
+							(list
+								(- fg-erc-track-save-copies n 1)
+								(- fg-erc-track-save-copies n)))
+						(when (file-exists-p src) (rename-file src dst t)))))
+			(when (file-exists-p fg-erc-track-save-path)
+				(rename-file fg-erc-track-save-path
+					(fg-erc-track-save-bak-name 1) t)))
+		;; Save
+		(with-temp-buffer
+			(insert (fg-erc-track-save-dump))
+			(write-region (point-min) (point-max) fg-erc-track-save-path))))
 
 
 ;; Local feature: blocking msgs by a bunch of props
