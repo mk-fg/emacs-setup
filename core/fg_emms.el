@@ -37,12 +37,14 @@
 (require 'emms-compat)
 (require 'emms-player-simple)
 
+(emms-player-start (emms-playlist-current-selected-track))
+
 (define-emms-simple-player mpv '(file url)
 	(concat "\\`\\(http\\|mms\\)://\\|"
 		(emms-player-simple-regexp
 			"ogg" "mp3" "wav" "mpg" "mpeg" "wmv" "wma"
 			"mov" "avi" "divx" "ogm" "ogv" "asf" "mkv"
-			"rm" "rmvb" "mp4" "flac" "vob" "m4a" "ape"))
+			"rm" "rmvb" "mp4" "flac" "vob" "m4a" "ape" "mpc"))
 	"mpv" "--slave-broken" "--quiet"
 		"--really-quiet" "--no-config" "--vo" "null")
 (define-emms-simple-player mpv-playlist '(streamlist)
