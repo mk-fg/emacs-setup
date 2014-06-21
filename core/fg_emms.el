@@ -37,8 +37,6 @@
 (require 'emms-compat)
 (require 'emms-player-simple)
 
-(emms-player-start (emms-playlist-current-selected-track))
-
 (define-emms-simple-player mpv '(file url)
 	(concat "\\`\\(http\\|mms\\)://\\|"
 		(emms-player-simple-regexp
