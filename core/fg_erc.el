@@ -2,23 +2,52 @@
 (require 'tls)
 
 
-(defun fg-erc (&rest ignored)
+(defvar fg-erc-connect-last 0
+	"Timestamp when last irc net was connected,
+to make sure there are delays between these.
+Used from `fg-erc'.")
+
+(defvar fg-erc-connect-lag 10
+	"Timeout for irc connection to complete.
+Used for misc sloppy time matching purposes as well.")
+
+(defun fg-erc ()
 	"Connect to IRC servers.
 Uses up all the connection commands destructively,
 so can only be called once.
 Enables notifications only after connecting to the last server,
 to avoid spamming them with MOTD entries and notices."
 	(interactive)
+	(when fg-erc-links
+
+		(run-with-timer (* fg-erc-connect-lag 2) nil
+			(lambda ()
+				"Post-connected-to-all hook."
+				(add-hook 'erc-insert-pre-hook 'fg-erc-notify)
+				(setq fg-erc-track-save-timer
+					(run-with-timer fg-erc-track-save-interval
+						fg-erc-track-save-interval 'fg-erc-track-save))))
+
+		(fg-erc-connect-loop)))
+
+(defun fg-erc-connect-loop (&rest ignored)
 	(if (not fg-erc-links)
-		(remove-hook 'erc-after-connect 'fg-erc)
-		(add-hook 'erc-after-connect 'fg-erc)
-		(run-with-timer 20 nil 'add-hook 'erc-insert-pre-hook 'fg-erc-notify)
-		(setq fg-erc-track-save-timer
-			(run-with-timer fg-erc-track-save-interval
-				fg-erc-track-save-interval 'fg-erc-track-save))
-		(let ((link (car fg-erc-links)))
-			(setq fg-erc-links (cdr fg-erc-links))
-			(apply 'run-with-timer 1 nil (car link) (cdr link)))))
+		(remove-hook 'erc-after-connect 'fg-erc-connect-loop)
+		(add-hook 'erc-after-connect 'fg-erc-connect-loop)
+		(run-with-timer (* 1.5 fg-erc-connect-lag) nil 'fg-erc-connect-next t)
+		(run-with-timer 1 nil 'fg-erc-connect-next)))
+
+(defun fg-erc-connect-next (&optional timeout-hook)
+	(let
+		((link (car fg-erc-links))
+			(skip
+				(when timeout-hook
+					(< (- (float-time) fg-erc-connect-last) fg-erc-connect-lag))))
+		(when (and link (not skip))
+			(setq
+				fg-erc-links (cdr fg-erc-links)
+				fg-erc-connect-last (float-time))
+			(apply (car link) (cdr link)))))
 
 
 ;; erc-track state preservation feature
