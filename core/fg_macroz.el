@@ -78,6 +78,14 @@
 ; py: reversed(list)
 ; el: (nreverse list)
 
+;;;; misc
+
+; py:
+;   try: stuff
+;   except Exception as err: pass
+; el:
+;   (condition-case err stuff ('error nil))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -502,6 +510,13 @@ ERROR-IF-NOT-FOUND signals error if named buffer doesn't exist."
 				(if error-if-not-found 'error 'message)
 				"No such buffer: %s" name))))
 
+(defadvice desktop-create-buffer (around fg-desktop-create-buffer activate)
+	(let ((filename (ad-get-arg 1)) (buffname (ad-get-arg 2)))
+		(condition-case-unless-debug err
+			ad-do-it
+			('error (message
+				"Failed to restore buffer %S (file: %S): %s"
+				buffname filename err)))))
 
 (require 'notifications) ;; using vars from there, loads dbus as well
 
