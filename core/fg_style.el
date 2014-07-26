@@ -12,7 +12,9 @@
 
 	py-indent-offset 2
 	python-indent 2
-	python-guess-indent nil ; this disables spaces/tab flip in py buffers
+	;; Following opts disable spaces/tab flip in py buffers
+	python-indent-guess-indent-offset nil
+	python-guess-indent nil
 
 	c-syntactic-indentation nil ; stupid ten-tabs indentation
 	lua-electric-flag nil) ;; disable indents on closing brackets
