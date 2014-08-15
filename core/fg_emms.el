@@ -2,6 +2,7 @@
 (require 'emms-source-file)
 (require 'emms-source-playlist)
 (require 'emms-playlist-mode)
+(require 'emms-playing-time)
 
 (setq-default
 	emms-directory (concat fg-path "/tmp/emms")
