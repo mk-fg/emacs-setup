@@ -48,7 +48,9 @@
 (show-paren-mode t) ; show matching parenthesis
 (column-number-mode t) ; column numbers at the bottom
 (display-battery-mode t) ; show the death clock
-(which-function-mode t) ; show which function pointer is in
+
+;; (which-function-mode t) ; show which function pointer is in
+;; Seem to be causing a lot of heavy parsing in some modes, not that important
 
 ;; Rodent banishment (if any)
 (when (and (display-mouse-p) (require 'avoid))
