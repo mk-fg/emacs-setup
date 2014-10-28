@@ -68,6 +68,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 				(apply action '(before-save-hook delete-trailing-whitespace))
 				(message (format "delete-trailing-whitespace: %s" msg)))))
 		("C-M-S-o" delete-selection-mode)
+		("<insert>" nil) ; very annoying to mistype occasionally and a useless mode
 
 		;; Lookz switching should work everywhere as well
 		("C-M-/" fg-masq-x-light)
