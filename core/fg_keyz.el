@@ -574,6 +574,11 @@ If point is on a group name, this function operates on that group."
 			("C-M-<down>" down-list))))
 
 
+;; -- Makefiles --
+(eval-after-load "makefile-mode" '(progn
+	(define-key makefile-mode-map (key "C-c") nil)))
+
+
 ;; -- ERC + submodes --
 
 (eval-after-load "erc" '(progn
