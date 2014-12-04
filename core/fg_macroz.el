@@ -70,13 +70,16 @@
 ; el: (let* ((A (car (last LIST)))) (nbutlast LIST) ...)
 
 ; py: list.append(a)
-; el: (push a list)
+; el: (push A LIST)
 
 ; py: for a in list:
-; el: (dolist (a list [res]) ...)
+; el: (dolist (A LIST [RES]) ...)
 
 ; py: reversed(list)
-; el: (nreverse list)
+; el: (nreverse LIST)
+
+; py: filter(func, list)
+; el: (fg-keep-when FUNC LIST)
 
 ;;;; misc
 
@@ -790,10 +793,6 @@ Returns the resulting string."
 	"Remove whitespace characters from STRING margins, returns the resulting string."
 	(replace-regexp-in-string "\\(^[[:space:]\n]+\\|[[:space:]\n]+$\\)" "" string))
 
-(defun fg-product (list1 list2)
-	"Return a list of the Cartesian product of two lists."
-	(mapcan (lambda (x) (mapcar (lambda (y) (list x y)) list2)) list1))
-
 (defadvice wildcard-to-regexp (around fg-wildcard-to-regexp activate)
 	"Make `wildcard-to-regexp' not fail if square brackets are present in the filename."
 	(ad-set-arg 0
@@ -804,3 +803,12 @@ Returns the resulting string."
 	(set 'ad-return-value
 		(fg-string-replace-pairs ad-return-value
 			'(("_-_" "\\\\[") ("_--_" "\\\\]") ("_--\\(-+\\)_" "_\\1_")))))
+
+(defun fg-product (list1 list2)
+	"Return a list of the cartesian product of two lists."
+	(mapcan (lambda (x) (mapcar (lambda (y) (list x y)) list2)) list1))
+
+(defun fg-keep-when (pred seq)
+	"Return only elements from SEQ for which PRED returns non-nil."
+	(let ((del (make-symbol "del")))
+		(remove del (mapcar (lambda (el) (if (funcall pred el) el del)) seq))))
