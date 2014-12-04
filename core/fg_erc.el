@@ -250,7 +250,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 				:net "^FreeNode$" :nick "zebrapig"
 				:msg "[0-9]+ patch\\(es\\)? in queue \\.\\.\\. slackers!")
 			(:chan "^#exherbo$" :net "^FreeNode$"
-				:nick "\\(u-u-commits\\|gerritwk23\\)")
+				:nick "\\(u-u-commits\\|gerritwk23\\|jenkins-exherbo\\)")
 			(:chan "^#tahoe-lafs$" :net "^FreeNode$" :nick "tahoe-bot")
 			(:chan "^#crytocc$" :net "^Cryto\\(-IRC\\|CC\\)$" :nick "botpie91")
 			(:chan "^#esp$" :net "^FreeNode$" :nick "plexdev")
