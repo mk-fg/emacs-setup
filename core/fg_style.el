@@ -19,6 +19,11 @@
 	c-syntactic-indentation nil ; stupid ten-tabs indentation
 	lua-electric-flag nil) ;; disable indents on closing brackets
 
+;; Adjust some develock line lengths
+(eval-after-load "develock"
+	(dolist (mode '(emacs-lisp-mode html-mode))
+		(plist-put develock-max-column-plist mode 99)))
+
 ;; Make absolutely sure python-mode uses tabs
 (add-hook 'python-mode-hook
 	#'(lambda () (setq tab-width 2 indent-tabs-mode t)))
