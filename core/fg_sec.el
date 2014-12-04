@@ -16,8 +16,10 @@ using `epa-file-encrypt-to' value instead.")
 	"Return all key(s) referenced by name(s) in
 `epa-file-encrypt-to' instead or a popup selection prompt
 if `epa-select-keys-inhibit' is set to nil or STATIC is non-nil.
+
 Only auto-picks keys with ultimate validity and email
 regexp-match against NAMES to make sure it's the right key.
+
 See `epa-select-keys-interactive' for the description of other parameters."
 	(if (or static epa-select-keys-inhibit)
 		(or
@@ -28,7 +30,7 @@ See `epa-select-keys-interactive' for the description of other parameters."
 						(let*
 							;; Match names vs epg-user-id-string
 							((uid-string (epg-user-id-string uid))
-								(uid-names
+								(uid-names ; nil if no matches
 									(fg-keep-when
 										(lambda (name)
 											(string-match
@@ -40,8 +42,8 @@ See `epa-select-keys-interactive' for the description of other parameters."
 								(and uid-names
 									(eq (epg-user-id-validity uid) 'ultimate))
 								(message "Encrypting with gpg key: %s [%s]" uid-string
-									(substring
-										(epg-sub-key-id (car (epg-key-sub-key-list key))) -8))
+									(substring (epg-sub-key-id
+										(car (epg-key-sub-key-list key))) -8)) ; car here is the primary key
 								(return-from :loop (list key)))))))
 			(error
 				(format "Failed to match trusted gpg key against name(s): %s" names)))
