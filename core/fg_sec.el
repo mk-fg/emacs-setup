@@ -1,29 +1,36 @@
 ;; use ";; -*- epa-file-encrypt-to: ("mk.fraggod@gmail.com") -*-" in file headers
 
 (require 'epa-file)
-(setq-default epa-file-encrypt-to "mk.fraggod@gmail.com")
+
+(defvar epa-select-keys-default-name "mk.fraggod@gmail.com"
+	"Name to fallback to when selecting keys.")
 
 (defvar epa-select-keys-inhibit t
 	"Do not use interactive prompt for recipient keys,
 using `epa-file-encrypt-to' value instead.")
+
+(setq-default epa-file-encrypt-to epa-select-keys-default-name)
 
 
 ;; These will replace epa-select-keys function, leaving the old definition as
 ;;  epa-select-keys-interactive, so it can still be used, if necessary
 (fset 'epa-select-keys-interactive (symbol-function 'epa-select-keys))
 
-(defun epa-select-keys (context prompt &optional names secret static)
+(defun epa-select-keys (context prompt &optional names secret encrypt-to)
 	"Return all key(s) referenced by name(s) in
 `epa-file-encrypt-to' instead or a popup selection prompt
-if `epa-select-keys-inhibit' is set to nil or STATIC is non-nil.
+if `epa-select-keys-inhibit' is set to nil or ENCRYPT-TO is non-nil.
 
 Only auto-picks keys with ultimate validity and email
 regexp-match against NAMES to make sure it's the right key.
 
 See `epa-select-keys-interactive' for the description of other parameters."
-	(if (or static epa-select-keys-inhibit)
+	(if (or encrypt-to epa-select-keys-inhibit)
 		(or
 			(block :loop
+				(when encrypt-to
+					(setq epa-file-encrypt-to encrypt-to))
+				(message "EPA selecting key to: %s" epa-file-encrypt-to)
 				(dolist
 					(key (epg-list-keys context epa-file-encrypt-to secret))
 					(dolist (uid (epg-key-user-id-list key))
@@ -31,23 +38,35 @@ See `epa-select-keys-interactive' for the description of other parameters."
 							;; Match names vs epg-user-id-string
 							((uid-string (epg-user-id-string uid))
 								(uid-names ; nil if no matches
-									(fg-keep-when
-										(lambda (name)
-											(string-match
-												(concat "<" (regexp-quote name) ">\\s-*$")
-												uid-string))
-										names)))
+									(or
+										(not names)
+										(fg-keep-when
+											(lambda (name)
+												(string-match
+													(concat "<" (regexp-quote name) ">\\s-*$")
+													uid-string))
+											names))))
 							;; Check epg-user-id-validity
 							(when
 								(and uid-names
 									(eq (epg-user-id-validity uid) 'ultimate))
-								(message "Encrypting with gpg key: %s [%s]" uid-string
+								(message "EPA selected gpg key: %s [%s]" uid-string
 									(substring (epg-sub-key-id
 										(car (epg-key-sub-key-list key))) -8)) ; car here is the primary key
 								(return-from :loop (list key)))))))
 			(error
 				(format "Failed to match trusted gpg key against name(s): %s" names)))
 		(epa-select-keys-interactive context prompt names secret)))
+
+(defun epa-file-select-keys-default ()
+	"Select global-default recipients for encryption.
+Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-default-name'."
+	(interactive)
+	(make-local-variable 'epa-file-encrypt-to)
+	(setq epa-file-encrypt-to
+		(mapcar
+			(lambda (key) (epg-sub-key-id (car (epg-key-sub-key-list key))))
+			(epa-select-keys (epg-make-context) nil nil nil epa-select-keys-default-name))))
 
 ;; Patched version from upstream to work with gpg-2.1.0
 ;;  https://lists.gnu.org/archive/html/emacs-diffs/2014-11/msg00088.html
