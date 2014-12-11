@@ -70,7 +70,7 @@ Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-d
 
 ;; Patched version from upstream to work with gpg-2.1.0
 ;;  https://lists.gnu.org/archive/html/emacs-diffs/2014-11/msg00088.html
-(when
+(unless
 	(or (> emacs-major-version 24)
 		(and (= emacs-major-version 24) (> emacs-minor-version 4)))
 	(defun epg--list-keys-1 (context name mode)
