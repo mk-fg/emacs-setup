@@ -163,32 +163,33 @@ Examples:
 		/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac
 		/some/path/Artist/Some_Track_Name.ogg
 		/some/path/Artist/01_Some_Track_Name.ogg (no year in album part - no album info)"
-	(let ((name (emms-track-name track)))
-		(setq name
-			(split-string
-				(if (not (string-prefix-p emms-source-file-default-directory name))
-					name
-					(substring name
-						(length emms-source-file-default-directory)))
-				"/" t))
-		(unless (< (length name) 2)
-			(multiple-value-bind
-				(info-title info-tracknumber info-album info-year info-artist)
-				(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
-				(when info-title
-					(if (<= (length name) 2)
-						(setq info-artist (car (last name 2)))
-						(multiple-value-setq
-							(info-album info-year)
-							(fg-emms-file-track-wash-name (car (last name 2))))
-						(if info-year
-							(setq info-artist (car (last name 3)))
-							(setq info-artist info-album info-album nil)))
-					(setq info-artist (replace-regexp-in-string "_+" " " info-artist))
-					;; Actually set the values
-					(dolist
-						(sym '(info-artist info-album info-title info-tracknumber) track)
-						(emms-track-set track sym (eval sym))))))))
+	(when track
+		(let ((name (emms-track-name track)))
+			(setq name
+				(split-string
+					(if (not (string-prefix-p emms-source-file-default-directory name))
+						name
+						(substring name
+							(length emms-source-file-default-directory)))
+					"/" t))
+			(unless (< (length name) 2)
+				(multiple-value-bind
+					(info-title info-tracknumber info-album info-year info-artist)
+					(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
+					(when info-title
+						(if (<= (length name) 2)
+							(setq info-artist (car (last name 2)))
+							(multiple-value-setq
+								(info-album info-year)
+								(fg-emms-file-track-wash-name (car (last name 2))))
+							(if info-year
+								(setq info-artist (car (last name 3)))
+								(setq info-artist info-album info-album nil)))
+						(setq info-artist (replace-regexp-in-string "_+" " " info-artist))
+						;; Actually set the values
+						(dolist
+							(sym '(info-artist info-album info-title info-tracknumber) track)
+							(emms-track-set track sym (eval sym)))))))))
 
 (defun fg-emms-info-track-description (track &optional no-fallback)
 	"Return a description of TRACK."
@@ -270,14 +271,16 @@ Examples:
 ;;;; Track change notification
 (defun fg-emms-notify ()
 	(interactive)
-	(fg-notify
-		"emms: now playing"
-		(concat
-			(emms-track-description (emms-playlist-current-selected-track))
-			(if (= 0 (length emms-playing-time-string))
-				"" (format " (%s)" emms-playing-time-string)))
-		:pixmap "emms"
-		:urgency 'critical))
+	(let ((track (emms-playlist-current-selected-track)))
+		(when track
+			(fg-notify
+				"emms: now playing"
+				(concat
+					(emms-track-description (emms-playlist-current-selected-track))
+					(if (= 0 (length emms-playing-time-string))
+						"" (format " (%s)" emms-playing-time-string)))
+				:pixmap "emms"
+				:urgency 'critical))))
 
 (add-hook 'emms-player-started-hook 'fg-emms-notify)
 (add-hook 'emms-player-started-hook 'emms-show)
