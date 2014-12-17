@@ -76,6 +76,44 @@
 		git-gutter:always-show-gutter t
 		git-gutter:diff-option "-w"))
 
+;; frame title
+(setq-default frame-title-format
+	'((:eval
+		(if (buffer-file-name)
+			(format "emacs: %s" (abbreviate-file-name (buffer-file-name)))
+			"emacs: %b"))))
+
+
+;; buffer color depending on filename/path
+
+;; (defun my-buffer-face-mode-variable (color)
+;; (interactive)
+;; (setq buffer-face-mode-face (list :background color))
+;; (buffer-face-mode 1))
+
+;; (defun my-set-theme-on-mode ()
+;; (interactive)
+;; (let ((file-name (buffer-file-name)))
+;; (cond
+;; ;; add your own project/color mappings here
+;; ((string-match "halcyon" file-name) (my-buffer-face-mode-variable "#00001A"))
+;; ((string-match "dwarf" file-name) (my-buffer-face-mode-variable "#001A1A"))
+;; ((string-match "nimbus" file-name) (my-buffer-face-mode-variable "black"))
+;; (t ""))))
+
+;; (add-hook 'helm-after-action-hook 'my-set-theme-on-mode)
+;; ;; uncomment if not using helm
+;; ;; (add-hook 'find-file-hook 'my-set-theme-on-mode)
+
+;; (defun disable-all-buffer-face-mode ()
+;; (interactive)
+;; (let ((current (get-buffer (current-buffer))))
+;; (-map (lambda (x) (progn (switch-to-buffer x)
+;; (buffer-face-mode 0))) (buffer-list))
+;; (switch-to-buffer current 1)))
+
+;; (add-hook 'kill-emacs-hook 'disable-all-buffer-face-mode)
+
 
 ;; Local modes
 (load-library-safe "develock-py")

@@ -89,6 +89,9 @@
 ; el:
 ;   (condition-case err stuff ('error nil))
 
+;; See also (should things will get really bad):
+;;  https://github.com/magnars/dash.el
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
