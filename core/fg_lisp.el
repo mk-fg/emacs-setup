@@ -5,9 +5,11 @@
 (when
 	(load-library-safe "highlight-parentheses")
 	(defun fg-lisp-setup () (highlight-parentheses-mode t))
-	(add-hook 'lisp-interaction-mode-hook 'fg-lisp-setup)
-	(add-hook 'lisp-mode-hook 'fg-lisp-setup)
-	(add-hook 'scheme-mode-hook 'fg-lisp-setup))
+	(dolist
+		(hook
+			'(emacs-lisp-mode-hook lisp-mode-hook
+				scheme-mode-hook lisp-interaction-mode-hook))
+		(add-hook hook 'fg-lisp-setup)))
 
 
 (setq inferior-lisp-program "/usr/bin/sbcl")
