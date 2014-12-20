@@ -430,13 +430,13 @@ channel/netwrok parameters."
 (defmacro fg-erc-unpack-color (color red green blue &rest body)
 	`(let
 		((,red (car ,color))
-			(,green (car (cdr ,color)))
-			(,blue (car (cdr (cdr ,color)))))
+			(,green (cadr ,color))
+			(,blue (caddr ,color)))
 		,@body))
 
 (defun fg-erc-rgb-to-html (color)
 	(fg-erc-unpack-color color red green blue
-		(concat "#" (format "%02x%02x%02x" red green blue))))
+		(format "#%02x%02x%02x" red green blue)))
 
 (defun fg-erc-hexcolor-luminance (color)
 	(fg-erc-unpack-color color red green blue

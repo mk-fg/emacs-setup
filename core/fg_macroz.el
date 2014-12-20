@@ -63,17 +63,21 @@
 ;   (memql V LIST)
 ;   (member V LIST)
 
+; py: list[n]
+; el: (nth N LIST)
+
 ; py: list_a + list_b
 ; el: (append LIST_A LIST_B)
 
 ; py: a = list.pop()
-; el: (let* ((A (car (last LIST)))) (nbutlast LIST) ...)
+; cl: (let* ((A (car (last LIST)))) (nbutlast LIST) ...)
 
 ; py: list.append(a)
 ; el: (push A LIST)
 
 ; py: for a in list:
 ; el: (dolist (A LIST [RES]) ...)
+; cl: (loop for A in LIST ...)
 
 ; py: reversed(list)
 ; el: (nreverse LIST)

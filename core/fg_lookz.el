@@ -84,35 +84,52 @@
 			"emacs: %b"))))
 
 
-;; buffer color depending on filename/path
+;; buffer color depending on filename/buffer-name
+;; idea: http://deliberate-software.com/emacs-project-tip/
+;; TODO: use "perceptual diff" color space (e.g. Lab) with a fixed distance
+(require 'cl)
 
-;; (defun my-buffer-face-mode-variable (color)
-;; (interactive)
-;; (setq buffer-face-mode-face (list :background color))
-;; (buffer-face-mode 1))
+(defun* fg-buffer-bg-tweak (&optional seed (max-shift 10))
+	"Adjust buffer bg color based on (md5 of-) SEED and MAX-SHIFT (0-255).
+If seed is nil or an empty string, bg color is restored to default face bg.
+Number of possible color variants is MAX-SHIFT**3, i.e. 512 for 8, 4k for 16, and so on."
+	(interactive)
+	(let*
+		((color
+				(plist-get (custom-face-attributes-get 'default (selected-frame)) :background))
+			(color
+				(block :color-shift
+					(if (numberp seed)
+						(set 'seed (concat "###" (number-to-string seed)))
+						(when (or (not seed) (equal seed ""))
+							(return-from :color-shift color)))
+					(set 'color
+						(loop
+							with c-chan-len = (/ (- (length color) 1) 3) ; 1 or 2
+							for n from 0 to 2
+							for offset = (1+ (* n c-chan-len))
+							collect (string-to-number (substring color offset (+ offset 2)) 16)))
+					(apply #'format "#%02x%02x%02x"
+						(loop
+							with seed = (md5 seed)
+							for n from 0 to 2
+							collect
+								(min 255 (max 0 (+
+									(nth n color)
+									(round (-
+										(* max-shift
+											(/ (string-to-number (substring seed (* n 2) (* (1+ n) 2)) 16) 255.0))
+										(/ max-shift 2.0)))))))))))
+		(buffer-face-set (list :background color))
+		color))
 
-;; (defun my-set-theme-on-mode ()
-;; (interactive)
-;; (let ((file-name (buffer-file-name)))
-;; (cond
-;; ;; add your own project/color mappings here
-;; ((string-match "halcyon" file-name) (my-buffer-face-mode-variable "#00001A"))
-;; ((string-match "dwarf" file-name) (my-buffer-face-mode-variable "#001A1A"))
-;; ((string-match "nimbus" file-name) (my-buffer-face-mode-variable "black"))
-;; (t ""))))
-
-;; (add-hook 'helm-after-action-hook 'my-set-theme-on-mode)
-;; ;; uncomment if not using helm
-;; ;; (add-hook 'find-file-hook 'my-set-theme-on-mode)
-
-;; (defun disable-all-buffer-face-mode ()
-;; (interactive)
-;; (let ((current (get-buffer (current-buffer))))
-;; (-map (lambda (x) (progn (switch-to-buffer x)
-;; (buffer-face-mode 0))) (buffer-list))
-;; (switch-to-buffer current 1)))
-
-;; (add-hook 'kill-emacs-hook 'disable-all-buffer-face-mode)
+(defun fg-buffer-bg-tweak-name (&optional name)
+	"Adjust buffer bg color based on buffer filename or name (if not a file).
+NAME can also be passed explicitly as an argument."
+	(interactive)
+	(unless name
+		(set 'name (or buffer-file-name (buffer-name))))
+	(fg-buffer-bg-tweak name))
 
 
 ;; Local modes
@@ -181,6 +198,7 @@
 ;; Mask for X (inits are bg-agnostic colors)
 ;; TODO: rewrite it as a single theme,
 ;;  with colors derived from `frame-background-mode'
+;; See also `frame-set-background-mode'
 
 (defvar fg-color-fg-core)
 (defvar fg-color-bg-core)
@@ -388,6 +406,7 @@ should be set before calling the `solar-sunrise-sunset'."
 ;; Auto lookz switching
 (defun fg-hook-set-lookz ()
 	"Enable stuff like trailing spacez or fixed-width face."
+	(fg-buffer-bg-tweak-name)
 	(if buffer-file-name ; nil for system buffers and terminals
 		(setq show-trailing-whitespace t)
 		(when
