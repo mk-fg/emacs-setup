@@ -88,6 +88,7 @@
 ;; idea: http://deliberate-software.com/emacs-project-tip/
 ;; TODO: color re-shift on bg dark/light change
 ;; TODO: picking of lab color values in a way that maximizes color distance
+;; TODO: make it not pick (or re-pick) colors that have to be truncated in RGB
 (require 'color)
 
 (defun* fg-buffer-bg-tweak (&optional seed (max-shift '(3 6 6)))
@@ -96,27 +97,31 @@ If seed is nil or an empty string, bg color is restored to default face bg.
 MAX-SHIFT is a three-value list of max offset on L*a*b* colorspace coordinates."
 	(interactive)
 	(let*
-		((color
+		((color0
 				(apply #'color-srgb-to-lab
 					(color-name-to-rgb (plist-get
 						(custom-face-attributes-get 'default (selected-frame)) :background))))
-			(color
+			(color1
+				(block :color-shift
+					(if (numberp seed)
+						(set 'seed (concat "###" (number-to-string seed)))
+						(when (or (not seed) (equal seed "")) (return-from :color-shift color0)))
+					(loop
+						with seed = (md5 seed)
+						for n from 0 to 2
+						for max-shift-c = (nth n max-shift)
+						collect
+							(+ (nth n color0) (- (/ max-shift-c 2.0))
+								(* max-shift-c (/ (string-to-number
+									(substring seed (* n 3) (* (1+ n) 3)) 16) 4095.0))))))
+			(color-hex
 				(apply #'color-rgb-to-hex
-					(apply #'color-lab-to-srgb
-						(block :color-shift
-							(if (numberp seed)
-								(set 'seed (concat "###" (number-to-string seed)))
-								(when (or (not seed) (equal seed "")) (return-from :color-shift color)))
-							(loop
-								with seed = (md5 seed)
-								for n from 0 to 2
-								for max-shift-c = (nth n max-shift)
-								collect
-									(+ (nth n color) (- (/ max-shift-c 2.0))
-										(* max-shift-c (/ (string-to-number
-											(substring seed (* n 3) (* (1+ n) 3)) 16) 4095.0)))))))))
-		(buffer-face-set (list :background color))
-		color))
+					(loop
+						for c in (apply #'color-lab-to-srgb color1)
+						collect (min 1 (max 0 c))))))
+		;; (message "%s: %s %s %s" (buffer-name) color0 color1 color-hex)
+		(buffer-face-set (list :background color-hex))
+		color-hex))
 
 (defun fg-buffer-bg-tweak-name (&optional name)
 	"Adjust buffer bg color based on buffer filename or name (if not a file).
@@ -125,6 +130,12 @@ NAME can also be passed explicitly as an argument."
 	(unless name
 		(set 'name (or buffer-file-name (buffer-name))))
 	(fg-buffer-bg-tweak name))
+
+(defun fg-buffer-bg-tweak-name-all ()
+	(interactive)
+	(dolist (buff (buffer-list))
+		(with-current-buffer buff
+			(fg-buffer-bg-tweak-name))))
 
 
 ;; Local modes
@@ -284,7 +295,8 @@ NAME can also be passed explicitly as an argument."
 		(setq-default term-default-fg-color fg-color-fg-core))
 	(when (boundp 'fg-color-bg-core)
 		(set-background-color fg-color-bg-core)
-		(setq-default term-default-bg-color fg-color-bg-core)))
+		(setq-default term-default-bg-color fg-color-bg-core))
+	(fg-buffer-bg-tweak-name-all))
 
 ;;;; Rainbow mode seem to need a kick here, not sure why
 ;; (progn (rainbow-mode t) (rainbow-turn-on))
@@ -311,7 +323,7 @@ NAME can also be passed explicitly as an argument."
 	(interactive)
 	(let*
 		((fg-color-fg-core "black")
-			(fg-color-bg-core "white")
+			(fg-color-bg-core "#e0f0ed")
 			(fg-color-bg-hl "lavender blush")
 			(fg-color-func "saddle brown")
 			(fg-color-func-modeline "red4")
@@ -325,9 +337,8 @@ NAME can also be passed explicitly as an argument."
 	(interactive)
 	(if
 		(and (boundp 'buffer-face-mode-face) buffer-face-mode-face)
-		(setq buffer-face-mode-face (buffer-face-set nil))
+		(buffer-face-set nil)
 		(buffer-face-set 'fixed-pitch)))
-
 
 ;; Mask 4 no-X, uniform static dark-only
 (defun fg-masq-nox ()
