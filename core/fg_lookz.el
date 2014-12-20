@@ -86,40 +86,35 @@
 
 ;; buffer color depending on filename/buffer-name
 ;; idea: http://deliberate-software.com/emacs-project-tip/
-;; TODO: use "perceptual diff" color space (e.g. Lab) with a fixed distance
-(require 'cl)
+;; TODO: color re-shift on bg dark/light change
+;; TODO: picking of lab color values in a way that maximizes color distance
+(require 'color)
 
-(defun* fg-buffer-bg-tweak (&optional seed (max-shift 10))
-	"Adjust buffer bg color based on (md5 of-) SEED and MAX-SHIFT (0-255).
+(defun* fg-buffer-bg-tweak (&optional seed (max-shift '(3 6 6)))
+	"Adjust buffer bg color based on (md5 of-) SEED and MAX-SHIFT list.
 If seed is nil or an empty string, bg color is restored to default face bg.
-Number of possible color variants is MAX-SHIFT**3, i.e. 512 for 8, 4k for 16, and so on."
+MAX-SHIFT is a three-value list of max offset on L*a*b* colorspace coordinates."
 	(interactive)
 	(let*
 		((color
-				(plist-get (custom-face-attributes-get 'default (selected-frame)) :background))
+				(apply #'color-srgb-to-lab
+					(color-name-to-rgb (plist-get
+						(custom-face-attributes-get 'default (selected-frame)) :background))))
 			(color
-				(block :color-shift
-					(if (numberp seed)
-						(set 'seed (concat "###" (number-to-string seed)))
-						(when (or (not seed) (equal seed ""))
-							(return-from :color-shift color)))
-					(set 'color
-						(loop
-							with c-chan-len = (/ (- (length color) 1) 3) ; 1 or 2
-							for n from 0 to 2
-							for offset = (1+ (* n c-chan-len))
-							collect (string-to-number (substring color offset (+ offset 2)) 16)))
-					(apply #'format "#%02x%02x%02x"
-						(loop
-							with seed = (md5 seed)
-							for n from 0 to 2
-							collect
-								(min 255 (max 0 (+
-									(nth n color)
-									(round (-
-										(* max-shift
-											(/ (string-to-number (substring seed (* n 2) (* (1+ n) 2)) 16) 255.0))
-										(/ max-shift 2.0)))))))))))
+				(apply #'color-rgb-to-hex
+					(apply #'color-lab-to-srgb
+						(block :color-shift
+							(if (numberp seed)
+								(set 'seed (concat "###" (number-to-string seed)))
+								(when (or (not seed) (equal seed "")) (return-from :color-shift color)))
+							(loop
+								with seed = (md5 seed)
+								for n from 0 to 2
+								for max-shift-c = (nth n max-shift)
+								collect
+									(+ (nth n color) (- (/ max-shift-c 2.0))
+										(* max-shift-c (/ (string-to-number
+											(substring seed (* n 3) (* (1+ n) 3)) 16) 4095.0)))))))))
 		(buffer-face-set (list :background color))
 		color))
 
