@@ -426,39 +426,34 @@ channel/netwrok parameters."
 ;; erc-highlight-nicknames mods
 ;; idea: from #erc
 ;; source: http://www.emacswiki.org/emacs/ErcNickColors
+;; TODO: also check ciede2k vs opposite bg, make sure color is visible on both kinds
+(require 'color)
 
-(defmacro fg-erc-unpack-color (color red green blue &rest body)
-	`(let
-		((,red (car ,color))
-			(,green (cadr ,color))
-			(,blue (caddr ,color)))
-		,@body))
-
-(defun fg-erc-rgb-to-html (color)
-	(fg-erc-unpack-color color red green blue
-		(format "#%02x%02x%02x" red green blue)))
-
-(defun fg-erc-hexcolor-luminance (color)
-	(fg-erc-unpack-color color red green blue
-		(floor (+ (* 0.299 red) (* 0.587 green) (* 0.114 blue)))))
-
-(defun fg-erc-invert-color (color)
-	(fg-erc-unpack-color color red green blue
-		`(,(- 255 red) ,(- 255 green) ,(- 255 blue))))
-
-(defun fg-erc-get-color-for-nick (nick dark)
+(defun* fg-erc-get-color-for-nick (nick &optional (min-ciede2k-delta 30))
 	(let*
-		((hash (md5 (downcase nick)))
-			(red (mod (string-to-number (substring hash 0 10) 16) 256))
-			(blue (mod (string-to-number (substring hash 10 20) 16) 256))
-			(green (mod (string-to-number (substring hash 20 30) 16) 256))
-			(color `(,red ,green ,blue)))
-		(fg-erc-rgb-to-html
-			(if
-				(if dark
-					(< (fg-erc-hexcolor-luminance color) 85)
-					(> (fg-erc-hexcolor-luminance color) 155))
-				(fg-erc-invert-color color) color))))
+		((nick-hash (downcase nick))
+			(default-face (custom-face-attributes-get 'default (selected-frame)))
+			(color-bg
+				(color-name-to-rgb (plist-get default-face :background)))
+			(color-default
+				(color-name-to-rgb (plist-get default-face :foreground)))
+			color)
+		(apply #'color-rgb-to-hex
+			(loop
+				for n from 0 to 10 ; to avoid long loops
+				do
+					(set 'nick-hash (md5 nick-hash))
+					(set 'color
+						(color-name-to-rgb (format "#%s" (substring nick-hash 0 6))))
+					(when
+						(>=
+							(color-cie-de2000
+								(apply #'color-srgb-to-lab color)
+								(apply #'color-srgb-to-lab color-bg))
+							min-ciede2k-delta)
+						(return color))
+					(set 'color color-default)
+				finally (return color)))))
 
 (defun fg-erc-highlight-nicknames ()
 	(condition-case-unless-debug ex
@@ -482,8 +477,7 @@ channel/netwrok parameters."
 						(put-text-property
 							(car bounds) (cdr bounds) 'face
 							(cons 'foreground-color
-								(fg-erc-get-color-for-nick nick
-									(eq frame-background-mode 'dark))))))))
+								(fg-erc-get-color-for-nick nick)))))))
 		(error
 			(message "ERC highlight error: %s" ex)
 			(ding t))))
