@@ -426,34 +426,13 @@ channel/netwrok parameters."
 ;; erc-highlight-nicknames mods
 ;; idea: from #erc
 ;; source: http://www.emacswiki.org/emacs/ErcNickColors
-;; TODO: also check ciede2k vs opposite bg, make sure color is visible on both kinds
+;; TODO: also check color-diff vs opposite bg, make sure color is visible on both kinds
 (require 'color)
 
-(defun* fg-erc-get-color-for-nick (nick &optional (min-ciede2k-delta 30))
-	(let*
-		((nick-hash (downcase nick))
-			(default-face (custom-face-attributes-get 'default (selected-frame)))
-			(color-bg
-				(color-name-to-rgb (plist-get default-face :background)))
-			(color-default
-				(color-name-to-rgb (plist-get default-face :foreground)))
-			color)
-		(apply #'color-rgb-to-hex
-			(loop
-				for n from 0 to 10 ; to avoid long loops
-				do
-					(set 'nick-hash (md5 nick-hash))
-					(set 'color
-						(color-name-to-rgb (format "#%s" (substring nick-hash 0 6))))
-					(when
-						(>=
-							(color-cie-de2000
-								(apply #'color-srgb-to-lab color)
-								(apply #'color-srgb-to-lab color-bg))
-							min-ciede2k-delta)
-						(return color))
-					(set 'color color-default)
-				finally (return color)))))
+(defun* fg-erc-get-color-for-nick (nick &optional (min-delta 40))
+	(fg-color-tweak
+		(plist-get (custom-face-attributes-get 'default (selected-frame)) :background)
+		(downcase nick) min-delta))
 
 (defun fg-erc-highlight-nicknames ()
 	(condition-case-unless-debug ex

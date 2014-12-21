@@ -66,6 +66,9 @@
 ; py: list[n]
 ; el: (nth N LIST)
 
+; py: list[n:m]
+; el: (subseq LIST N M)
+
 ; py: list_a + list_b
 ; el: (append LIST_A LIST_B)
 
@@ -92,6 +95,12 @@
 ;   except Exception as err: pass
 ; el:
 ;   (condition-case err stuff ('error nil))
+
+; py: map(func, list)
+; el: (mapcar func list)
+
+; py: for a in list: func(a)
+; el: (mapc func list)
 
 ;; See also (should things will get really bad):
 ;;  https://github.com/magnars/dash.el
@@ -582,6 +591,155 @@ Uses async dbus call and does not return notification id."
 	(concat (current-time-string ts) " " (cadr (current-time-zone ts))))
 
 
+(defun fg-product (list1 list2)
+	"Return a list of the cartesian product of two lists."
+	(mapcan (lambda (x) (mapcar (lambda (y) (list x y)) list2)) list1))
+
+(defun fg-keep-when (pred seq)
+	"Return only elements from SEQ for which PRED returns non-nil."
+	(let ((del (make-symbol "del")))
+		(remove del (mapcar (lambda (el) (if (funcall pred el) el del)) seq))))
+
+(defun* fg-hex (val &optional (offset 0) len)
+	"Parse hex from a VAL string, or substring (OFFSET / LEN) of VAL."
+	(when (/= 0 offset) (set 'val (substring val offset)))
+	(when len (set 'val (substring val 0 len)))
+	(string-to-number val 16))
+
+(defun* fg-xor (a b)
+	"Easy XOR logic function. Force-converts A and B to t or nil."
+	(let ((a (and a t)) (b (and b t))) (not (eq a b))))
+
+
+(require 'color)
+
+(defvar fg-color-tweak-debug nil)
+
+;; No idea if L*a*b* coord ranges for a*/b* and sRGB bounds are actually correct
+(defun* fg-color-tweak
+	(color &optional seed min-shift max-shift
+		(clamp-rgb-after 20)
+		(lab-ranges '((0 100) (-86.185 98.254) (-107.863 94.482))))
+	"Adjust COLOR based on (md5 of-) SEED and MIN-SHIFT / MAX-SHIFT lists.
+
+COLOR can be provided as a three-value (0-1 float)
+R G B list, or a string suitable for `color-name-to-rgb'.
+
+MIN-SHIFT / MAX-SHIFT can be:
+ * three-value list (numbers) of min/max offset on L*a*b* in either direction
+ * one number - min/max cie-de2000 distance
+ * four-value list of offsets and distance, combining both options above
+ * nil for no-limit
+
+SEED can be number, string or nil.
+Empty string or nil passed as SEED will return the original color.
+
+CLAMP-RGB-AFTER defines how many attempts to make in picking
+L*a*b* color with random offset that translates to non-imaginary sRGB color.
+When that number is reached, last color will be `color-clamp'ed to fit into sRGB.
+
+Returns color plus/minus offset as a hex string.
+Resulting color offset should be uniformly distributed between min/max shift limits."
+	(interactive)
+	(when (< clamp-rgb-after 1) (error "clamp-rgb-after must be >1"))
+	(let*
+
+		((parse-ciede2k
+				(lambda (shift-spec)
+					(when shift-spec
+						(if (numberp shift-spec) shift-spec
+							(when (= (length shift-spec) 4) (nth 3 shift-spec))))))
+			(parse-offsets
+				(lambda (shift-spec) (and shift-spec (listp shift-spec) shift-spec)))
+
+			(min-ciede2k (funcall parse-ciede2k min-shift))
+			(max-ciede2k (funcall parse-ciede2k max-shift))
+			(min-offs (funcall parse-offsets min-shift))
+			(max-offs (funcall parse-offsets max-shift))
+
+			(color0
+				(apply #'color-srgb-to-lab
+					(if (stringp color) (color-name-to-rgb color) color)))
+			color1-srgb-valid-first ; skipped on ciede2k diff mismatch
+			color1-srgb-fallback) ; any color1, used as a last resort
+
+		(apply #'color-rgb-to-hex
+			(loop
+				for n from 0 to clamp-rgb-after
+				do
+					(let*
+
+						((color1
+								(block :color-shift
+									(if (numberp seed)
+										(set 'seed (concat "###" (number-to-string seed)))
+										(when (or (not seed) (equal seed "")) (return-from :color-shift color0)))
+									(set 'seed (md5 seed))
+									(loop
+										for n from 0 to 2
+										collect
+											(let*
+												((o (* n 4))
+													(sign (if (> (fg-hex seed o 1) 7) '+ '-))
+													(rnd (/ (fg-hex seed (+ o 1) 3) 4095.0))
+													(c (nth n color0))
+													(n-min (or (and min-offs (nth n min-offs)) 0))
+													(n-max (and max-offs (nth n max-offs))))
+												(if n-max
+													; "c1 = c +/- (rnd * (max-min) + min)"
+													(funcall sign c (+ (* rnd (- n-max n-min)) n-min))
+													(let*
+														; c1 in [a, b], where a/b are picked from rnd and pos/neg spans
+														((lab-range (nth n lab-ranges))
+															(c-pos-a (cadr lab-range))
+															(c-pos-b (min c-pos-a (+ c n-min)))
+															(c-pos-span (abs (- c-pos-a c-pos-b)))
+															(c-neg-a (car lab-range))
+															(c-neg-b (max c-neg-a (- c n-min)))
+															(c-neg-span (abs (- (abs c-neg-a) (abs c-neg-b))))
+															(rnd-ratio (/ c-neg-span (+ c-neg-span c-pos-span))))
+														(if (> rnd rnd-ratio)
+															(setq a c-pos-a b c-pos-b k c-pos-span rnd (- rnd rnd-ratio))
+															(setq a c-neg-a b c-neg-b k (- c-neg-span)))
+														(when (> (abs a) (abs b)) (let ((ax a)) (setq a b b ax)))
+														(if (= a b) a (+ c (* rnd k) a))))))))
+							(color1-srgb (apply #'color-lab-to-srgb color1))
+							(color1-srgb-valid
+								(loop
+									for c in color1-srgb
+									do (when (or (> c 1) (< c -0.06)) (return nil))
+									collect (color-clamp c))))
+
+						(when color1-srgb-valid
+							(unless color1-srgb-valid-first
+								(set 'color1-srgb-valid-first color1-srgb-valid))
+							(let
+								((ciede2k (color-cie-de2000 color0 color1)))
+								(when
+									(and
+										(or (not min-ciede2k) (> ciede2k min-ciede2k))
+										(or (not max-ciede2k) (< ciede2k max-ciede2k)))
+								(when fg-color-tweak-debug
+									(message "fg-color-tweak: %s -> %s, n=%d [%.2f]"
+										color (apply #'color-rgb-to-hex color1-srgb) n ciede2k))
+								(return color1-srgb-valid))))
+
+						(unless color1-srgb-fallback
+							(set 'color1-srgb-fallback color1-srgb)))
+
+				finally
+					(let
+						((color1-srgb
+							(mapcar #'color-clamp
+								(or color1-srgb-valid-first color1-srgb-fallback))))
+						(when fg-color-tweak-debug
+							(message "fg-color-tweak: %s -> %s, n=%d [FALLBACK]"
+								color (apply #'color-rgb-to-hex color1-srgb) n))
+						(return color1-srgb))))))
+
+;; (setq fg-color-tweak-debug t)
+;; (loop for n from 0 to 10 do (fg-color-tweak "#000" n 80))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Indentation descrimination (tab-only) stuff
@@ -810,12 +968,3 @@ Returns the resulting string."
 	(set 'ad-return-value
 		(fg-string-replace-pairs ad-return-value
 			'(("_-_" "\\\\[") ("_--_" "\\\\]") ("_--\\(-+\\)_" "_\\1_")))))
-
-(defun fg-product (list1 list2)
-	"Return a list of the cartesian product of two lists."
-	(mapcan (lambda (x) (mapcar (lambda (y) (list x y)) list2)) list1))
-
-(defun fg-keep-when (pred seq)
-	"Return only elements from SEQ for which PRED returns non-nil."
-	(let ((del (make-symbol "del")))
-		(remove del (mapcar (lambda (el) (if (funcall pred el) el del)) seq))))
