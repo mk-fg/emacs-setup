@@ -201,7 +201,7 @@
 	(flet ((process-list ())) ad-do-it))
 
 
-;; Emacs server (client is bound to zsh ec/ee aliases)
+;; Emacs server (client is bound to zsh ec/ece aliases)
 (server-start)
 
 ;; Starting layout setup
