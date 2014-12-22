@@ -5,6 +5,7 @@
 ;; For most stuff, see:
 ;;  https://github.com/magnars/s.el
 ;;  https://github.com/magnars/dash.el
+;; TODO: dedup old macros with this stuff
 (require 's)
 (require 'dash)
 (require 'dash-functional)
@@ -150,14 +151,12 @@ Useful for &rest + &key + &allow-other-keys in `defun*'."
 	"Supress minibuffer 'Mark set' messages on kill-ring ops."
 	(ad-set-arg 1 t))
 
-
 (defun fg-copy-region (start end)
 	"Same as `copy-region-as-kill' but doesn't deactivate the mark."
 	(interactive "r")
 	(if (eq last-command 'kill-region)
 		(kill-append (filter-buffer-substring start end) (< end start))
 		(kill-new (filter-buffer-substring start end))))
-
 
 (defun* fg-taint (&key call whole-lines-only)
 	"Smart region interpreter.
@@ -195,7 +194,6 @@ Point is moved to the end of affected zone before the call."
 					(forward-line 1)
 					(point))))))
 
-
 (defun fg-copy (&optional whole-lines-only)
 	"Push selected region or current line into ring-buffer."
 	(interactive)
@@ -209,14 +207,12 @@ Point is moved to the end of affected zone before the call."
 					:call 'fg-copy-region
 					:whole-lines-only whole-lines-only)))))
 
-
 (defun fg-copy-paragraph (&optional arg)
 	"Copy full paragraph at the point."
 	(interactive "p")
 	(mark-paragraph arg)
 	(forward-line 1) ; skip past blank opening line
 	(fg-copy))
-
 
 (defun fg-clone (arg)
 	"If no region is active, clone current line.
@@ -532,6 +528,14 @@ ERROR-IF-NOT-FOUND signals error if named buffer doesn't exist."
 			(funcall
 				(if error-if-not-found 'error 'message)
 				"No such buffer: %s" name))))
+
+(defun fg-list-useful-buffers (&optional pattern)
+	"Return a list of non-private buffers that contain string PATTERN."
+	(--filter
+		(and
+			(or (not pattern) (s-contains? pattern it t))
+			(not (s-matches? "^\\s-*\\*.*\\*$" it)))
+		(-map 'buffer-name (buffer-list))))
 
 (defadvice desktop-create-buffer (around fg-desktop-create-buffer activate)
 	(let ((filename (ad-get-arg 1)) (buffname (ad-get-arg 2)))
