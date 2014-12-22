@@ -40,7 +40,7 @@
 (setq-default
 	inhibit-startup-screen t
 	split-height-threshold nil ; split only from-up-to-down
-	split-width-threshold 120
+	split-width-threshold nil
 	frame-title-format
 		'((:eval
 			(if (buffer-file-name)
