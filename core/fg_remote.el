@@ -11,6 +11,7 @@
 (defun fg-remote (data)
 	"Writes stringified DATA to a /tmp/.ece.remote.XXXX temp-file and returns filename.
 Path and filename prefix are fixed and independent of e.g. `temporary-file-directory'.
+If DATA is a list, it will be considered to be a list of (to-be-stringified) lines.
 Final newline is ensured in DATA after converting it to string.
 If DATA is nil, file won't be created.
 
@@ -19,10 +20,13 @@ from emacsclient, match returned filename, read file contents, remove it."
 	(when data
 		(let*
 			((temporary-file-directory "/tmp/")
-				(tmp (make-temp-file ".ece.remote.")))
-			(set 'data (format "%s" data))
+				(tmp (make-temp-file ".ece.remote."))
+				(data
+					(s-join "\n"
+						(--map (format "%s" it)
+							(if (listp data) data (list data))))))
 			(unless (s-ends-with? "\n" data) (set 'data (concat data "\n")))
-			(append-to-file data nil tmp)
+			(write-region data nil tmp)
 			tmp)))
 
 
@@ -46,39 +50,41 @@ otherwise socket type is toggled based on `server-use-tcp'."
 	(if server-use-tcp 'tcp 'unix))
 
 
-(defun fg-remote-list-buffers (&optional pattern)
-	"Results of `fg-list-useful-buffers' as a newline-delimited string."
-	(s-join ""
-		(--map (concat (s-trim it) "\n")
-			(fg-list-useful-buffers pattern))))
+(defun fg-remote-buffer (&optional pattern buffers)
+	"Depending on whether PATTERN is specified, return
+results of `fg-list-useful-buffer-names' as a newline-delimited string,
+or text contents of a buffer with name matching (via `fg-get-useful-buffer') PATTERN."
+	(if (not pattern)
+		(fg-list-useful-buffer-names nil buffers)
+		(with-current-buffer (fg-get-useful-buffer pattern buffers)
+			(buffer-substring-no-properties (point-min) (point-max)))))
 
-(defun fg-remote-get-buffer (pattern)
-	"Text contents of a buffer with name matching PATTERN.
-Matching is done via `fg-list-useful-buffers'.
-Error is signaled if there is more than one match."
-	(let ((names (fg-list-useful-buffers pattern)))
-		(if (/= (length names) 1)
-			(error (concat "Failed to uniquely match"
-				" buffer by `%s', matches: %s") pattern (s-join ", " names))
-			(with-current-buffer (car names)
-				(buffer-substring-no-properties (point-min) (point-max))))))
+(defalias 'fg-remote-buff 'fg-remote-buffer)
+(defalias 'fg-remote-b 'fg-remote-buffer)
 
 
-(defun fg-remote-erc-activity ()
-	"ERC activity in '<n> <chan>' (per line) format."
-	(--map
-		(format "%03d %s\n"
-			(buffer-name (car it)) (cadr it))
-		erc-modified-channels-alist))
+(defun fg-remote-erc (&optional pattern)
+	"WIthout PATTERN, displays last ERC activity in '<n> <chan>' (per line) format.
+Otherwise same as `fg-remote-buffer', but only considers erc buffers,
+and PATTERN can have special 'all', 'list' or 'l' values to set it to nil."
+	(if (not pattern)
+		(--map
+			(format "%03d %s"
+				(cadr it) (buffer-name (car it)))
+			erc-modified-channels-alist)
+		(when (-contains? '("list" "l" "all") (format "%s" pattern)) (set 'pattern nil))
+		(fg-remote-buffer pattern (erc-buffer-list))))
 
 (defun fg-remote-erc-mark (pattern)
-	"Put /mark to a specified ERC chan."
-	(let
-		((names
-			(--filter
-				(with-current-buffer it (eq major-mode 'erc-mode))
-				(fg-list-useful-buffers pattern))))
-		(if (/= (length names) 1)
-			(error (concat "Failed to uniquely match"
-				" ERC buffer by `%s', matches: %s") pattern (s-join ", " names))
-			(with-current-buffer (car names) (fg-erc-mark)))))
+	"Put /mark to a specified ERC chan and resets its activity track."
+	(with-current-buffer (fg-get-useful-buffer pattern (erc-buffer-list))
+		(fg-erc-mark)
+		(erc-modified-channels-remove-buffer (current-buffer))
+		(erc-modified-channels-display))
+	nil)
+
+
+(defun fg-remote-log ()
+	"Return contents of *Messages* buffer."
+	(with-current-buffer "*Messages*"
+		(buffer-substring-no-properties (point-min) (point-max))))

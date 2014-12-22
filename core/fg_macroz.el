@@ -529,13 +529,24 @@ ERROR-IF-NOT-FOUND signals error if named buffer doesn't exist."
 				(if error-if-not-found 'error 'message)
 				"No such buffer: %s" name))))
 
-(defun fg-list-useful-buffers (&optional pattern)
-	"Return a list of non-private buffers that contain string PATTERN."
+(defun fg-list-useful-buffer-names (&optional pattern buffers)
+	"Return a list of non-private buffers that contain string PATTERN.
+If BUFFERS is passed, only these will be considered."
 	(--filter
 		(and
 			(or (not pattern) (s-contains? pattern it t))
-			(not (s-matches? "^\\s-*\\*.*\\*$" it)))
-		(-map 'buffer-name (buffer-list))))
+			(not (s-matches? "^\\s-*\\*" it)))
+		(-map 'buffer-name (or buffers (buffer-list)))))
+
+(defun fg-get-useful-buffer (&optional pattern buffers)
+	"Returns buffer name for unique PATTERN match,
+according to `fg-list-useful-buffer-names'.
+If more than one match is returned, error gets signaled."
+	(let ((names (fg-list-useful-buffer-names pattern buffers)))
+		(unless (= (length names) 1)
+			(error (concat "Failed to uniquely match"
+				" buffer by `%s', matches: %s") pattern (s-join ", " names)))
+		(car names)))
 
 (defadvice desktop-create-buffer (around fg-desktop-create-buffer activate)
 	(let ((filename (ad-get-arg 1)) (buffname (ad-get-arg 2)))
