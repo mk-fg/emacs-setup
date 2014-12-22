@@ -2,6 +2,13 @@
 ;; REFERENCE - 'cause elisp is for aliens
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; For most stuff, see:
+;;  https://github.com/magnars/s.el
+;;  https://github.com/magnars/dash.el
+(require 's)
+(require 'dash)
+(require 'dash-functional)
+
 ;;;; str
 
 ; py:
@@ -12,8 +19,8 @@
 ;   bool(str)
 ;   len(str)
 ; el:
-;   (position SUB S [:start N] [:end N] [:from-end t])
-;   (member STR1 STR2)
+;   ??? (position SUB S [:start N] [:end N] [:from-end t])
+;   ??? (member STR1 STR2)
 ;   (string= STR1 STR2)
 ;   (> (length STR) 0)
 ;   (length STR)
@@ -101,9 +108,6 @@
 
 ; py: for a in list: func(a)
 ; el: (mapc func list)
-
-;; See also (should things will get really bad):
-;;  https://github.com/magnars/dash.el
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

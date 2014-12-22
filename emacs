@@ -45,6 +45,7 @@
 (load-library "fg_stack")
 (load-library "fg_lookz")
 (load-library "fg_diff")
+(load-library "fg_remote")
 
 ; External and non-critical
 (autoload 'multi-term "fg_shell" nil t)
