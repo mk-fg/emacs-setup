@@ -1,0 +1,34 @@
+#!/bin/bash
+
+[[ -z "$1" ]] && { echo >&2 "Usage: $(basename $0) func [arg ...]"; exit 1; }
+
+set -o pipefail
+client_args=()
+use_tcp= tcp_info_path="$HOME"/.emacs.d/server/server
+
+[[ -f "$tcp_info_path" ]] && {
+	sock=$(awk '{print $1; exit}' "$tcp_info_path")
+	ss -lnt4 | awk '$4=="'"$sock"'" {found=1} END {exit !found}' && use_tcp=t
+}
+[[ -n "$use_tcp" ]] && client_args+=( -f "$tcp_info_path" )
+
+call="fg-remote-$1"; shift
+for arg in "$@"; do call+=" \"$arg\""; done
+call="(fg-remote ($call))"
+
+path=$(
+	emacsclient "${client_args[@]}" -e "$call" |
+		grep -v '^emacsclient: connected to remote socket at ' )
+
+[[ "$path" = nil || -z "$path" ]] && exit 0
+if [[ "${path:0:1}" = '"' && "${path:$((${#path}-1))}" = '"' ]]
+then
+	path="${path:1:-1}"
+	[[ -n "$path" && "$path" =~ ^/tmp/\.ece\. ]]\
+		|| { echo >&2 "Invalid path returned: $path"; exit 1; }
+	cat "$path"
+	rm -f "$path"
+else
+	echo >&2 "$path"
+	exit 1
+fi

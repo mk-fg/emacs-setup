@@ -140,6 +140,35 @@ Useful for &rest + &key + &allow-other-keys in `defun*'."
 	(let ((args (append (nbutlast args) (car (last args)))))
 		(eval (macroexpand-all `(,macro ,@args)))))
 
+(defun fg-real-function-name (function)
+	"Return name of FUNCTION or name it is an alias of.
+Based on `describe-function-1'."
+	(let*
+		((advised
+				(and (symbolp function)
+					(featurep 'advice)
+					(ad-get-advice-info function)))
+			(real-function
+				(or
+					(and advised
+						(let
+							((origname (cdr (assq 'origname advised))))
+							(and (fboundp origname) origname)))
+					function))
+			(def
+				(if (symbolp real-function)
+					(symbol-function real-function)
+					function))
+			(aliased (symbolp def))
+			(real-function
+				(if aliased
+					(let ((f def))
+						(while
+							(and (fboundp f) (symbolp (symbol-function f)))
+							(set 'f (symbol-function f)))
+						f)
+					real-function)))
+		(format "%s" real-function)))
 
 
 

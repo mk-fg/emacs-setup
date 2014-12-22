@@ -29,6 +29,48 @@ from emacsclient, match returned filename, read file contents, remove it."
 			(write-region data nil tmp)
 			tmp)))
 
+(defun fg-remote-help (&optional cmd)
+	"Return a list of remote commands
+and all their aliases or info on specified CMD."
+	(let ((pre "fg-remote-"))
+		(if cmd
+			(let ((func (intern (concat pre cmd))))
+				(require 'help-fns)
+				(format "%S\n\n%s"
+					(help-make-usage func (help-function-arglist func))
+					(documentation func)))
+			(apply 'list
+				"Available commands:"
+				(--map
+					(concat "  " it)
+					(let (names)
+						(mapatoms
+							(lambda (sym)
+								(let ((sym-name (format "%s" sym)))
+									(when
+										(and (fboundp sym)
+											(s-starts-with? pre sym-name))
+										(push
+											(cons
+												(s-chop-prefix pre
+													(fg-real-function-name sym))
+												(s-chop-prefix pre sym-name))
+											names))))
+							obarray)
+						(-sort 'string<
+							(--map
+								(let ((cmd (car it)) (aliases (cdr it)))
+									(format "%s%s" cmd
+										(if (= (length aliases) 1) ""
+											(format " (aliases: %s)"
+												(s-join ", " (--filter
+													(not (string= cmd it)) (-map 'cdr aliases)))))))
+								(-group-by 'car names)))))))))
+
+(defalias 'fg-remote-h 'fg-remote-help)
+(defalias 'fg-remote-rtfm 'fg-remote-help)
+(defalias 'fg-remote-wat 'fg-remote-help)
+
 
 (defun fg-remote-switch-sockets (&optional tcp-or-unix)
 	"Switch server between listening on tcp or unix socket, force-killing all clients.
