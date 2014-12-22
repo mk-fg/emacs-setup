@@ -109,21 +109,23 @@ or text contents of a buffer with name matching (via `fg-get-useful-buffer') PAT
 	"WIthout PATTERN, displays last ERC activity in '<n> <chan>' (per line) format.
 Otherwise same as `fg-remote-buffer', but only considers erc buffers,
 and PATTERN can have special 'all', 'list' or 'l' values to set it to nil."
-	(if (not pattern)
-		(--map
-			(format "%03d %s"
-				(cadr it) (buffer-name (car it)))
-			erc-modified-channels-alist)
-		(when (-contains? '("list" "l" "all") (format "%s" pattern)) (set 'pattern nil))
-		(fg-remote-buffer pattern (erc-buffer-list))))
+	(when (boundp 'erc-version-string)
+		(if (not pattern)
+			(--map
+				(format "%03d %s"
+					(cadr it) (buffer-name (car it)))
+				erc-modified-channels-alist)
+			(when (-contains? '("list" "l" "all") (format "%s" pattern)) (set 'pattern nil))
+			(fg-remote-buffer pattern (erc-buffer-list)))))
 
 (defun fg-remote-erc-mark (pattern)
 	"Put /mark to a specified ERC chan and resets its activity track."
-	(with-current-buffer (fg-get-useful-buffer pattern (erc-buffer-list))
-		(fg-erc-mark)
-		(erc-modified-channels-remove-buffer (current-buffer))
-		(erc-modified-channels-display))
-	nil)
+	(when (boundp 'erc-version-string)
+		(with-current-buffer (fg-get-useful-buffer pattern (erc-buffer-list))
+			(fg-erc-mark)
+			(erc-modified-channels-remove-buffer (current-buffer))
+			(erc-modified-channels-display))
+		nil))
 
 
 (defun fg-remote-log ()
