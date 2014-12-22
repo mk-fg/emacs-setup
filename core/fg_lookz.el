@@ -39,7 +39,13 @@
 ;; Assorted minor tweaks
 (setq-default
 	inhibit-startup-screen t
-	frame-title-format "emacs - %b" ; format the title-bar to include buffer name
+	split-height-threshold nil ; split only from-up-to-down
+	split-width-threshold 120
+	frame-title-format
+		'((:eval
+			(if (buffer-file-name)
+				(format "emacs: %s" (abbreviate-file-name (buffer-file-name)))
+				"emacs: %b")))
 	show-paren-style 'mixed ; mark the area in the direction of far parenthesis
 	visible-bell t) ; flash on weird stuff
 
@@ -75,13 +81,6 @@
 		git-gutter:lighter ""
 		git-gutter:always-show-gutter t
 		git-gutter:diff-option "-w"))
-
-;; frame title
-(setq-default frame-title-format
-	'((:eval
-		(if (buffer-file-name)
-			(format "emacs: %s" (abbreviate-file-name (buffer-file-name)))
-			"emacs: %b"))))
 
 
 ;; buffer color depending on filename/buffer-name
