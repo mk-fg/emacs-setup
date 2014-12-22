@@ -313,8 +313,9 @@ NAME can also be passed explicitly as an argument."
 	"Toggle fixed/variable pitch in current buffer."
 	(interactive)
 	(if
-		(and (boundp 'buffer-face-mode-face) buffer-face-mode-face)
-		(buffer-face-set nil)
+		(and (boundp 'buffer-face-mode-face)
+			(eq buffer-face-mode-face 'fixed-pitch))
+		(setq buffer-face-mode-face (buffer-face-set nil))
 		(buffer-face-set 'fixed-pitch)))
 
 ;; Mask 4 no-X, uniform static dark-only
