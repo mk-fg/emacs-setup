@@ -65,8 +65,8 @@ and all their aliases or info on specified CMD."
 									(format "%s%s" cmd
 										(if (= (length aliases) 1) ""
 											(format " (aliases: %s)"
-												(s-join ", " (--filter
-													(not (string= cmd it)) (-map 'cdr aliases)))))))
+												(s-join ", " (-sort 'string< (--filter
+													(not (string= cmd it)) (-map 'cdr aliases))))))))
 								(-group-by 'car names)))))))))
 
 (defalias 'fg-remote-h 'fg-remote-help)
