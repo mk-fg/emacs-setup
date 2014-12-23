@@ -1016,3 +1016,11 @@ Returns the resulting string."
 	(set 'ad-return-value
 		(fg-string-replace-pairs ad-return-value
 			'(("_-_" "\\\\[") ("_--_" "\\\\]") ("_--\\(-+\\)_" "_\\1_")))))
+
+(defmacro fg-string-case (expr &rest conds)
+	"Same as `case', but uses `string='."
+	`(cond
+			,@(--map
+				(let ((match (car it)) (body (cdr it)))
+					`(,(if (eq match t) t `(string= ,expr ,match)) ,@body))
+				conds)))

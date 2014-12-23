@@ -276,7 +276,7 @@ Examples:
 			(fg-notify
 				"emms: now playing"
 				(concat
-					(emms-track-description (emms-playlist-current-selected-track))
+					(emms-track-description track)
 					(if (= 0 (length emms-playing-time-string))
 						"" (format " (%s)" emms-playing-time-string)))
 				:pixmap "emms"

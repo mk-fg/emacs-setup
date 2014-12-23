@@ -1,5 +1,4 @@
 ;; Stuff to call via emacsclient
-;; TODO: cmds to control emms
 
 (require 'dns)
 (setq-default
@@ -180,3 +179,18 @@ and PATTERN can have special 'all', 'list' or 'l' values to set it to nil."
 	"Return contents of *Messages* buffer."
 	(with-current-buffer "*Messages*"
 		(buffer-substring-no-properties (point-min) (point-max))))
+
+
+(defun fg-remote-emms (&optional action)
+	"Show current emms track or perform specified ACTION.
+Supported actions:
+play/pause (toggled, alias: p), stop (alias: s),
+notify (desktop notification, alias: n)."
+	(if (not action)
+		(-when-let (track (emms-playlist-current-selected-track))
+			(emms-track-description track))
+		(case (intern action)
+			((play pause p) (emms-pause))
+			((stop s) (emms-stop))
+			((notify n) (fg-emms-notify))
+			(t (error "Unknown action: %s" action)))))
