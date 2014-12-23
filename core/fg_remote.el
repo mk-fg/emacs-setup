@@ -1,4 +1,6 @@
 ;; Stuff to call via emacsclient
+;; TODO: cmd to save specified modified buffer
+;; TODO: cmds to control emms
 
 (require 'dns)
 (setq-default
