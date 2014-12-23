@@ -1,5 +1,4 @@
 ;; Stuff to call via emacsclient
-;; TODO: cmd to save specified modified buffer
 ;; TODO: cmds to control emms
 
 (require 'dns)
@@ -113,6 +112,45 @@ or text contents of a buffer with name matching (via `fg-get-useful-buffer') PAT
 	"Same as `fg-remote-buffer', but always returns a list of names,
 optionally filtered by PATTERN. Uses `fg-list-useful-buffer-names' for filtering."
 	(fg-list-useful-buffer-names pattern buffers))
+
+(defun* fg-remote-buffer-save (pattern &optional overwrite buffers)
+	"Saves the buffer matching (via `fg-get-useful-buffer') PATTERN.
+Any queries during save (e.g. file was modified by something else) will signal error,
+unless OVERWIRITE is specified and matches one of the following:
+* 'mod' - answer 'y' to 'has changed since visited or saved' query, if any.
+* 'exists' - answer 'y' to 'file exists, overwrite?' query, if any.
+* 'all', 'y', 't', 'yes' - answer 'y' to all of the queries listed above, but not any unknown ones.
+* 'force' - answer 'y' on all queries asked in process, including any unmatched (unknown) ones."
+	(let ((suppress-all '(mod exists force)) suppress)
+		(when (and overwrite (not (symbolp overwrite)))
+			(set 'overwrite (intern overwrite)))
+		(if (-contains? suppress-all overwrite)
+			(set 'suppress (cons overwrite suppress))
+			(if (-contains? '(all y t yes) overwrite) ; special composite values
+				(set 'suppress (-cons* 'mod 'exists suppress))
+				(when overwrite
+					(error "Unrecognized value for OVERWRITE: %s" overwrite))))
+		(with-current-buffer (fg-get-useful-buffer pattern buffers)
+			(flet
+				((check-tag (prompt &optional tag prompt-pat)
+						(when (or (not prompt-pat) (s-match prompt-pat prompt))
+							(if
+								(or (-contains? suppress 'force) (and tag (-contains? suppress tag)))
+								t (error "File save canceled on prompt (tag: %s): %s" tag prompt))))
+					(ask-user-about-supersession-threat (fn)
+						(unless (-contains? suppress 'mod)
+							(error "File save canceled on supersession-threat (use 'mod' tag to override)")))
+					(y-or-n-p (prompt)
+						(cond ;; see `basic-save-buffer'
+							((check-tag prompt 'mod
+								" has changed since visited or saved. +Save anyway\\? *$") t)
+							((check-tag prompt 'exists " exists; overwrite\\? *$") t)
+							((check-tag prompt) t)
+							(t (error "Bug in `fg-remote-buffer-save'")))))
+				(basic-save-buffer)))))
+
+(defalias 'fg-remote-buff-save 'fg-remote-buffer-save)
+(defalias 'fg-remote-bs 'fg-remote-buffer-save)
 
 
 (defun fg-remote-erc (&optional pattern)
