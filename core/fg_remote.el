@@ -112,6 +112,8 @@ or text contents of a buffer with name matching (via `fg-get-useful-buffer') PAT
 optionally filtered by PATTERN. Uses `fg-list-useful-buffer-names' for filtering."
 	(fg-list-useful-buffer-names pattern buffers))
 
+(defalias 'fg-remote-bn 'fg-remote-buffer-names)
+
 (defun* fg-remote-buffer-save (pattern &optional overwrite buffers)
 	"Saves the buffer matching (via `fg-get-useful-buffer') PATTERN.
 Any queries during save (e.g. file was modified by something else) will signal error,
@@ -154,16 +156,31 @@ unless OVERWIRITE is specified and matches one of the following:
 
 (defun fg-remote-erc (&optional pattern)
 	"WIthout PATTERN, displays last ERC activity in '<n> <chan>' (per line) format.
-Otherwise same as `fg-remote-buffer-names', but only considers erc buffers,
-and PATTERN can have special 'all', 'list' or 'l' values to set it to nil."
+Otherwise, same as `fg-remote-buffer', gets specified erc buffer contents,
+picking only from buffers with activity (i.e. the ones that are disaplayed without PATTERN)."
 	(when (boundp 'erc-version-string)
 		(if (not pattern)
-			(--map
-				(format "%03d %s"
-					(cadr it) (buffer-name (car it)))
-				erc-modified-channels-alist)
-			(when (-contains? '("list" "l" "all") (format "%s" pattern)) (set 'pattern nil))
-			(fg-remote-buffer-names pattern (erc-buffer-list)))))
+			(when erc-modified-channels-alist
+				(let*
+					((digits (-max (-map 'cadr erc-modified-channels-alist)))
+						(fmt (format "%%0%dd %%s" (or
+							(multiple-value-bind
+								(digits overflow) (round* (log digits 10))
+								(if (> overflow 0) (1+ digits) digits)) ""))))
+					(--map
+						(format fmt (cadr it) (buffer-name (car it)))
+						erc-modified-channels-alist)))
+			(with-current-buffer
+				(fg-get-useful-buffer pattern (-map 'car erc-modified-channels-alist))
+				(buffer-substring-no-properties (point-min) (point-max))))))
+
+(defalias 'fg-remote-e 'fg-remote-erc)
+
+(defun fg-remote-erc-names (&optional pattern)
+	"Same as `fg-remote-buffer-names', but only considers erc buffers."
+	(fg-remote-buffer-names pattern (erc-buffer-list)))
+
+(defalias 'fg-remote-en 'fg-remote-erc-names)
 
 (defun fg-remote-erc-mark (pattern)
 	"Put /mark to a specified ERC chan and resets its activity track."
@@ -173,6 +190,8 @@ and PATTERN can have special 'all', 'list' or 'l' values to set it to nil."
 			(erc-modified-channels-remove-buffer (current-buffer))
 			(erc-modified-channels-display))
 		nil))
+
+(defalias 'fg-remote-em 'fg-remote-erc-mark)
 
 
 (defun fg-remote-log ()
