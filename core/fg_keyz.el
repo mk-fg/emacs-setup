@@ -447,20 +447,16 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 (defun fg-track-reset ()
 	"Drop annoying status line notifications"
 	(interactive)
-	(when (fboundp 'fg-jabber-activity-reset)
-		(fg-jabber-activity-reset))
-	(when (fboundp 'fg-erc-track-reset)
-		(fg-erc-track-reset)))
+	(when (featurep 'jabber) (fg-jabber-activity-reset))
+	(when (fboundp 'fg-erc-track-reset) (fg-erc-track-reset)))
 
 (defun fg-track-switch (arg)
 	"Switch to jabbra or erc activity buffers"
 	(interactive "p")
 	(let ((buff (current-buffer)))
-		(when (fboundp 'jabber-activity-switch-to)
-			(jabber-activity-switch-to))
+		(when (featurep 'jabber) (jabber-activity-switch-to))
 		(when
-			(and (fboundp 'erc-track-switch-buffer)
-				(eq buff (current-buffer)))
+			(and (fboundp 'erc-track-switch-buffer) (eq buff (current-buffer)))
 			(erc-track-switch-buffer arg))))
 
 
