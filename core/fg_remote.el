@@ -153,6 +153,23 @@ unless OVERWIRITE is specified and matches one of the following:
 (defalias 'fg-remote-buff-save 'fg-remote-buffer-save)
 (defalias 'fg-remote-bs 'fg-remote-buffer-save)
 
+(defun* fg-remote-buffer-kill (pattern &optional buffers)
+	"Kill buffer matching (via `fg-get-useful-buffer') PATTERN.
+It doesn't matter if buffer is modified or if there's
+an associated process, it will still be killed without any prompt.
+Obviously dangerous to any possible unsaved changes."
+	(with-current-buffer (fg-get-useful-buffer pattern buffers)
+		(let (kill-buffer-query-functions)
+			(-when-let
+				(proc (get-buffer-process (current-buffer)))
+				(delete-process proc))
+			(set-buffer-modified-p nil)
+			(kill-buffer)))
+	nil)
+
+(defalias 'fg-remote-buff-kill 'fg-remote-buffer-kill)
+(defalias 'fg-remote-bk 'fg-remote-buffer-kill)
+
 
 (defun fg-remote-erc (&optional pattern)
 	"WIthout PATTERN, displays last ERC activity in '<n> <chan>' (per line) format.
@@ -193,11 +210,41 @@ picking only from buffers with activity (i.e. the ones that are disaplayed witho
 
 (defalias 'fg-remote-em 'fg-remote-erc-mark)
 
+(defun fg-remote-erc-cat-mark (pattern)
+	"Combined `fg-remote-erc' and `fg-remote-erc-mark' commands.
+Will get the buffer contents, put a mark there, and return the contents."
+	(prog1
+		(fg-remote-erc pattern)
+		(fg-remote-erc-mark pattern)))
+
+(defalias 'fg-remote-ecm 'fg-remote-erc-cat-mark)
+
 
 (defun fg-remote-log ()
 	"Return contents of *Messages* buffer."
 	(with-current-buffer "*Messages*"
 		(buffer-substring-no-properties (point-min) (point-max))))
+
+
+(defun fg-remote-eval (path)
+	"Load and eval file at the specified local PATH.
+If PATH is already opened in some buffer, error is signaled.
+Result of the eval operation is not returned."
+	(flet
+		((kill-buffer-force ()
+			(let (kill-buffer-query-functions)
+				(-when-let
+					(proc (get-buffer-process (current-buffer)))
+					(delete-process proc))
+				(set-buffer-modified-p nil)
+				(kill-buffer))))
+		(save-excursion
+			(-when-let (buff (find-buffer-visiting path))
+				(error "Specified path already opened in buffer: %s" (buffer-name buff)))
+			(find-file path) ; not sure if there might still be some interactivity
+			(condition-case err
+				(prog1 (eval-buffer) (kill-buffer-force))
+				(error (kill-buffer-force) (signal (car err) (cdr err)))))))
 
 
 (defun fg-remote-emms (&optional action)
