@@ -572,10 +572,12 @@ If BUFFERS is passed, only these will be considered."
 according to `fg-list-useful-buffer-names'.
 If more than one match is returned, error gets signaled."
 	(let ((names (fg-list-useful-buffer-names pattern buffers)))
-		(unless (= (length names) 1)
-			(error (concat "Failed to uniquely match"
-				" buffer by `%s', matches: %s") pattern (s-join ", " names)))
-		(car names)))
+		(if (-contains? names pattern)
+			pattern ; exact match
+			(unless (= (length names) 1)
+				(error (concat "Failed to uniquely match"
+					" buffer by `%s', matches: %s") pattern (s-join ", " names)))
+			(car names))))
 
 (defadvice desktop-create-buffer (around fg-desktop-create-buffer activate)
 	(let ((filename (ad-get-arg 1)) (buffname (ad-get-arg 2)))
