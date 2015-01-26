@@ -1,11 +1,15 @@
 ;; Stuff to call via emacsclient
 
-(require 'dns)
 (setq-default
 	server-use-tcp nil
-	server-host ;; ipv6 stuff doesn't seem to be supported yet
-		(dns-query-cached (concat system-name ".v4c"))
+	server-host "0.0.0.0"
 	server-port 6002)
+
+(ignore-errors
+	(require 'dns)
+	(setq-default
+		server-host ;; ipv6 stuff doesn't seem to be supported yet
+			(dns-query-cached (concat system-name ".v4c"))))
 
 
 (defun fg-remote (data)
