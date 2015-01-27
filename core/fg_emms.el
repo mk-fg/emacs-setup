@@ -19,66 +19,16 @@
 ;;;; Player
 
 ;;; Use VLC
-(require 'emms-player-vlc)
-(setq-default
-	emms-player-list
-		'(emms-player-vlc-playlist emms-player-vlc)
-	emms-player-vlc-parameters '("--intf=oldrc")
-	emms-player-vlc-playlist-parameters '("--intf=oldrc"))
-
-;;; Use mplayer/mplayer2
-;; (require 'emms-player-mplayer)
+;; (require 'emms-player-vlc)
 ;; (setq-default
 ;; 	emms-player-list
-;; 		'(emms-player-mplayer-playlist emms-player-mplayer)
-;; 	emms-player-mplayer-parameters
-;; 		(append emms-player-mplayer-parameters
-;; 			'("-noconfig" "user" "-vo" "null")))
+;; 		'(emms-player-vlc-playlist emms-player-vlc)
+;; 	emms-player-vlc-parameters '("--intf=oldrc")
+;; 	emms-player-vlc-playlist-parameters '("--intf=oldrc"))
 
-;;; Use/define mpv (better mplayer fork)
-;; (require 'emms-compat)
-;; (require 'emms-player-simple)
-
-;; (define-emms-simple-player mpv '(file url)
-;; 	(concat "\\`\\(http\\|mms\\)://\\|"
-;; 		(emms-player-simple-regexp
-;; 			"ogg" "mp3" "wav" "mpg" "mpeg" "wmv" "wma"
-;; 			"mov" "avi" "divx" "ogm" "ogv" "asf" "mkv"
-;; 			"rm" "rmvb" "mp4" "flac" "vob" "m4a" "ape" "mpc"))
-;; 	"mpv" "--slave-broken" "--quiet"
-;; 		"--really-quiet" "--no-config" "--vo" "null")
-;; (define-emms-simple-player mpv-playlist '(streamlist)
-;; 	"\\`http://"
-;; 	"mpv" "--slave-broken" "--quiet"
-;; 		"--really-quiet" "--no-config" "--vo" "null" "--playlist")
-
-;; (defun emms-player-mpv-pause ()
-;; 	(process-send-string
-;; 		emms-player-simple-process-name "pause\n"))
-;; (emms-player-set emms-player-mpv
-;; 	'pause 'emms-player-mpv-pause)
-;; (emms-player-set emms-player-mpv
-;; 	'resume nil)
-
-;; (defun emms-player-mpv-seek (sec)
-;; 	(process-send-string
-;; 		emms-player-simple-process-name
-;; 		(format "seek %d\n" sec)))
-;; (emms-player-set emms-player-mpv
-;; 	'seek 'emms-player-mpv-seek)
-
-;; (defun emms-player-mpv-seek-to (sec)
-;; 	(process-send-string
-;; 		emms-player-simple-process-name
-;; 		(format "seek %d 2\n" sec)))
-;; (emms-player-set emms-player-mpv
-;; 	 'seek-to 'emms-player-mpv-seek-to)
-
-;; (provide 'emms-player-mpv)
-
-;; (setq-default
-;; 	emms-player-list
-;; 		'(emms-player-mpv-playlist emms-player-mpv))
+(require 'emms-player-mpv) ;; in extz
+(add-to-list 'emms-player-list 'emms-player-mpv)
+(setq-default emms-player-list '(emms-player-mpv))
 
 
 ;;;; Playlist controls
