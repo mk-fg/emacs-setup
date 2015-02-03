@@ -176,7 +176,7 @@ Obviously dangerous to any possible unsaved changes."
 
 
 (defun fg-remote-erc (&optional pattern)
-	"WIthout PATTERN, displays last ERC activity in '<n> <chan>' (per line) format.
+	"WIthout PATTERN, displays last erc activity in '<n> <chan>' (per line) format.
 Otherwise, same as `fg-remote-buffer', gets specified erc buffer contents,
 picking only from buffers with activity (i.e. the ones that are disaplayed without PATTERN)."
 	(when (boundp 'erc-version-string)
@@ -198,13 +198,15 @@ picking only from buffers with activity (i.e. the ones that are disaplayed witho
 (defalias 'fg-remote-e 'fg-remote-erc)
 
 (defun fg-remote-erc-names (&optional pattern)
-	"Same as `fg-remote-buffer-names', but only considers erc buffers."
+	"Same as `fg-remote-buffer-names', but only considers erc buffers.
+Unlike `fg-remote-erc', considers all erc buffers, not just ones with activity."
 	(fg-remote-buffer-names pattern (erc-buffer-list)))
 
 (defalias 'fg-remote-en 'fg-remote-erc-names)
 
 (defun fg-remote-erc-mark (pattern)
-	"Put /mark to a specified ERC chan and resets its activity track."
+	"put /mark to a specified erc chan and resets its activity track.
+Unlike `fg-remote-erc', considers all erc buffers, not just ones with activity."
 	(when (boundp 'erc-version-string)
 		(with-current-buffer (fg-get-useful-buffer pattern (erc-buffer-list))
 			(fg-erc-mark)
@@ -216,7 +218,7 @@ picking only from buffers with activity (i.e. the ones that are disaplayed witho
 
 (defun fg-remote-erc-cat-mark (pattern)
 	"Combined `fg-remote-erc' and `fg-remote-erc-mark' commands.
-Will get the buffer contents, put a mark there, and return the contents."
+Will get the active buffer contents, put a mark there, and return the contents."
 	(prog1
 		(fg-remote-erc pattern)
 		(fg-remote-erc-mark pattern)))
