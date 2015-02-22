@@ -258,7 +258,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 				:net "^EFNet$" :nick "i2p"
 				:msg "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
 			(:chan "^#cjdns$" :net "^HypeIRC$" :nick "finnbot")
-			(:chan "^#bitlbee$" :net "^OFTC$" :nick "Not-dee8" :msg "\\[bitlbee\\]")
+			(:chan "^#bitlbee$" :net "^OFTC$" :nick "Not-...." :msg "\\[bitlbee\\]")
 			(:chan "^#\\(unhosted\\|remotestorage\\)$"
 				:net "^FreeNode$" :nick "unposted"
 				:msg ,(concat "\\[\\(" "website\\(/master\\)?"
