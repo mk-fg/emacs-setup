@@ -2,13 +2,8 @@
 (require 'newsticker)
 
 (setq-default
-	newsticker-url-list
-		'(("Music" "http://fraggod.net/feeds/music/" nil 7200)
-			("SCM MetaTracker"
-				"http://fraggod.net/feeds/scm_meta_trak/syndication/atom/" nil 3600)
-			("SCM Tags" "http://fraggod.net/feeds/scm_tags/" nil 3600)
-			("social.last_fm" "http://ws.audioscrobbler.com/1.0/user/FraGGod/replytracker.rss" nil 3000))
-	newsticker-url-list-defaults '()
+	newsticker-url-list fg-newsticker-urls
+	newsticker-url-list-defaults nil
 
 	newsticker-automatically-mark-items-as-old nil
 	newsticker-automatically-mark-visited-items-as-old t
