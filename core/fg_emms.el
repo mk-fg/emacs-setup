@@ -251,12 +251,19 @@ invoke `emms-play-directory-tree'."
 	(interactive)
 	(if emms-playlist-buffer-p
 		(emms-playlist-mode-bury-buffer)
-		(when
-			(or (null emms-playlist-buffer)
-				(not (buffer-live-p emms-playlist-buffer)))
-			(call-interactively 'emms-play-directory-tree))
-		(emms-playlist-mode-go)))
-
+		(let
+			((playlist-restore-pos
+				(if
+					(or (null emms-playlist-buffer)
+						(not (buffer-live-p emms-playlist-buffer)))
+					(prog1 nil (call-interactively 'emms-play-directory-tree))
+					(with-current-emms-playlist
+						(-when-let (m emms-playlist-selected-marker) (marker-position m))))))
+			(emms-playlist-mode-go)
+			(when playlist-restore-pos
+				(with-current-emms-playlist
+					(emms-playlist-select playlist-restore-pos)
+					(goto-char playlist-restore-pos))))))
 
 
 ;; Create paths
