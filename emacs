@@ -4,7 +4,6 @@
 
 
 ;; Extend include path
-(add-to-list 'load-path fg-path)
 (add-to-list 'load-path (concat fg-path "/core"))
 (add-to-list 'load-path (concat fg-path "/extz"))
 (add-to-list 'load-path (concat fg-path "/extz/yasnippet"))
@@ -82,7 +81,7 @@
 (load-library "fg_keyz") ; must be the last one of fg_* stuff
 
 ;; ELPA
-(load-library "elpa/init")
+(load-library "fg_elpa")
 
 ;; "customize" settings (if any) - should be after everything else, ideally
 (setq custom-file (concat fg-path "/customize.el"))
@@ -170,16 +169,17 @@
 
 ;; Auto-mode tweaks
 (delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
-(nconc auto-mode-alist
-	`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'" . sh-mode)
-		("\\.jl\\'" . lisp-mode) ("\\.rkt\\'" . scheme-mode)
-		("\\.yaml\\'" . yaml-mode)
-		("\\.coffee\\'" . coffee-mode) ("\\.scss\\'" . css-mode) ("\\.jade\\'" . jade-mode)
-		("\\.go\\'" . go-mode)
-		(,(concat
-			".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
-				"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
-			"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'") . conf-mode)))
+(setq-default auto-mode-alist
+	(-concat auto-mode-alist
+		`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'" . sh-mode)
+			("\\.jl\\'" . lisp-mode) ("\\.rkt\\'" . scheme-mode)
+			("\\.yaml\\'" . yaml-mode)
+			("\\.coffee\\'" . coffee-mode) ("\\.scss\\'" . css-mode) ("\\.jade\\'" . jade-mode)
+			("\\.go\\'" . go-mode)
+			(,(concat
+				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
+					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
+				"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'") . conf-mode))))
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
 ;; Simple way to expand this list is "!" on confirm and fishing them from custom
