@@ -224,6 +224,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	erc-log-channels-directory (concat fg-path "/tmp/erc")
 	erc-max-buffer-size 30000
 	erc-max-buffer-size-to-act 50000 ;; for custom truncation, not used by default ERC
+	(setq erc-fill-column 2048)
 
 	erc-track-showcount t
 	erc-track-exclude-types ;; join/part/nickserv + all the crap on connect
