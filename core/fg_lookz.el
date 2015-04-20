@@ -126,6 +126,12 @@ NAME can also be passed explicitly as an argument."
 	"coffee-mode" "Mode for editing CoffeeScript sources" t)
 (autoload 'jade-mode
 	"jade-mode" "Mode for editing JADE templates" t)
+(autoload 'markdown-mode
+	"markdown-mode" "Major mode for editing Markdown files" t)
+(autoload 'lua-mode "lua-mode" "Lua editing mode." t)
+(autoload 'php-mode "php-mode.el" "Php mode." t)
+(autoload 'pkgbuild-mode "pkgbuild-mode.el" "PKGBUILD mode." t)
+(load-library-safe "haskell-mode-autoloads")
 
 
 ;; Nice, but crashes current emacs (24.0.50.1)

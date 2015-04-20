@@ -170,16 +170,19 @@
 ;; Auto-mode tweaks
 (delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
 (setq-default auto-mode-alist
-	(-concat auto-mode-alist
+	(-distinct (-concat auto-mode-alist
 		`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'" . sh-mode)
+			("/PKGBUILD$" . pkgbuild-mode)
 			("\\.jl\\'" . lisp-mode) ("\\.rkt\\'" . scheme-mode)
 			("\\.yaml\\'" . yaml-mode)
+			("\\.\\(text\\|markdown\\|md\\)\\'" . markdown-mode)
 			("\\.coffee\\'" . coffee-mode) ("\\.scss\\'" . css-mode) ("\\.jade\\'" . jade-mode)
-			("\\.go\\'" . go-mode)
+			("\.lua$" . lua-mode) ("\\.go\\'" . go-mode) ("/*.\.php[345]?$" . php-mode)
 			(,(concat
 				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
 					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
-				"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'") . conf-mode))))
+				"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'") . conf-mode)))))
+
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
 ;; Simple way to expand this list is "!" on confirm and fishing them from custom
