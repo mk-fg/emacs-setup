@@ -205,6 +205,8 @@ NAME can also be passed explicitly as an argument."
 (defvar fg-color-var "Coral")
 (defvar fg-color-static "olive drab")
 
+;; (face-all-attributes 'region)
+
 (defun fg-masq-x ()
 	"CSS-like binding."
 	(custom-set-faces
@@ -214,6 +216,7 @@ NAME can also be passed explicitly as an argument."
 					(boundp 'fg-color-bg-core))
 				(:foreground ,fg-color-fg-core
 					:background ,fg-color-bg-core))))
+		`(region ((t (:foreground ,fg-color-fg-core :background ,fg-color-bg-hl))))
 		;; Py
 		`(py-builtins-face ((t (:foreground ,fg-color-kw))))
 		`(py-decorators-face ((t (:foreground ,fg-color-kw))))

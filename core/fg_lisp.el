@@ -1,6 +1,12 @@
 (require 'cl) ; superb stuff
 
 
+;; TEH LISHP MUSHT FLOW...
+(setq-default
+	eval-expression-print-length nil
+	eval-expression-print-level nil)
+
+
 ;; Parenthesis editing helpers (TODO: MOAR!)
 (when
 	(load-library-safe "highlight-parentheses")
