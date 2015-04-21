@@ -153,20 +153,17 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 
 ;; Modules
-(setq
-	;; Fill-mode doesn't play nice with variable pitch
-	;; Note that it can't seem to be disabled globally via erc-fill-mode var
-	erc-modules (delq 'fill erc-modules)
-	;; These are useless and only hinder ops like copy-paste
-	erc-modules (delq 'button erc-modules)
-	;; Disabled by default, but I'd hate to bump into these
-	erc-modules (delq 'smiley erc-modules)
-	erc-modules (delq 'sound erc-modules))
-
-(add-to-list 'erc-modules 'log)
-(add-to-list 'erc-modules 'truncate)
-(add-to-list 'erc-modules 'autoaway)
-(add-to-list 'erc-modules 'dcc)
+(customize-set-variable 'erc-modules
+	(-union
+		(-difference erc-modules '(
+			;; Fill-mode doesn't play nice with variable pitch
+			;; Note that it can't seem to be disabled globally via erc-fill-mode var
+			fill
+			;; These are useless and only hinder ops like copy-paste
+			button
+			;; Disabled by default, but I'd hate to bump into these
+			smiley sound))
+		'(log truncate autoaway dcc)))
 
 ;; TODO: should be configured first
 ;; (add-to-list 'erc-modules 'notify)
@@ -224,7 +221,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	erc-log-channels-directory (concat fg-path "/tmp/erc")
 	erc-max-buffer-size 30000
 	erc-max-buffer-size-to-act 50000 ;; for custom truncation, not used by default ERC
-	(setq erc-fill-column 2048)
+	erc-fill-column 2048 ;; in case that dumb module gets activated somehow
 
 	erc-track-showcount t
 	erc-track-exclude-types ;; join/part/nickserv + all the crap on connect
