@@ -575,6 +575,13 @@ If point is on a group name, this function operates on that group."
 	(define-key makefile-mode-map (key "C-c") nil)))
 
 
+;; -- Markdown mode weird bindings --
+(eval-after-load "markdown-mode" '(progn
+	;; Seriously, who rebinds shift-tab to some whole-document-removal action? Nice prank!
+	(define-key markdown-mode-map (key "<S-iso-lefttab>") nil)
+	(define-key markdown-mode-map (key "<backtab>") nil)))
+
+
 ;; -- ERC + submodes --
 
 (eval-after-load "erc" '(progn
