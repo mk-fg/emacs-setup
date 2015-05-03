@@ -512,7 +512,7 @@ If point is on a group name, this function operates on that group."
 			vars))
 	'(("js" js-mode-map '("{" "}" "(" ")" ":" ";" ","))
 		("perl" perl-mode-map '("{" "}" "(" ")" ":" ";" ","))
-		("yaml-mode" yaml-mode-map '(">" "|"))
+		("yaml-mode" yaml-mode-map '(">" "|" "-" "."))
 		("go-mode" go-mode-map '("}" ")" ":" "="))))
 
 
