@@ -4,10 +4,11 @@
 (setq-default
 	newsticker-url-list fg-newsticker-urls
 	newsticker-url-list-defaults nil
+	newsticker-retrieval-interval (* 4 3600)
 
 	newsticker-automatically-mark-items-as-old nil
 	newsticker-automatically-mark-visited-items-as-old t
-	newsticker-obsolete-item-max-age (* 30 (* 24 3600))
+	newsticker-obsolete-item-max-age (* 30 24 3600))
 
 	newsticker-ticker-interval 0.3
 	newsticker-scroll-smoothly t
@@ -45,12 +46,6 @@ activate newsticker layout (and reset ticker) if it's already started."
 				(newsticker-show-news)))
 		(newsticker-start)
 		(newsticker-start-ticker)))
-
-
-;; (defun fg-feeds-read ()
-;; 	"Mark all the stuff in newsticker as read (TODO!), reset ticker."
-;; 	(interactive)
-;; 	(newsticker--ticker-text-setup))
 
 
 ;; Doesn't work: every item seem to be considered "new",
