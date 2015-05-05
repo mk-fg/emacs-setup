@@ -8,7 +8,7 @@
 
 	newsticker-automatically-mark-items-as-old nil
 	newsticker-automatically-mark-visited-items-as-old t
-	newsticker-obsolete-item-max-age (* 30 24 3600))
+	newsticker-obsolete-item-max-age (* 30 24 3600)
 
 	newsticker-ticker-interval 0.3
 	newsticker-scroll-smoothly t
