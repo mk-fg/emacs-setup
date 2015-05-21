@@ -257,7 +257,8 @@ Result of the eval operation is not returned."
 	"Show current emms track or perform specified ACTION.
 Supported actions:
 play/pause (toggled, alias: p), stop (alias: s),
-notify (desktop notification, alias: n)."
+notify (desktop notification, alias: n),
+clear (clear playlist, alias: c)."
 	(if (not action)
 		(-when-let (track (emms-playlist-current-selected-track))
 			(emms-track-description track))
@@ -265,4 +266,12 @@ notify (desktop notification, alias: n)."
 			((play pause p) (emms-pause))
 			((stop s) (emms-stop))
 			((notify n) (fg-emms-notify))
+			((clear c) (emms-playlist-mode-clear))
 			(t (error "Unknown action: %s" action)))))
+
+
+(defun fg-remote-emms-add (&rest paths)
+	"Recursively add path(s) (or glob(s)) to emms playlist."
+	(-each paths 'fg-emms-add-directory-tree-glob))
+
+(defalias 'fg-remote-ea 'fg-remote-emms-add)
