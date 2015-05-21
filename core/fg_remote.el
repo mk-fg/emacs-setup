@@ -258,7 +258,7 @@ Result of the eval operation is not returned."
 Supported actions:
 play/pause (toggled, alias: p), stop (alias: s),
 notify (desktop notification, alias: n),
-clear (clear playlist, alias: c)."
+clear (clear playlist, alias: c), path (current track path)."
 	(if (not action)
 		(-when-let (track (emms-playlist-current-selected-track))
 			(emms-track-description track))
@@ -267,6 +267,7 @@ clear (clear playlist, alias: c)."
 			((stop s) (emms-stop))
 			((notify n) (fg-emms-notify))
 			((clear c) (emms-playlist-mode-clear))
+			((path) (emms-track-get (emms-playlist-current-selected-track) 'name))
 			(t (error "Unknown action: %s" action)))))
 
 
