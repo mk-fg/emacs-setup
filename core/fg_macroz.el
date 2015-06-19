@@ -5,10 +5,12 @@
 ;; For most stuff, see:
 ;;  https://github.com/magnars/s.el
 ;;  https://github.com/magnars/dash.el
+;;  https://github.com/Wilfred/ht.el
 ;; TODO: dedup old macros with this stuff
 (require 's)
 (require 'dash)
 (require 'dash-functional)
+(require 'ht)
 
 ;;;; str
 
@@ -109,6 +111,9 @@
 
 ; py: for a in list: func(a)
 ; el: (mapc func list)
+
+; py: len(some_dict)
+; el: (hash-table-count SOME-DICT)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
