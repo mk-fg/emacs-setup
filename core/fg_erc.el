@@ -433,11 +433,44 @@ channel/netwrok parameters."
 		(plist-get (custom-face-attributes-get 'default (selected-frame)) :background)
 		(downcase nick) min-delta))
 
+(defvar-local fg-erc-highlight-name-set nil
+	"Nicks picked up from channel messages via regexps to be highlighted.
+Only used when `erc-channel-users' is unavailable or bogus (e.g. only has 1 user).")
+
+(defvar fg-erc-highlight-name-set-cleanup
+	`((min-size . 500)
+		(chance . ,(/ 1.0 200))
+		(timeout . ,(* 10 3600)))
+	"Parameters for cleanup of unused nicks from `fg-erc-highlight-name-set'.")
+
+(defun fg-erc-highlight-nicknames-cleanup (name-set params)
+	"Cleanup NAME-SET according to PARAMS.
+PARAMS should probably be `fg-erc-highlight-name-set-cleanup'."
+	(-let*
+		(((&alist
+					'min-size cleanup-min-size
+					'chance cleanup-chance
+					'timeout cleanup-timeout)
+				params)
+			((cleanup-ts-cutoff) (list (- (float-time) cleanup-timeout))))
+		(when
+			(and
+				(> (ht-size name-set) cleanup-min-size)
+				(< (random-float) cleanup-chance))
+			(ht-each
+				(lambda (k v)
+					(when (< v cleanup-ts-cutoff) (ht-remove! name-set k)))
+				name-set))))
+
 (defun fg-erc-highlight-nicknames ()
+	"Hook to colorize nicknames in channel messages."
+	(unless
+		(condition-case nil (ht? fg-erc-highlight-name-set) (error nil))
+		(setq-local fg-erc-highlight-name-set (ht-create)))
 	(condition-case-unless-debug ex
 		(save-excursion
 			(goto-char (point-min))
-			(while (re-search-forward "[-[:alnum:]_`^|]+" nil t)
+			(while (re-search-forward "[-[:alnum:]_`^|<>]+" nil t)
 				(let*
 					((bounds (cons (match-beginning 0) (point)))
 						(nick (buffer-substring-no-properties (car bounds) (cdr bounds)))
@@ -445,17 +478,24 @@ channel/netwrok parameters."
 					(when (string-match "^<\\(.*\\)>$" nick)
 						(setq
 							nick (match-string 1 nick)
-							bounds (cons (1+ (car bounds)) (1- (cdr bounds)))))
+							bounds (cons (1+ (car bounds)) (1- (cdr bounds))))
+						;; Special case - 1 user in "erc-channel-users" means that /names doesn't work
+						;; So nicks will be matched from messages in the chan instead, checked below
+						(if (and (ht? erc-channel-users) (> (ht-size erc-channel-users) 1))
+							(ht-clear! fg-erc-highlight-name-set)
+							(ht-set! fg-erc-highlight-name-set (downcase nick) (float-time))
+							(fg-erc-highlight-nicknames-cleanup
+								fg-erc-highlight-name-set fg-erc-highlight-name-set-cleanup)))
 					(when
 						(and
 							(or
 								(and (erc-server-buffer-p) (erc-get-server-user nick))
-								(and erc-channel-users (erc-get-channel-user nick)))
+								(and erc-channel-users (erc-get-channel-user nick))
+								(ht-contains? fg-erc-highlight-name-set (downcase nick)))
 							(not (string-equal nick nick-self)))
 						(put-text-property
 							(car bounds) (cdr bounds) 'face
-							(cons 'foreground-color
-								(fg-erc-get-color-for-nick nick)))))))
+							(cons 'foreground-color (fg-erc-get-color-for-nick nick)))))))
 		(error
 			(message "ERC highlight error: %s" ex)
 			(ding t))))

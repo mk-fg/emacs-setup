@@ -1031,3 +1031,16 @@ Returns the resulting string."
 				(let ((match (car it)) (body (cdr it)))
 					`(,(if (eq match t) t `(string= ,expr ,match)) ,@body))
 				conds)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Numbers and math
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun random-float (&optional max-digits)
+	"Returns random `float' in [0, 1] range with MAX-DIGITS decimal digits.
+Not sure if distribution fits whatever advanced purposes (e.g. crypto),
+but should be good enough for simple random checks.
+More info on such naive random: http://mumble.net/~campbell/2014/04/28/uniform-random-float"
+	(let ((random-max (expt 10 (or max-digits 6))))
+		(/ (float (1+ (random random-max))) (- random-max 1))))
