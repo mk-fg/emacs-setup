@@ -258,6 +258,7 @@ Result of the eval operation is not returned."
 Supported actions:
 play/pause (toggled, alias: p), stop (alias: s),
 notify (desktop notification, alias: n),
+shuffle (for playlist), sort (for playlist),
 clear (clear playlist, alias: c), path (current track path)."
 	(if (not action)
 		(-when-let (track (emms-playlist-current-selected-track))
@@ -266,6 +267,8 @@ clear (clear playlist, alias: c), path (current track path)."
 			((play pause p) (emms-pause))
 			((stop s) (emms-stop))
 			((notify n) (fg-emms-notify))
+			((shuffle) (prog1 nil (emms-shuffle)))
+			((sort) (prog1 nil (emms-sort)))
 			((clear c) (emms-playlist-mode-clear))
 			((path) (emms-track-get (emms-playlist-current-selected-track) 'name))
 			(t (error "Unknown action: %s" action)))))
