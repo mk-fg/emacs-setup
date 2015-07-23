@@ -187,7 +187,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 			(if (and (boundp 'erc-default-recipients) (erc-default-target))
 				(erc-default-target) "limbo") "%")
 			'read-only t 'rear-nonsticky t 'front-nonsticky t 'intangible t))
-	erc-minibuffer-notice t
+	erc-minibuffer-notice nil
 
 	erc-quit-reason 'erc-quit-reason-various
 	erc-quit-reason-various-alist
@@ -228,7 +228,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 		'("JOIN" "NICK" "PART" "QUIT" "MODE" "324" "329" "332" "333" "353" "477")
 	erc-track-enable-keybindings nil
 
-	erc-hide-list '("JOIN" "PART" "QUIT") ;; careful, these are completely ignored
+	erc-hide-list '("JOIN" "PART" "MODE" "MODE-nick" "QUIT") ;; careful, these are completely ignored
 
 	erc-ignore-list ;; global ignore-everywhere list
 		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
@@ -333,21 +333,27 @@ and block the message if any rule in either matches it."
 (defun fg-erc-msg-match-rule (rule msg)
 	"Match RULE against MSG.
 Must be called from an ERC channel buffer, as it also matches
-channel/netwrok parameters."
+channel/network parameters."
 	(let*
 		((net (plist-get rule :net))
+			(host (plist-get rule :host))
 			(chan (plist-get rule :chan))
 			(nick (plist-get rule :nick))
-			(line (plist-get rule :msg))
-			(msg-pat (when (or nick line)
-				(fg-erc-msg-block-pattern (or nick "[^>]+") (or line "")))))
+			(msg-pat-raw (plist-get rule :msg))
+			(line (plist-get rule :line))
+			(msg-pat (when (or nick msg-pat-raw)
+				(fg-erc-msg-block-pattern (or nick "[^>]+") (or msg-pat-raw "")))))
 		(and
 			(or (not net)
 				(string-match net (or (symbol-name (erc-network)) "")))
+			(or (not host)
+				(string-match host (or erc-session-server "")))
 			(or (not chan)
 				(string-match chan (or (erc-default-target) "")))
 			(or (not msg-pat)
-				(string-match msg-pat (fg-string-strip-whitespace msg))))))
+				(string-match msg-pat (fg-string-strip-whitespace msg)))
+			(or (not line)
+				(string-match line (fg-string-strip-whitespace msg))))))
 
 ;; (with-current-buffer (erc-get-buffer "#ccnx")
 ;; 	(let
