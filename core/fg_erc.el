@@ -415,14 +415,20 @@ channel/network parameters."
 		((buffer (current-buffer))
 			(channel
 				(or (erc-default-target) (buffer-name buffer)))
+			(net (erc-network))
 			(text (erc-controls-strip text)))
+		(when
+			(and
+				erc-session-server
+				(or (not net) (string= net "") (string= net "Unknown")))
+			(set 'net erc-session-server))
 		(when
 			(and (buffer-live-p buffer)
 				(or
 					(not (erc-buffer-visible buffer))
 					(not (fg-xactive-check))))
 			(condition-case-unless-debug ex
-				(fg-notify (format "erc: %s" channel) text :pixmap "erc" :strip t)
+				(fg-notify (format "erc: %s [%s]" channel net) text :pixmap "erc" :strip t)
 				(error
 					(message "ERC notification error: %s" ex)
 					(ding t))))))
