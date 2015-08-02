@@ -255,11 +255,17 @@ Result of the eval operation is not returned."
 
 (defun fg-remote-emms (&optional action)
 	"Show current emms track or perform specified ACTION.
+
 Supported actions:
-play/pause (toggled, alias: p), stop (alias: s),
-notify (desktop notification, alias: n),
-shuffle (for playlist), sort (for playlist),
-clear (clear playlist, alias: c), path (current track path)."
+* play/pause (toggled, alias: p)
+* stop (alias: s)
+* notify (desktop notification, alias: n)
+* shuffle (for playlist)
+* sort (for playlist)
+* clear (clear playlist, alias: c)
+* path (current track path)
+
+There's also separate emms-add (ea) command to add stuff to playlist."
 	(if (not action)
 		(-when-let (track (emms-playlist-current-selected-track))
 			(emms-track-description track))
