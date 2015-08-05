@@ -615,6 +615,9 @@ If point is on a group name, this function operates on that group."
 ;; -- Auto mode-switching --
 (defun fg-hook-set-mode ()
 	"Turn fg-scite-* (and various cosmetic) minor modes, depending on major."
+	;; Make sure nothing inserts any unwanted newlines via electric-* stuff
+	(setq-local electric-layout-rules '())
+	(setq-local electric-indent-chars '())
 	;; (message "%s, %s, %s" major-mode buffer-file-name (buffer-name))
 	(if buffer-file-name ; nil for system buffers and terminals
 		(cond
