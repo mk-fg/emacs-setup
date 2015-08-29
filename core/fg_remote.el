@@ -258,6 +258,8 @@ Result of the eval operation is not returned."
 
 Supported actions:
 * play/pause (toggled, alias: p)
+* track-next (alias: >, +)
+* track-prev (alias: <, -)
 * stop (alias: s)
 * notify (desktop notification, alias: n)
 * shuffle (for playlist)
@@ -271,6 +273,8 @@ There's also separate emms-add (ea) command to add stuff to playlist."
 			(emms-track-description track))
 		(case (intern action)
 			((play pause p) (emms-pause))
+			((track-next > +) (emms-next))
+			((track-prev < -) (emms-previous))
 			((stop s) (emms-stop))
 			((notify n) (fg-emms-notify))
 			((shuffle) (prog1 nil (emms-shuffle)))
