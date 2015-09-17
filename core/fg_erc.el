@@ -197,6 +197,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	erc-part-reason-various-alist erc-quit-reason-various-alist
 
 	erc-anonymous-login nil
+	erc-join-buffer 'bury
 
 	erc-interpret-controls-p t ;; for otr
 	erc-interpret-mirc-color nil
