@@ -45,6 +45,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 	(sym '(wcy-switch-buffer-forward wcy-switch-buffer-backward))
 	(autoload sym "wcy-swbuff" nil t)) ; buffer cycling thru minibuff
 (autoload 'browse-kill-ring "browse-kill-ring" nil t)
+(require 'acme-mouse) ; http://acme.cat-v.org/mouse
 
 
 ;; Key-related settings
