@@ -19,6 +19,10 @@
 	c-syntactic-indentation nil ; stupid ten-tabs indentation
 	lua-electric-flag nil) ;; disable indents on closing brackets
 
+;; Try to disable as much of "electric" stuff as possible
+(add-hook 'after-change-major-mode-hook
+	(lambda() (electric-indent-mode -1)))
+
 ;; Adjust some develock line lengths
 (eval-after-load "develock"
 	(dolist (mode '(emacs-lisp-mode html-mode))
