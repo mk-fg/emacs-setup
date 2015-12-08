@@ -180,39 +180,54 @@ Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-d
 	(and (or beg end) visit (error "Attempt to visit less than an entire file"))
 
 	(let*
-		(c-start c-size
+		(c-start c-size err-file-not-found
 			(filename (expand-file-name file)))
 
-		(let
-			((args (-concat ghg-args '("-do")))
-				(temp-buff (get-buffer-create " *ghg-io-temp*"))
-				(coding-system-for-write 'no-conversion)
-				(coding-system-for-read 'no-conversion))
+		(condition-case err-tmp
+			(let
+				((args (-concat ghg-args '("-do")))
+					(temp-buff (get-buffer-create " *ghg-io-temp*"))
+					(coding-system-for-write 'no-conversion)
+					(coding-system-for-read 'no-conversion))
 
-			(with-current-buffer temp-buff (widen) (erase-buffer))
-			(unless
-				(= 0 (apply 'call-process
-					ghg-bin filename (list temp-buff nil) nil args))
-				;; XXX: collect stderr on errors (can be written to temp-file)
-				(error "ghg - call failed: %s %s" ghg-bin args))
+				(with-current-buffer temp-buff (widen) (erase-buffer))
+				(unless
+					(= 0 (apply 'call-process
+						ghg-bin filename (list temp-buff nil) nil args))
+					;; XXX: collect stderr on errors (can be written to temp-file)
+					(error "ghg - call failed: %s %s" ghg-bin args))
 
-			(let ;; to prevent "really edit?" file-locking queries
-				((buffer-file-name (if visit nil buffer-file-name)))
-				(when replace (goto-char (point-min)))
-				(setq c-start (point))
-				(insert-buffer-substring temp-buff beg end)
-				(with-current-buffer temp-buff (erase-buffer))
-				(setq c-size (- (point) c-start))
-				(if replace (delete-region (point) (point-max)))
-				(goto-char c-start)))
+				(let ;; to prevent "really edit?" file-locking queries
+					((buffer-file-name (if visit nil buffer-file-name)))
+					(when replace (goto-char (point-min)))
+					(setq c-start (point))
+					(insert-buffer-substring temp-buff beg end)
+					(with-current-buffer temp-buff (erase-buffer))
+					(setq c-size (- (point) c-start))
+					(if replace (delete-region (point) (point-max)))
+					(goto-char c-start)))
+			(file-error
+				;; (message "ghg - file-error: %s" err-tmp)
+				;; (file-error "Opening process input file"
+				;;  "no such file or directory""/path/to/file.ghg")
+				(if (eq (nth 3 err-tmp) filename)
+					(progn
+						(unless visit
+							(signal 'file-error (cons "Opening input file" (nthcdr 2 err-tmp))))
+						;; Error is delayed otherwise, until buffer-file-name and such are set
+						(setq err-file-not-found (nth 2 err-tmp)))
+					(error "Unhandled file-error when running ghg: %s" err-tmp))))
 
-		(decode-coding-inserted-region
-			(point) (+ (point) c-size)
-			filename visit beg end replace)
+		(unless err-file-not-found
+			(decode-coding-inserted-region
+				(point) (+ (point) c-size)
+				filename visit beg end replace))
 
 		(when visit
 			(unlock-buffer)
 			(setq buffer-file-name filename)
-			(set-visited-file-modtime))
+			(set-visited-file-modtime)
+			(when err-file-not-found
+				(signal 'file-error (cons "Opening input file" err-file-not-found))))
 
 		(list filename c-size)))
