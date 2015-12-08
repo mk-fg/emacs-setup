@@ -1,3 +1,6 @@
+
+;;;; Old EPA mode (for gpg), superseded by GHG stuff below
+
 ;; use ";; -*- epa-file-encrypt-to: ("mk.fraggod@gmail.com") -*-" in file headers
 
 (require 'epa-file)
@@ -68,56 +71,6 @@ Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-d
 			(lambda (key) (epg-sub-key-id (car (epg-key-sub-key-list key))))
 			(epa-select-keys (epg-make-context) nil nil nil epa-select-keys-default-name))))
 
-;; Patched version from upstream to work with gpg-2.1.0
-;;  https://lists.gnu.org/archive/html/emacs-diffs/2014-11/msg00088.html
-(unless
-	(or (> emacs-major-version 24)
-		(and (= emacs-major-version 24) (> emacs-minor-version 4)))
-	(defun epg--list-keys-1 (context name mode)
-		(let
-			((args
-					(append
-						(if epg-gpg-home-directory
-							(list "--homedir" epg-gpg-home-directory))
-						'("--with-colons" "--no-greeting" "--batch"
-							"--with-fingerprint" "--with-fingerprint")
-						(unless
-							(eq (epg-context-protocol context) 'CMS)
-							'("--fixed-list-mode"))))
-				(list-keys-option
-					(if (memq mode '(t secret))
-						"--list-secret-keys"
-						(if (memq mode '(nil public)) "--list-keys" "--list-sigs")))
-				(coding-system-for-read 'binary)
-				keys string field index)
-			(if name
-				(progn
-					(unless (listp name) (setq name (list name)))
-					(while name
-						(setq
-							args (append args (list list-keys-option (car name)))
-							name (cdr name))))
-				(setq args (append args (list list-keys-option))))
-				(with-temp-buffer
-					(apply #'call-process
-						(if (eq (epg-context-protocol context) 'CMS)
-							epg-gpgsm-program epg-gpg-program)
-						nil (list t nil) nil args)
-					(goto-char (point-min))
-					(while (re-search-forward "^[a-z][a-z][a-z]:.*" nil t)
-						(setq
-							keys (cons (make-vector 15 nil) keys)
-							string (match-string 0)
-							index 0
-							field 0)
-						(while
-							(and (< field (length (car keys)))
-								(eq index (string-match "\\([^:]+\\)?:" string index)))
-							(setq index (match-end 0))
-							(aset (car keys) field (match-string 1 string))
-							(setq field (1+ field))))
-					(nreverse keys)))))
-
 
 
 ;;;; TRAMP mode
@@ -128,11 +81,138 @@ Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-d
 (setq-default
 	tramp-default-method "ssh")
 
-(add-to-list 'tramp-default-user-alist
-	'("ssh" ".*\\.\\(mplik\\.ru\\|e1\\)\\'" "mkfg"))
-(add-to-list 'tramp-default-proxies-alist
-	'(".*.\\(mplik\\.ru\\|e1\\)\\'" "\\`root\\'" "/ssh:mkfg@%h:"))
+;; (add-to-list 'tramp-default-user-alist
+;; 	'("ssh" ".*\\.\\(mplik\\.ru\\|e1\\)\\'" "mkfg"))
+;; (add-to-list 'tramp-default-proxies-alist
+;; 	'(".*.\\(mplik\\.ru\\|e1\\)\\'" "\\`root\\'" "/ssh:mkfg@%h:"))
 
 ;; (setq auth-source-debug t)
 ;; (password-reset)
 ;; (auth-source-user-or-password "password" "db-six.mplik.ru" "sudo" "root")
+
+
+
+;;;; GHG transparent encryption
+;; Based on jka-compr-install, which has all the same hooks
+
+(defvar ghg-bin "ghg"
+	"ghg binary path/name to use, passed to `call-process-region'.")
+(defvar ghg-args nil
+	"List of arguments to always pass to ghg process before any others.")
+
+(defvar ghg-enc-inhibit nil
+	"Non-nil disables ghg processing temporarily. Can be useful to bind to t in el code.")
+
+(defun ghg-enc-install ()
+	"Enable hooks to transparently work with ghg-encrypted files."
+
+	;; XXX: other potential hooks/overrides:
+	;;  file-coding-system-alist
+	;;  auto-mode-alist - for minor mode vars
+	;;  inhibit-local-variables-suffixes - needed only for containers like tar/zip
+	;;  load-file-rep-suffixes
+
+	(--map
+		(put it 'ghg-io-op (intern (concat "ghg-io-op-" (symbol-name it))))
+		'(write-region insert-file-contents))
+		;; XXX: not sure about these:
+		;;  file-local-copy - jka-compr uncompresses it
+		;;  load - for open-and-run-lisp ops, can be used for auth.el.ghg later
+		;;  byte-compiler-base-file-name - for .elc files, probably shouldn't be used
+	(let*
+		((handler-spec
+				'("\\.ghg\\(?:~\\|\\.~[-[:alnum:]:#@^._]+\\(?:~[[:digit:]]+\\)?~\\)?\\'" . ghg-io-handler))
+			(handler-cons (assoc (car handler-spec) file-name-handler-alist)))
+		(unless handler-cons (push handler-spec file-name-handler-alist)))
+
+	nil)
+
+(ghg-enc-install)
+
+
+(defun ghg-io-handler (operation &rest args)
+	(save-match-data
+		(let ((ghg-op (get operation 'ghg-io-op)))
+			(if (and ghg-op (not ghg-enc-inhibit))
+				(apply ghg-op args)
+				;; (message "ghg - passed io op: %s %s" operation args)
+				(ghg-io-run-real-handler operation args)))))
+
+(defun ghg-io-run-real-handler (operation args)
+	(let
+		((inhibit-file-name-handlers
+				(cons 'ghg-io-handler
+					(and (eq inhibit-file-name-operation operation) inhibit-file-name-handlers)))
+			(inhibit-file-name-operation operation))
+		(apply operation args)))
+
+
+(defun ghg-io-op-write-region (start end file &optional append visit lockname mustbenew)
+	(let*
+		((filename (expand-file-name file)) ;; actual filename
+		 (visit-file (if (stringp visit) (expand-file-name visit) filename))) ;; displayed filename
+
+		(when
+			(and mustbenew (file-exists-p filename)
+				(or (eq mustbenew t)
+					(not (y-or-n-p (format "ghg - file exists: %s  -- overwrite?" visit-file)))))
+			(error "ghg - file exists, not overwriting: %s" visit-file))
+		(when append (error "ghg - file-append not implemented: %s" visit-file))
+
+		(let
+			((args (-concat ghg-args '("-eo")))
+				(temp-buff (get-buffer-create " *ghg-io-temp*"))
+				(coding-system-for-write 'no-conversion)
+				(coding-system-for-read 'no-conversion))
+			(with-current-buffer temp-buff (widen) (erase-buffer))
+			(unless
+				(= 0 (apply 'call-process-region
+					start end ghg-bin nil (list temp-buff nil) nil args))
+				;; XXX: collect stderr on errors (can be written to temp-file)
+				(error "ghg - call failed: %s %s" ghg-bin args))
+			(with-current-buffer temp-buff
+				(ghg-io-run-real-handler 'write-region
+					(list (point-min) (point-max) filename append 'dont))
+				(erase-buffer)))))
+
+(defun ghg-io-op-insert-file-contents (file &optional visit beg end replace)
+	(barf-if-buffer-read-only)
+	(and (or beg end) visit (error "Attempt to visit less than an entire file"))
+
+	(let*
+		(c-start c-size
+			(filename (expand-file-name file)))
+
+		(let
+			((args (-concat ghg-args '("-do")))
+				(temp-buff (get-buffer-create " *ghg-io-temp*"))
+				(coding-system-for-write 'no-conversion)
+				(coding-system-for-read 'no-conversion))
+
+			(with-current-buffer temp-buff (widen) (erase-buffer))
+			(unless
+				(= 0 (apply 'call-process
+					ghg-bin filename (list temp-buff nil) nil args))
+				;; XXX: collect stderr on errors (can be written to temp-file)
+				(error "ghg - call failed: %s %s" ghg-bin args))
+
+			(let ;; to prevent "really edit?" file-locking queries
+				((buffer-file-name (if visit nil buffer-file-name)))
+				(when replace (goto-char (point-min)))
+				(setq c-start (point))
+				(insert-buffer-substring temp-buff beg end)
+				(with-current-buffer temp-buff (erase-buffer))
+				(setq c-size (- (point) c-start))
+				(if replace (delete-region (point) (point-max)))
+				(goto-char c-start)))
+
+		(decode-coding-inserted-region
+			(point) (+ (point) c-size)
+			filename visit beg end replace)
+
+		(when visit
+			(unlock-buffer)
+			(setq buffer-file-name filename)
+			(set-visited-file-modtime))
+
+		(list filename c-size)))
