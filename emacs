@@ -18,16 +18,20 @@
 (setq-default vc-follow-symlinks t) ;; it's just a noise anyway
 
 
+(load-library "fg_lisp") ; core language tweaks, should be first
+(load-library "fg_macroz")
+
+
 ;; Auth data
 (load-library "fg_sec")
 (condition-case err
 	(save-excursion
-		(find-file (concat fg-path "/auth.el.gpg"))
+		(find-file (concat fg-path "/auth.el.ghg"))
 		(eval-buffer)
 		(kill-buffer))
 	(file-error))
 (setq-default
-	auth-sources (list (concat fg-path "/authrc.el.gpg")))
+	auth-sources (list (concat fg-path "/authrc.el.ghg")))
 
 
 ;; Temp/spool path init
@@ -38,13 +42,11 @@
 (set-file-modes temporary-file-directory #o700)
 
 
-;; Basic / custom includes
-(load-library "fg_lisp") ; core language tweaks, should be first
-(load-library "fg_macroz")
 (load-library "fg_stack")
 (load-library "fg_lookz")
 (load-library "fg_diff")
 (load-library "fg_remote")
+
 
 ; External and non-critical
 (autoload 'multi-term "fg_shell" nil t)

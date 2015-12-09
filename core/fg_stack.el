@@ -37,7 +37,7 @@ preceding to TIME and insert note if it isn't."
 			(fg-newline))))
 
 
-(defvar fg-stack-name "~/media/secure/stack.gpg"
+(defvar fg-stack-name "~/media/secure/stack.ghg"
 	"Filename of a stack-dump to use")
 (defvar fg-stack-buffer nil
 	"Buffer with fg-stack opened")
