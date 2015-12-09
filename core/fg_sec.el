@@ -149,8 +149,9 @@ Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-d
 
 (defun ghg-io-op-write-region (start end file &optional append visit lockname mustbenew)
 	(let*
-		((filename (expand-file-name file)) ;; actual filename
-		 (visit-file (if (stringp visit) (expand-file-name visit) filename))) ;; displayed filename
+		(coding-system-used
+			(filename (expand-file-name file)) ;; actual filename
+			(visit-file (if (stringp visit) (expand-file-name visit) filename))) ;; displayed filename
 
 		(when
 			(and mustbenew (file-exists-p filename)
@@ -173,7 +174,20 @@ Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-d
 			(with-current-buffer temp-buff
 				(ghg-io-run-real-handler 'write-region
 					(list (point-min) (point-max) filename append 'dont))
-				(erase-buffer)))))
+				(setq coding-system-used last-coding-system-used) ;; set by real write-region
+				(erase-buffer)))
+
+		(cond
+			((eq visit t)
+				(setq buffer-file-name filename)
+				(set-visited-file-modtime))
+			((stringp visit)
+				(setq buffer-file-name visit)
+				(let ((buffer-file-name filename))
+				(set-visited-file-modtime))))
+		(setq last-coding-system-used coding-system-used))
+
+	nil)
 
 (defun ghg-io-op-insert-file-contents (file &optional visit beg end replace)
 	(barf-if-buffer-read-only)
