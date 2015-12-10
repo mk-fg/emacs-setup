@@ -97,6 +97,12 @@
 
 ; py: filter(func, list)
 ; el: (fg-keep-when FUNC LIST)
+; el: (remove-if NOT-FUNC LIST)
+
+; py-1: if a not in some_list: some_list.append(a)
+; py-2: if (a . b) not in some_alist: some_alist[a] = b
+; el-1: (add-to-list 'SOME_LIST A [append nil] [compare-fn 'equal])
+; el-2: (add-to-list 'SOME_ALIST (A . B) ...)
 
 ;;;; misc
 

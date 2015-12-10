@@ -12,24 +12,22 @@
 (defun ghg-enc-install ()
 	"Enable hooks to transparently work with ghg-encrypted files."
 
-	;; XXX: other potential hooks/overrides:
-	;;  file-coding-system-alist
-	;;  auto-mode-alist - for minor mode vars
-	;;  inhibit-local-variables-suffixes - needed only for containers like tar/zip
-	;;  load-file-rep-suffixes
-
+	;; XXX: not sure about these io-ops:
+	;;  file-local-copy - jka-compr uncompresses it
+	;;  load - for open-and-run-lisp ops, can be used for auth.el.ghg later
+	;;  byte-compiler-base-file-name - for .elc files, probably shouldn't be used
 	(--map
 		(put it 'ghg-io-op (intern (concat "ghg-io-op-" (symbol-name it))))
 		'(write-region insert-file-contents))
-		;; XXX: not sure about these:
-		;;  file-local-copy - jka-compr uncompresses it
-		;;  load - for open-and-run-lisp ops, can be used for auth.el.ghg later
-		;;  byte-compiler-base-file-name - for .elc files, probably shouldn't be used
-	(let*
-		((handler-spec
-				'("\\.ghg\\(?:~\\|\\.~[-[:alnum:]:#@^._]+\\(?:~[[:digit:]]+\\)?~\\)?\\'" . ghg-io-handler))
-			(handler-cons (assoc (car handler-spec) file-name-handler-alist)))
-		(unless handler-cons (push handler-spec file-name-handler-alist)))
+
+	;; XXX: other potential overrides:
+	;;  inhibit-local-variables-suffixes - needed only for containers like tar/zip
+	;;  load-file-rep-suffixes
+	(let ((ext-regexp "\\.ghg\\(?:~\\|\\.~[-[:alnum:]:#@^._]+\\(?:~[[:digit:]]+\\)?~\\)?\\'"))
+		(add-to-list 'auto-mode-alist (list ext-regexp nil 'ghg-file))
+		(add-to-list 'auto-coding-alist (cons ext-regexp 'no-conversion))
+		(add-to-list 'file-name-handler-alist (cons ext-regexp 'ghg-io-handler))
+		(add-to-list 'file-coding-system-alist `(,ext-regexp no-conversion . no-conversion)))
 
 	nil)
 
