@@ -95,10 +95,10 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		;; im and twitter stuff
 		("<f6>" ,(iwrapm fg-find-buffer "&bitlbee"))
 		("<S-f6>" ,(iwrapm fg-find-buffer "#twitter_bitlbee"))
-		("<C-f6>" fg-erc-ddg-define) ; prints the definition of whatever is selected
-		;; irc channel shortcuts
-		("<f8>" ,(iwrapm fg-find-buffer "#exherbo"))
-		("<f9>" ,(iwrapm fg-find-buffer "#tahoe-lafs"))))
+		;; news-bots, docs and similar net-info chans
+		("<f7>" ,(iwrapm fg-find-buffer "#blazer"))
+		("<C-f6>" fg-erc-ddg-define))) ; prints the definition of whatever is selected
+
 
 
 ;;;; Snippet to rebind stuff online
