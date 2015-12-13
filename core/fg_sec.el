@@ -53,7 +53,7 @@
 
 (defun ghg-io-op-write-region (start end file &optional append visit lockname mustbenew)
 	(let*
-		(coding-system-used
+		((coding-system-used last-coding-system-used)
 			(filename (expand-file-name file)) ;; actual filename
 			(visit-file (if (stringp visit) (expand-file-name visit) filename))) ;; displayed filename
 
@@ -78,7 +78,6 @@
 			(with-current-buffer temp-buff
 				(ghg-io-run-real-handler 'write-region
 					(list (point-min) (point-max) filename append 'dont))
-				(setq coding-system-used last-coding-system-used) ;; set by real write-region
 				(erase-buffer)))
 
 		(cond
