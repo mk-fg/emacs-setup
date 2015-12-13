@@ -227,11 +227,11 @@ Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-d
 
 ;;;; TRAMP mode
 
-(require 'auth-source)
-(require 'tramp)
+;; (require 'auth-source)
+;; (require 'tramp)
 
-(setq-default
-	tramp-default-method "ssh")
+;; (setq-default
+;; 	tramp-default-method "ssh")
 
 ;; (add-to-list 'tramp-default-user-alist
 ;; 	'("ssh" ".*\\.\\(mplik\\.ru\\|e1\\)\\'" "mkfg"))
