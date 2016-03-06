@@ -608,6 +608,9 @@ If point is on a group name, this function operates on that group."
 	(define-key erc-track-minor-mode-map (key "C-c C-@") nil)
 	(define-key erc-track-minor-mode-map (key "C-c") nil)))
 
+(eval-after-load "erc-list" '(progn
+	(define-key erc-list-menu-sort-button-map
+		[header-line mouse-2] 'erc-list-menu-sort-by-column)))
 
 ;; -- KMacro (ex)globals --
 (global-set-keys '(("<f3>" nil) ("<f4>" nil)))
