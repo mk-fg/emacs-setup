@@ -417,38 +417,46 @@ channel/network parameters."
 Intended to match/remove timestamps when used as `erc-insert-post-hook'.
 Setting to nil avoids making any replacements.")
 
+(defvar fg-erc-notify-check-inivisible t
+	"Whether to use `erc-string-invisible-p' on messages and skip unes that match.
+Should only work with `erc-insert-post-hook', as that's when
+these text-properties should be applied reliably (e.g. in `erc-insert-modify' hooks).")
+
 (defun fg-erc-notify (&optional text)
 	"`erc-insert-post-hook'  or `erc-insert-pre-hook' function
 to send desktop notification about inserted message.
 If TEXT argument is not passed (as it is in 'pre' hook),
 it is taken from the (presumably narrowed, as is before 'post' hook) buffer."
-	(unless text
-		(setq text
-			(buffer-substring-no-properties (point-min) (point-max))))
-	(let*
-		((buffer (current-buffer))
-			(channel
-				(or (erc-default-target) (buffer-name buffer)))
-			(net (erc-network))
-			(text (erc-controls-strip text)))
-		(when
-			(and
-				erc-session-server
-				(or (not net) (string= net "") (string= net "Unknown")))
-			(set 'net erc-session-server))
-		(when
-			(and (buffer-live-p buffer)
-				(or
-					(not (erc-buffer-visible buffer))
-					(not (fg-xactive-check))))
-			(when fg-erc-notify-strip-regexp
-				(setq text (replace-regexp-in-string fg-erc-notify-strip-regexp "" text)))
-			(setq text (s-trim-right text))
-			(condition-case-unless-debug ex
-				(fg-notify (format "erc: %s [%s]" channel net) text :pixmap "erc" :strip t)
-				(error
-					(message "ERC notification error: %s" ex)
-					(ding t))))))
+	(when
+		(and (not text)
+			(not (and fg-erc-notify-check-inivisible
+				(erc-string-invisible-p (buffer-substring (point-min) (point-max))))))
+		(setq text (buffer-substring-no-properties (point-min) (point-max))))
+	(when text
+		(let*
+			((buffer (current-buffer))
+				(channel
+					(or (erc-default-target) (buffer-name buffer)))
+				(net (erc-network))
+				(text (erc-controls-strip text)))
+			(when
+				(and
+					erc-session-server
+					(or (not net) (string= net "") (string= net "Unknown")))
+				(set 'net erc-session-server))
+			(when
+				(and (buffer-live-p buffer)
+					(or
+						(not (erc-buffer-visible buffer))
+						(not (fg-xactive-check))))
+				(when fg-erc-notify-strip-regexp
+					(setq text (replace-regexp-in-string fg-erc-notify-strip-regexp "" text)))
+				(setq text (s-trim-right text))
+				(condition-case-unless-debug ex
+					(fg-notify (format "erc: %s [%s]" channel net) text :pixmap "erc" :strip t)
+					(error
+						(message "ERC notification error: %s" ex)
+						(ding t)))))))
 
 
 ;; erc-highlight-nicknames mods
