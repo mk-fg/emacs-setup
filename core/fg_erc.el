@@ -23,8 +23,8 @@ to avoid spamming them with MOTD entries and notices."
 		(run-with-timer (* fg-erc-connect-lag 2) nil
 			(lambda ()
 				"Post-connected-to-all hook."
-				(add-hook 'erc-insert-pre-hook 'fg-erc-notify)
-				;; (remove-hook 'erc-insert-pre-hook 'fg-erc-notify)
+				(add-hook 'erc-insert-post-hook 'fg-erc-notify)
+				;; (remove-hook 'erc-insert-post-hook 'fg-erc-notify)
 				(setq fg-erc-track-save-timer
 					(run-with-timer fg-erc-track-save-interval
 						fg-erc-track-save-interval 'fg-erc-track-save))))
@@ -412,6 +412,11 @@ channel/network parameters."
 
 
 ;; New message notification hook
+(defvar fg-erc-notify-strip-regexp "^\\[[0-9]\\{2\\}:[0-9]\\{2\\}\\(:[0-9]\\{2\\}\\)?\\]\\s-*"
+	"Regexp to replace with nothing when using message for `fg-erc-notify'.
+Intended to match/remove timestamps when used as `erc-insert-post-hook'.
+Setting to nil avoids making any replacements.")
+
 (defun fg-erc-notify (&optional text)
 	"`erc-insert-post-hook'  or `erc-insert-pre-hook' function
 to send desktop notification about inserted message.
@@ -436,6 +441,9 @@ it is taken from the (presumably narrowed, as is before 'post' hook) buffer."
 				(or
 					(not (erc-buffer-visible buffer))
 					(not (fg-xactive-check))))
+			(when fg-erc-notify-strip-regexp
+				(setq text (replace-regexp-in-string fg-erc-notify-strip-regexp "" text)))
+			(setq text (s-trim-right text))
 			(condition-case-unless-debug ex
 				(fg-notify (format "erc: %s [%s]" channel net) text :pixmap "erc" :strip t)
 				(error
