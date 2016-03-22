@@ -327,7 +327,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 							(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer))
 							(let*
 								((msg-push (s-match-strings-all (concat
-										" \\([0-9]+ commits pushed to\\) .*?"
+										" \\(\\(?:[0-9]+\\|One\\) commits? pushed to\\) .*?"
 										"<a .*?href=\"https://bitbucket\\.org/\\(.+?\\)\"") text-html))
 									(msg-raw (replace-regexp-in-string "<[^<]+>" "" text-html))
 									(msg (or ;; pick best match among ones above
