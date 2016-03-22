@@ -24,6 +24,7 @@ to avoid spamming them with MOTD entries and notices."
 			(lambda ()
 				"Post-connected-to-all hook."
 				(add-hook 'erc-insert-pre-hook 'fg-erc-notify)
+				;; (remove-hook 'erc-insert-pre-hook 'fg-erc-notify)
 				(setq fg-erc-track-save-timer
 					(run-with-timer fg-erc-track-save-interval
 						fg-erc-track-save-interval 'fg-erc-track-save))))
@@ -411,7 +412,14 @@ channel/network parameters."
 
 
 ;; New message notification hook
-(defun fg-erc-notify (text)
+(defun fg-erc-notify (&optional text)
+	"`erc-insert-post-hook'  or `erc-insert-pre-hook' function
+to send desktop notification about inserted message.
+If TEXT argument is not passed (as it is in 'pre' hook),
+it is taken from the (presumably narrowed, as is before 'post' hook) buffer."
+	(unless text
+		(setq text
+			(buffer-substring-no-properties (point-min) (point-max))))
 	(let*
 		((buffer (current-buffer))
 			(channel
