@@ -51,6 +51,28 @@ to avoid spamming them with MOTD entries and notices."
 			(apply (car link) (cdr link)))))
 
 
+;; Common erc message processing routines
+
+(defvar fg-erc-post-hook-strip-regexp "^\\[[0-9]\\{2\\}:[0-9]\\{2\\}\\(:[0-9]\\{2\\}\\)?\\]\\s-*"
+	"Regexp to replace with nothing when using message with `erc-insert-post-hook',
+intended to match/remove timestamps. Setting to nil avoids making any replacements.")
+
+(defun fg-erc-get-hook-msg (&optional text)
+	"Used in `erc-insert-pre-hook', `erc-insert-modify-hook' or `erc-insert-post-hook' funcs,
+to get text cleaned-up of timestamps, and indication of what kind of hook it is.
+Only 'pre' hook passes message text,
+otherwise it has to be grabbed from (presumably narrowed) buffer,
+and (optionally) cleaned-up from timestamps, text-props, control chars, etc."
+	(let ((hook-type (if text 'pre 'post)))
+		(when (eq hook-type 'post)
+			(setq text (buffer-substring-no-properties (point-min) (point-max))))
+		(setq text (erc-controls-strip text))
+		(when fg-erc-post-hook-strip-regexp
+			(setq text (replace-regexp-in-string fg-erc-post-hook-strip-regexp "" text)))
+		(setq text (s-trim-right text))
+		(list text hook-type)))
+
+
 ;; erc-track state preservation feature
 ;; Idea is to have list of unread stuff dumped to some file on timer,
 ;;  so that sudden system crash or emacs kill won't loose any important msgs
@@ -316,20 +338,33 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 
 
 ;; Message content filter
-(defun fg-erc-msg-content-filter (msg)
-	"erc-insert-pre-hook function to match message against
-fg-erc-msg-block and fg-erc-msg-block-channel rulesets
-and block the message if any rule in either matches it."
+(defun fg-erc-msg-content-filter (&optional text)
+	"`erc-insert-modify-hook' or `erc-insert-pre-hook' function
+to match message against `fg-erc-msg-block' and `fg-erc-msg-block-channel'
+rulesets and discard/hide the message if any rule in either matches it.
+Depending on whether TEXT is passed (and/or returned from `fg-erc-get-hook-msg'),
+if match is found, either `erc-insert-this' is used to discard ('pre' hook),
+or (presumably narrowed) buffer is updated with invisible text-props to hide the thing."
 	(condition-case-unless-debug ex
-		(let ((msg (erc-controls-strip msg)))
+		(-let [(text hook-type) (fg-erc-get-hook-msg text)]
+			;; (message "ERC filter test for: %S" text)
+			;; (message "ERC filter test result: %s"
+			;; 	(dolist (rule fg-erc-msg-block-plists)
+			;; 		(let ((rule-res (fg-erc-msg-match-rule rule text)))
+			;; 			(when (s-contains? "waka waka" text)
+			;; 				(message " - rule result: %s -- %s" rule-res rule))
+			;; 			(when rule-res (return-from nil t)))))
 			(when
 				(or
 					;; check fg-erc-msg-block
-					(erc-list-match fg-erc-msg-block msg)
+					(erc-list-match fg-erc-msg-block text)
 					;; check fg-erc-msg-block-channel
 					(dolist (rule fg-erc-msg-block-plists)
-						(when (fg-erc-msg-match-rule rule msg) (return-from nil t))))
-				(set 'erc-insert-this nil)))
+						(when (fg-erc-msg-match-rule rule text) (return-from nil t))))
+				(if (eq hook-type 'pre)
+					(set 'erc-insert-this nil)
+					(erc-put-text-properties (point-min) (point-max)
+						'(invisible intangible) (current-buffer)))))
 		(t (warn "Error in ERC filter: %s" ex))))
 
 (defun fg-erc-msg-match-rule (rule msg)
@@ -365,7 +400,8 @@ channel/network parameters."
 ;; 		(dolist (rule fg-erc-msg-block-plists)
 ;; 			(when (fg-erc-msg-match-rule rule msg) (return-from nil t)))))
 
-(add-hook 'erc-insert-pre-hook 'fg-erc-msg-content-filter)
+(add-hook 'erc-insert-modify-hook 'fg-erc-msg-content-filter)
+;; (remove-hook 'erc-insert-modify-hook 'fg-erc-msg-content-filter)
 
 
 ;; Useful to test new ignore-list masks
@@ -412,11 +448,6 @@ channel/network parameters."
 
 
 ;; New message notification hook
-(defvar fg-erc-notify-strip-regexp "^\\[[0-9]\\{2\\}:[0-9]\\{2\\}\\(:[0-9]\\{2\\}\\)?\\]\\s-*"
-	"Regexp to replace with nothing when using message for `fg-erc-notify'.
-Intended to match/remove timestamps when used as `erc-insert-post-hook'.
-Setting to nil avoids making any replacements.")
-
 (defvar fg-erc-notify-check-inivisible t
 	"Whether to use `erc-string-invisible-p' on messages and skip unes that match.
 Should only work with `erc-insert-post-hook', as that's when
@@ -425,38 +456,34 @@ these text-properties should be applied reliably (e.g. in `erc-insert-modify' ho
 (defun fg-erc-notify (&optional text)
 	"`erc-insert-post-hook'  or `erc-insert-pre-hook' function
 to send desktop notification about inserted message.
-If TEXT argument is not passed (as it is in 'pre' hook),
-it is taken from the (presumably narrowed, as is before 'post' hook) buffer."
-	(when
-		(and (not text)
-			(not (and fg-erc-notify-check-inivisible
-				(erc-string-invisible-p (buffer-substring (point-min) (point-max))))))
-		(setq text (buffer-substring-no-properties (point-min) (point-max))))
-	(when text
-		(let*
-			((buffer (current-buffer))
-				(channel
-					(or (erc-default-target) (buffer-name buffer)))
-				(net (erc-network))
-				(text (erc-controls-strip text)))
-			(when
-				(and
-					erc-session-server
-					(or (not net) (string= net "") (string= net "Unknown")))
-				(set 'net erc-session-server))
-			(when
-				(and (buffer-live-p buffer)
-					(or
-						(not (erc-buffer-visible buffer))
-						(not (fg-xactive-check))))
-				(when fg-erc-notify-strip-regexp
-					(setq text (replace-regexp-in-string fg-erc-notify-strip-regexp "" text)))
-				(setq text (s-trim-right text))
-				(condition-case-unless-debug ex
-					(fg-notify (format "erc: %s [%s]" channel net) text :pixmap "erc" :strip t)
-					(error
-						(message "ERC notification error: %s" ex)
-						(ding t)))))))
+TEXT argument is processed by `fg-erc-get-hook-msg'."
+	(-let [(text hook-type) (fg-erc-get-hook-msg text)]
+		(when
+			(and (eq hook-type 'post)
+				fg-erc-notify-check-inivisible
+				(erc-string-invisible-p (buffer-substring (point-min) (point-max))))
+			(setq text nil))
+		(when text
+			(let*
+				((buffer (current-buffer))
+					(channel
+						(or (erc-default-target) (buffer-name buffer)))
+					(net (erc-network)))
+				(when
+					(and
+						erc-session-server
+						(or (not net) (string= net "") (string= net "Unknown")))
+					(set 'net erc-session-server))
+				(when
+					(and (buffer-live-p buffer)
+						(or
+							(not (erc-buffer-visible buffer))
+							(not (fg-xactive-check))))
+					(condition-case-unless-debug ex
+						(fg-notify (format "erc: %s [%s]" channel net) text :pixmap "erc" :strip t)
+						(error
+							(message "ERC notification error: %s" ex)
+							(ding t))))))))
 
 
 ;; erc-highlight-nicknames mods
