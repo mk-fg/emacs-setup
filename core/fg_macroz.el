@@ -6,6 +6,7 @@
 ;;  https://github.com/magnars/s.el
 ;;  https://github.com/magnars/dash.el
 ;;  https://github.com/Wilfred/ht.el
+;;  https://www.emacswiki.org/emacs/RegularExpression
 ;; TODO: dedup old macros with this stuff
 (require 's)
 (require 'dash)
@@ -58,6 +59,7 @@
 ; el:
 ;   (replace-regexp-in-string OLD-RE NEW-RE S)
 ;   (fg-string-replace-pairs S (OLD-RE NEW-RE)...)
+;   https://www.emacswiki.org/emacs/RegularExpression
 
 ; py: str.upper -> el: upcase
 ; py: str.lower -> el: downcase

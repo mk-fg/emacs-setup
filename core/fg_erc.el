@@ -164,13 +164,30 @@ List of plists with any number of following keys (in each):
 	:msg - message regexp for `fg-erc-msg-block-pattern'."
 	:group 'erc :type '(repeat sexp))
 
+(defcustom fg-erc-msg-modify-plists ()
+	"Modify messages by matching any of
+channel, network, nick or message vs regexp plists,
+and applying specified (as :func) function to it.
+
+Function won't be passed any args, and is expected to work
+as if it was called from `erc-insert-modify-hook' (and it probably is).
+I.e. work with narrowed buffer, grab msg from there, alter it there.
+
+List of plists with any number of following keys (in each):
+	:net - regexp to match network.
+	:chan - regexp to match erc-target (e.g. channel or nick).
+	:nick - nickname regexp for `fg-erc-msg-block-pattern'.
+	:msg - message regexp for `fg-erc-msg-block-pattern'.
+	:func - function to apply to the message (see above)."
+	:group 'erc :type '(repeat sexp))
+
 (defun fg-erc-msg-block-pattern (nick msg)
 	"Build proper pattern for regular channel messages
  (including ZNC-buffered messages) from specified NICK
 and MSG regexp patterns. MSG can have $ at the end."
 	(concat
-		"^\\(\\s-*\\[[0-9:]+\\]\\)?\\s-*<" nick
-		">\\(\\s-+\\[[0-9:]+\\]\\)?\\s-+" msg))
+		"^\\(?:\\s-*\\[[0-9:]+\\]\\)?\\s-*<" nick
+		">\\(?:\\s-+\\[[0-9:]+\\]\\)?\\s-+" msg))
 
 (defun fg-erc-re (string) (concat "^" (regexp-quote string) "$"))
 
@@ -267,12 +284,14 @@ and MSG regexp patterns. MSG can have $ at the end."
 			(apply-partially 'apply 'fg-erc-msg-block-pattern)
 				'(("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")))
 
+	;; (setq-default
 	fg-erc-msg-block-plists ;; net+chan+nick+msg ignore-patterns
 		`((:chan "^#exherbo$"
 				:net "^FreeNode$" :nick "zebrapig"
 				:msg "[0-9]+ patch\\(es\\)? in queue \\.\\.\\. slackers!")
 			(:chan "^#exherbo$" :net "^FreeNode$"
 				:nick "\\(u-u-commits\\|gerritwk23\\|jenkins-exherbo\\|zebraparrot\\)")
+			;; (:msg ".*waka waka") ; for filter tests
 			(:chan "^#tahoe-lafs$" :net "^FreeNode$" :nick "tahoe-bot")
 			(:chan "^#crytocc$" :net "^Cryto\\(-IRC\\|CC\\)$" :nick "botpie91")
 			(:chan "^#esp$" :net "^FreeNode$" :nick "plexdev")
@@ -288,6 +307,41 @@ and MSG regexp patterns. MSG can have $ at the end."
 			(:chan "^#\\(unhosted\\|remotestorage\\)$"
 				:net "^FreeNode$" :nick "DeBot"
 				:msg "\\[\\(URL\\|feed\\)\\]\\s-+"))
+
+	fg-erc-msg-modify-plists
+		`((:chan "^#datascienceltd-" :net "^BitlBee$"
+			:nick "Bitbucket"
+			:func ,(lambda ()
+				(let*
+					((line-html (buffer-substring-no-properties (point-min) (point-max)))
+						(text-html-pos (s-matched-positions-all
+							(fg-erc-msg-block-pattern ".*?" "\\(.*\\)$") line-html 1))
+						(text-html (when text-html-pos
+							(s-trim (substring line-html (caar text-html-pos) (cadr text-html-pos)))))
+						(is-html-start (and text-html (string-match "^<img " text-html))))
+					;; Process only messages that start with bitbucket icon, hiding continuations
+					(when text-html
+						;; (message "ERC html text: %S" text-html)
+						(if (not is-html-start)
+							;; If it's a line continuation - just hide it, don't need any of these at all
+							(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer))
+							(let*
+								((msg-push (s-match-strings-all (concat
+										" \\([0-9]+ commits pushed to\\) .*?"
+										"<a .*?href=\"https://bitbucket\\.org/\\(.+?\\)\"" 1) text-html))
+									(msg-raw (replace-regexp-in-string "<[^<]+>" "" text-html))
+									(msg (or ;; pick best match among ones above
+											(and msg-push (format "%s %s" (cadar msg-push) (caddar msg-push)))
+											msg-raw)))
+								(let ((m (point))) ;; put new (processed) msg right after old one
+									(set-marker (point-marker) (point-max))
+									(insert-before-markers msg)
+									(set-marker (point-marker) m))
+								(erc-put-text-property ;; hide old (html) msg
+									(+ (point-min) (caar text-html-pos))
+									(+ (point-min) (cadr text-html-pos))
+									'invisible t (current-buffer)))))))))
+	;; )
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
@@ -342,19 +396,22 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	"`erc-insert-modify-hook' or `erc-insert-pre-hook' function
 to match message against `fg-erc-msg-block' and `fg-erc-msg-block-channel'
 rulesets and discard/hide the message if any rule in either matches it.
+
 Depending on whether TEXT is passed (and/or returned from `fg-erc-get-hook-msg'),
 if match is found, either `erc-insert-this' is used to discard ('pre' hook),
-or (presumably narrowed) buffer is updated with invisible text-props to hide the thing."
+or (presumably narrowed) buffer is updated with invisible text-props to hide the thing.
+
+Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 	(condition-case-unless-debug ex
 		(-let [(text hook-type) (fg-erc-get-hook-msg text)]
 			;; (message "ERC filter test for: %S" text)
 			;; (message "ERC filter test result: %s"
-			;; 	(dolist (rule fg-erc-msg-block-plists)
+			;; 	(dolist (rule fg-erc-msg-modify-plists)
 			;; 		(let ((rule-res (fg-erc-msg-match-rule rule text)))
 			;; 			(when (s-contains? "waka waka" text)
 			;; 				(message " - rule result: %s -- %s" rule-res rule))
 			;; 			(when rule-res (return-from nil t)))))
-			(when
+			(if
 				(or
 					;; check fg-erc-msg-block
 					(erc-list-match fg-erc-msg-block text)
@@ -363,8 +420,14 @@ or (presumably narrowed) buffer is updated with invisible text-props to hide the
 						(when (fg-erc-msg-match-rule rule text) (return-from nil t))))
 				(if (eq hook-type 'pre)
 					(set 'erc-insert-this nil)
-					(erc-put-text-properties (point-min) (point-max)
-						'(invisible intangible) (current-buffer)))))
+					(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))
+				(-if-let ;; try to modify msg, if it's not blocked
+					(func (and
+						(eq hook-type 'post)
+						(dolist (rule fg-erc-msg-modify-plists)
+							(when (fg-erc-msg-match-rule rule text)
+								(return-from nil (plist-get rule :func))))))
+					(funcall func))))
 		(t (warn "Error in ERC filter: %s" ex))))
 
 (defun fg-erc-msg-match-rule (rule msg)
