@@ -308,16 +308,16 @@ and MSG regexp patterns. MSG can have $ at the end."
 				:net "^FreeNode$" :nick "DeBot"
 				:msg "\\[\\(URL\\|feed\\)\\]\\s-+"))
 
+	;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
 	fg-erc-msg-modify-plists
-		`((:chan "^#datascienceltd-" :net "^BitlBee$"
-			:nick "Bitbucket"
+		`((:chan "^#datascienceltd-" :net "^BitlBee$" :nick "Bitbucket"
 			:func ,(lambda ()
 				(let*
 					((line-html (buffer-substring-no-properties (point-min) (point-max)))
 						(text-html-pos (s-matched-positions-all
 							(fg-erc-msg-block-pattern ".*?" "\\(.*\\)$") line-html 1))
 						(text-html (when text-html-pos
-							(s-trim (substring line-html (caar text-html-pos) (cadr text-html-pos)))))
+							(s-trim (substring line-html (caar text-html-pos) (cdar text-html-pos)))))
 						(is-html-start (and text-html (string-match "^<img " text-html))))
 					;; Process only messages that start with bitbucket icon, hiding continuations
 					(when text-html
@@ -328,18 +328,19 @@ and MSG regexp patterns. MSG can have $ at the end."
 							(let*
 								((msg-push (s-match-strings-all (concat
 										" \\([0-9]+ commits pushed to\\) .*?"
-										"<a .*?href=\"https://bitbucket\\.org/\\(.+?\\)\"" 1) text-html))
+										"<a .*?href=\"https://bitbucket\\.org/\\(.+?\\)\"") text-html))
 									(msg-raw (replace-regexp-in-string "<[^<]+>" "" text-html))
 									(msg (or ;; pick best match among ones above
-											(and msg-push (format "%s %s" (cadar msg-push) (caddar msg-push)))
+											(and msg-push (format "%s %s"
+												(cadar msg-push) (caddar msg-push)))
 											msg-raw)))
-								(let ((m (point))) ;; put new (processed) msg right after old one
-									(set-marker (point-marker) (point-max))
-									(insert-before-markers msg)
-									(set-marker (point-marker) m))
+								(save-excursion ;; put new (processed) msg right after old one
+									;; (goto-char (+ (point-min) (caar text-html-pos)))
+									(goto-char (point-max))
+									(insert-before-markers (concat msg "\n")))
 								(erc-put-text-property ;; hide old (html) msg
 									(+ (point-min) (caar text-html-pos))
-									(+ (point-min) (cadr text-html-pos))
+									(+ (point-min) (cdar text-html-pos) 1)
 									'invisible t (current-buffer)))))))))
 	;; )
 
