@@ -80,10 +80,11 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		;; tags: lines, line breaks, \r\n, dos unix mac, line endings, newlines,
 		;;  breaks, line terminator, buffer coding system, undecided-unix
 		("C-M-[" universal-coding-system-argument)
-		("C-M-p" ,(iwrapm fg-revert-buffer-to-enc 'koi8-r))
-		("C-M-S-p" ,(iwrapm fg-revert-buffer-to-enc 'cp1251))
-		("M-P" ,(iwrapm fg-revert-buffer-to-enc 'utf-8-unix)) ; to show ^M things
 		("M-p" ,(iwrapm fg-revert-buffer-to-enc 'undecided)) ; safe bet
+		("M-P" ,(iwrapm fg-revert-buffer-to-enc 'utf-8-unix)) ; to show ^M things
+		("C-M-p" (lambda () (interactive) ;; to remove ^M things
+			(setq buffer-display-table (make-display-table))
+			(aset buffer-display-table ?\^M []))))
 
 		;; Stack-buffer hop
 		("C-<return>" fg-stack-buffer)
