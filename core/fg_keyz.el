@@ -84,7 +84,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("M-P" ,(iwrapm fg-revert-buffer-to-enc 'utf-8-unix)) ; to show ^M things
 		("C-M-p" (lambda () (interactive) ;; to remove ^M things
 			(setq buffer-display-table (make-display-table))
-			(aset buffer-display-table ?\^M []))))
+			(aset buffer-display-table ?\^M [])))
 
 		;; Stack-buffer hop
 		("C-<return>" fg-stack-buffer)
