@@ -285,28 +285,14 @@ and MSG regexp patterns. MSG can have $ at the end."
 				'(("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")))
 
 	;; (setq-default
-	fg-erc-msg-block-plists ;; net+chan+nick+msg ignore-patterns
-		`((:chan "^#exherbo$"
-				:net "^FreeNode$" :nick "zebrapig"
-				:msg "[0-9]+ patch\\(es\\)? in queue \\.\\.\\. slackers!")
-			(:chan "^#exherbo$" :net "^FreeNode$"
-				:nick "\\(u-u-commits\\|gerritwk23\\|jenkins-exherbo\\|zebraparrot\\)")
-			;; (:msg ".*waka waka") ; for filter tests
-			(:chan "^#tahoe-lafs$" :net "^FreeNode$" :nick "tahoe-bot")
-			(:chan "^#crytocc$" :net "^Cryto\\(-IRC\\|CC\\)$" :nick "botpie91")
-			(:chan "^#esp$" :net "^FreeNode$" :nick "plexdev")
-			(:chan "^#\\(cjdns\\|projectmeshnet\\|hyperboria\\)$"
-				:net "^EFNet$" :nick "i2p"
-				:msg "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
-			(:chan "^#cjdns$" :net "^HypeIRC$" :nick "finnbot")
-			(:chan "^#bitlbee$" :net "^OFTC$" :nick "Not-...." :msg "\\[bitlbee\\]")
-			(:chan "^#\\(unhosted\\|remotestorage\\)$"
-				:net "^FreeNode$" :nick "unposted"
-				:msg ,(concat "\\[\\(" "website\\(/master\\)?"
-						"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+"))
-			(:chan "^#\\(unhosted\\|remotestorage\\)$"
-				:net "^FreeNode$" :nick "DeBot"
-				:msg "\\[\\(URL\\|feed\\)\\]\\s-+"))
+	fg-erc-msg-block-plists nil ;; net+chan+nick+msg ignore-patterns
+		;; `((:chan "^#\\(cjdns\\|projectmeshnet\\|hyperboria\\)$"
+		;; 		:net "^EFNet$" :nick "i2p"
+		;; 		:msg "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
+		;; 	(:chan "^#\\(unhosted\\|remotestorage\\)$"
+		;; 		:net "^FreeNode$" :nick "unposted"
+		;; 		:msg ,(concat "\\[\\(" "website\\(/master\\)?"
+		;; 			"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+")))
 
 	;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
 	fg-erc-msg-modify-plists
@@ -395,7 +381,7 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 ;; Message content filter
 (defun fg-erc-msg-content-filter (&optional text)
 	"`erc-insert-modify-hook' or `erc-insert-pre-hook' function
-to match message against `fg-erc-msg-block' and `fg-erc-msg-block-channel'
+to match message against `fg-erc-msg-block' and `fg-erc-msg-block-plists'
 rulesets and discard/hide the message if any rule in either matches it.
 
 Depending on whether TEXT is passed (and/or returned from `fg-erc-get-hook-msg'),
@@ -416,7 +402,7 @@ Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 				(or
 					;; check fg-erc-msg-block
 					(erc-list-match fg-erc-msg-block text)
-					;; check fg-erc-msg-block-channel
+					;; check fg-erc-msg-block-plists
 					(dolist (rule fg-erc-msg-block-plists)
 						(when (fg-erc-msg-match-rule rule text) (return-from nil t))))
 				(if (eq hook-type 'pre)
