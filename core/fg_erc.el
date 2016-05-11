@@ -411,11 +411,16 @@ Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 		(-let [(text hook-type) (fg-erc-get-hook-msg text)]
 			;; (message "ERC filter test for: %S" text)
 			;; (message "ERC filter test result: %s"
-			;; 	(dolist (rule fg-erc-msg-modify-plists)
-			;; 		(let ((rule-res (fg-erc-msg-match-rule rule text)))
-			;; 			(when (s-contains? "waka waka" text)
-			;; 				(message " - rule result: %s -- %s" rule-res rule))
-			;; 			(when rule-res (return-from nil t)))))
+			;; 	(or
+			;; 		(and (erc-list-match fg-erc-msg-block text) "fg-erc-msg-block")
+			;; 		(dolist (rule fg-erc-msg-block-plists)
+			;; 			(when (fg-erc-msg-match-rule rule text)
+			;; 				(return-from nil "fg-erc-msg-block-plists")))
+			;; 		(dolist (rule fg-erc-msg-modify-plists)
+			;; 			(let ((rule-res (fg-erc-msg-match-rule rule text)))
+			;; 				(when (s-contains? "waka waka" text)
+			;; 					(message " - rule result: %s -- %s" rule-res rule))
+			;; 				(when rule-res (return-from nil "fg-erc-msg-modify-plists"))))))
 			(if
 				(or
 					;; check fg-erc-msg-block
@@ -447,18 +452,14 @@ channel/network parameters."
 			(msg-pat-raw (plist-get rule :msg))
 			(line (plist-get rule :line))
 			(msg-pat (when (or nick msg-pat-raw)
-				(fg-erc-msg-block-pattern (or nick "[^>]+") (or msg-pat-raw "")))))
+				(fg-erc-msg-block-pattern (or nick "[^>]+") (or msg-pat-raw ""))))
+			(msg (fg-string-strip-whitespace msg)))
 		(and
-			(or (not net)
-				(string-match net (or (symbol-name (erc-network)) "")))
-			(or (not host)
-				(string-match host (or erc-session-server "")))
-			(or (not chan)
-				(string-match chan (or (erc-default-target) "")))
-			(or (not msg-pat)
-				(string-match msg-pat (fg-string-strip-whitespace msg)))
-			(or (not line)
-				(string-match line (fg-string-strip-whitespace msg))))))
+			(or (not net) (string-match net (or (symbol-name (erc-network)) "")))
+			(or (not host) (string-match host (or erc-session-server "")))
+			(or (not chan) (string-match chan (or (erc-default-target) "")))
+			(or (not msg-pat) (string-match msg-pat msg))
+			(or (not line) (string-match line msg)))))
 
 ;; (with-current-buffer (erc-get-buffer "#ccnx")
 ;; 	(let
@@ -468,7 +469,15 @@ channel/network parameters."
 ;; 		(dolist (rule fg-erc-msg-block-plists)
 ;; 			(when (fg-erc-msg-match-rule rule msg) (return-from nil t)))))
 
-(add-hook 'erc-insert-modify-hook 'fg-erc-msg-content-filter)
+;; Put the hook *before* erc-add-timestamp by remove/add dance
+;; This only makes datestamp not be made invisible
+;;  when it happens to be attached to filtered-out msg.
+(let ((datestamp-hook (-contains? erc-insert-modify-hook 'erc-add-timestamp)))
+	(when datestamp-hook
+		(remove-hook 'erc-insert-modify-hook 'erc-add-timestamp))
+	(add-hook 'erc-insert-modify-hook 'fg-erc-msg-content-filter)
+	(when datestamp-hook
+		(add-hook 'erc-insert-modify-hook 'erc-add-timestamp)))
 ;; (remove-hook 'erc-insert-modify-hook 'fg-erc-msg-content-filter)
 
 
