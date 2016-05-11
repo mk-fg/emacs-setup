@@ -159,6 +159,11 @@ making sure to preserve a copies from a few last runs."
 			(insert (fg-erc-track-save-dump))
 			(write-region (point-min) (point-max) fg-erc-track-save-path))))
 
+;; Make erc-track only count visible messages
+(defadvice erc-track-modified-channels
+	(around fg-erc-track-discard-invisible-msgs activate)
+	(unless (erc-string-invisible-p (buffer-substring (point-min) (point-max))) ad-do-it))
+
 
 ;; Local feature: blocking msgs by a bunch of props
 
