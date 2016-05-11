@@ -136,9 +136,10 @@
 					(error "Unhandled file-error when running ghg: %s" err-tmp))))
 
 		(unless err-file-not-found
-			(decode-coding-inserted-region
-				(point) (+ (point) c-size)
-				filename visit beg end replace))
+			(let ((coding-system-for-read 'undecided))
+				(decode-coding-inserted-region
+					(point) (+ (point) c-size)
+					filename visit beg end replace)))
 
 		(when visit
 			(unlock-buffer)
