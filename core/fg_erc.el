@@ -54,8 +54,14 @@ to avoid spamming them with MOTD entries and notices."
 ;; Common erc message processing routines
 
 (defvar fg-erc-post-hook-strip-regexp "^\\[[0-9]\\{2\\}:[0-9]\\{2\\}\\(:[0-9]\\{2\\}\\)?\\]\\s-*"
-	"Regexp to replace with nothing when using message with `erc-insert-post-hook',
-intended to match/remove timestamps. Setting to nil avoids making any replacements.")
+	"Regexp for `fg-erc-get-hook-msg', to replace match with nothing when using
+message with `erc-insert-post-hook', intended to match/remove timestamps.
+Setting to nil avoids making any replacements.")
+
+(defvar fg-erc-post-hook-pick-regexp fg-erc-post-hook-strip-regexp
+	"Regexp for `fg-erc-get-hook-msg', to pick last matching line with,
+when using message with `erc-insert-post-hook', if narrowed buffer has multiple lines.
+If nil, or no match is found, simply last line get passed in these cases.")
 
 (defun fg-erc-get-hook-msg (&optional text)
 	"Used in `erc-insert-pre-hook', `erc-insert-modify-hook' or `erc-insert-post-hook' funcs,
@@ -66,7 +72,14 @@ and (optionally) cleaned-up from timestamps, text-props, control chars, etc."
 	(let ((hook-type (if text 'pre 'post)))
 		(when (eq hook-type 'post)
 			(setq text (buffer-substring-no-properties (point-min) (point-max))))
-		(setq text (erc-controls-strip text))
+		(let (line-last line-match)
+			(dolist (line (-map 'erc-controls-strip (s-lines text)))
+				(setq line-last line)
+				(when
+					(and fg-erc-post-hook-pick-regexp
+						(string-match fg-erc-post-hook-pick-regexp line))
+					(setq line-match line)))
+			(setq text (or line-match line-last)))
 		(when fg-erc-post-hook-strip-regexp
 			(setq text (replace-regexp-in-string fg-erc-post-hook-strip-regexp "" text)))
 		(setq text (s-trim-right text))
