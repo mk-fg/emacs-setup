@@ -51,6 +51,11 @@
 		(apply operation args)))
 
 
+(defvar ghg-io-coding-system-default 'utf-8-unix
+	"Default coding system to use when e.g. opening files, if unspecified.
+Simply leaving it up to emacs doesn't seem to work well,
+esp. since utf-8 is used everywhere and guessing doesn't make much sense anymore.")
+
 (defun ghg-io-op-write-region (start end file &optional append visit lockname mustbenew)
 	(let*
 		((coding-system-used last-coding-system-used)
@@ -98,6 +103,7 @@
 
 	(let*
 		(c-start c-size err-file-not-found
+			(coding-base coding-system-for-read)
 			(filename (expand-file-name file)))
 
 		(condition-case err-tmp
@@ -136,7 +142,9 @@
 					(error "Unhandled file-error when running ghg: %s" err-tmp))))
 
 		(unless err-file-not-found
-			(let ((coding-system-for-read 'undecided))
+			(let
+				((coding-system-for-read
+					(or coding-base ghg-io-coding-system-default)))
 				(decode-coding-inserted-region
 					(point) (+ (point) c-size)
 					filename visit beg end replace)))
