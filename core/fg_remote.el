@@ -266,6 +266,7 @@ Supported actions:
 * sort (for playlist)
 * clear (clear playlist, alias: c)
 * path (current track path)
+* playlist (paths of all tracks, one per line, alias: m3u)
 
 There's also separate emms-add (ea) command to add stuff to playlist."
 	(if (not action)
@@ -281,6 +282,11 @@ There's also separate emms-add (ea) command to add stuff to playlist."
 			((sort) (prog1 nil (emms-sort)))
 			((clear c) (emms-playlist-mode-clear))
 			((path) (emms-track-get (emms-playlist-current-selected-track) 'name))
+			((playlist m3u)
+				(with-temp-buffer
+					(emms-source-playlist-unparse 'm3u
+						(with-current-emms-playlist (current-buffer)) (current-buffer))
+					(buffer-string)))
 			(t (error "Unknown action: %s" action)))))
 
 
