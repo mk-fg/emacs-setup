@@ -8,7 +8,7 @@
 	emms-directory (concat fg-path "/tmp/emms")
 	emms-source-file-default-directory "/mnt/db/mediaCore/sound_music"
 
-	emms-source-playlist-default-format 'pls
+	emms-source-playlist-default-format 'm3u
 	emms-playlist-mode-center-when-go t
 
 	emms-show-format "NP: %s")

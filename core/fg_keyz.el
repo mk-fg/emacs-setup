@@ -162,10 +162,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "s-,") . fg-emms-add-directory-tree-glob)
 		(,(key "M-s-,") . fg-emms-add-file-glob)
 		(,(key "s-/") . fg-emms-notify)
-		(,(key "M-s-/") . ,(lambda () (interactive)
-			(setq fg-emms-scrobble-tracks (not fg-emms-scrobble-tracks))
-			(message "Scrobbling %s"
-				(if fg-emms-scrobble-tracks "enabled" "disabled"))))
+		(,(key "M-s-/") . emms-playlist-save)
 		(,(key "s-?") . emms-playlist-save)
 		(,(key "C-s-?") . emms-playlist-mode-clear)
 		(,(key "M-s-;") . emms-seek-backward)
