@@ -290,6 +290,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-U") . ,(transient-wrap 'capitalize-region "r"))
 		(,(key "M-l") . ,(transient-wrap 'downcase-region "r"))
 		(,(key "C-/") . ,(transient-wrap 'fg-comment "P"))
+		(,(key "M-h") . hide-region-hide)
+		(,(key "C-M-h") . hide-region-unhide)
 
 		;; Skimming ops
 		(,(key "<f3>") . isearch-repeat-forward)
