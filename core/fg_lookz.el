@@ -11,12 +11,16 @@
 (defadvice select-safe-coding-system-interactively
 	(around fg-select-safe-coding-system-interactively activate) 'raw-text)
 
-;; Font
-;; Note: I always use variable-pitch font for code buffers
+;; Fonts
+;; - Always use variable-pitch font for code buffers
+;; - There's weird interesting stuff like https://github.com/tonsky/FiraCode for monospace
+;; - To debug: "M-` (universal arg, C-u) M-x what-cursor-position" on the weird letter
+;; - "describe-fontset" can be useful, and then overriding ranges from there via "set-fontset-font"
 (when window-system
 	(set-frame-font "Luxi Sans-8")
 	(set-face-font 'variable-pitch "Luxi Sans-8")
-	(set-face-font 'fixed-pitch "DejaVu Sans Mono-7.5"))
+	(set-face-font 'fixed-pitch "DejaVu Sans Mono-7.5")
+	(set-fontset-font t '(?А . ?я) "DejaVu Sans-7.5"))
 
 ;; Time is critical
 (setq-default display-time-day-and-date t
@@ -24,7 +28,7 @@
 	calendar-date-style 'european
 	calendar-latitude [56 50 north]
 	calendar-longitude [60 35 east]
-	calendar-time-display-form ; "13:05 (YEKST)"
+	calendar-time-display-form ; "13:05 (YEKT)"
 		'(24-hours ":" minutes
 			(if time-zone " (") time-zone (if time-zone ")")))
 (display-time)
