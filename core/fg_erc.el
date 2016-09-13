@@ -199,6 +199,14 @@ List of plists with any number of following keys (in each):
 	:func - function to apply to the message (see above)."
 	:group 'erc :type '(repeat sexp))
 
+;; These are to allow easy setq for fg-erc-msg-*-plists, without having to merge/dedup these
+(defvar fg-erc-msg-block-local ()
+	"Site-local `fg-erc-msg-block', for easier merging with global list.")
+(defvar fg-erc-msg-block-plists-local ()
+	"Site-local `fg-erc-msg-block-plists', for easier merging with global list.")
+(defvar fg-erc-msg-modify-plists-local ()
+	"Site-local `fg-erc-msg-modify-plists', for easier merging with global list.")
+
 (defun fg-erc-msg-block-pattern (nick msg)
 	"Build proper pattern for regular channel messages
  (including ZNC-buffered messages) from specified NICK
@@ -297,13 +305,13 @@ and MSG regexp patterns. MSG can have $ at the end."
 			"^irker[[:digit:]]+!~?irker@"
 			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
 
-	fg-erc-msg-block ;; ignore-patterns with nick and message regexps
-		(mapcar
-			(apply-partially 'apply 'fg-erc-msg-block-pattern)
-				'(("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")))
-
 	;; (setq-default
-	fg-erc-msg-block-plists nil ;; net+chan+nick+msg ignore-patterns
+	fg-erc-msg-block (append fg-erc-msg-block-local) ;; ignore-patterns with nick and message regexps
+		;; 	(mapcar
+		;; 		(apply-partially 'apply 'fg-erc-msg-block-pattern)
+		;; 			'(("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")))
+
+	fg-erc-msg-block-plists (append fg-erc-msg-block-plists-local) ;; net+chan+nick+msg ignore-patterns
 		;; `((:chan "^#\\(cjdns\\|projectmeshnet\\|hyperboria\\)$"
 		;; 		:net "^EFNet$" :nick "i2p"
 		;; 		:msg "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
@@ -313,7 +321,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 		;; 			"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+")))
 
 	;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
-	fg-erc-msg-modify-plists
+	fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
 		`((:chan "^#datascienceltd-" :net "^BitlBee$" :nick "Bitbucket"
 			:func ,(lambda ()
 				(let*
@@ -345,7 +353,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 								(erc-put-text-property ;; hide old (html) msg
 									(+ (point-min) (caar text-html-pos))
 									(+ (point-min) (cdar text-html-pos) 1)
-									'invisible t (current-buffer)))))))))
+									'invisible t (current-buffer))))))))))
 	;; )
 
 	erc-server-auto-reconnect t
