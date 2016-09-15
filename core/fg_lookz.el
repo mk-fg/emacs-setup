@@ -20,7 +20,13 @@
 	(set-frame-font "Luxi Sans-8")
 	(set-face-font 'variable-pitch "Luxi Sans-8")
 	(set-face-font 'fixed-pitch "DejaVu Sans Mono-7.5")
-	(set-fontset-font t '(?А . ?я) "DejaVu Sans-7.5"))
+	(set-fontset-font t '(?А . ?я) "DejaVu Sans-7.5")
+	(dolist
+		(range-cons
+			;; Emoji ranges from https://en.wikipedia.org/wiki/Emoji
+			'((#x1F300 . #x1F5FF) (#x1F900 . #x1F9FF) (#x1F600 . #x1F64F)
+				(#x1F680 . #x1F6FF) (#x2600 . #x26FF) (#x2700 . #x27BF)))
+		(set-fontset-font t range-cons "Symbola-10")))
 
 ;; Time is critical
 (setq-default display-time-day-and-date t
