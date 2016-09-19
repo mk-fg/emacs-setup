@@ -265,13 +265,19 @@ Supported actions:
 * shuffle (for playlist)
 * sort (for playlist)
 * clear (clear playlist, alias: c)
+* status (stopped, playing or paused)
 * path (current track path)
 * playlist (paths of all tracks, one per line, alias: m3u)
 
 There's also separate emms-add (ea) command to add stuff to playlist."
 	(if (not action)
-		(-when-let (track (emms-playlist-current-selected-track))
-			(emms-track-description track))
+		(let
+			((track (emms-playlist-current-selected-track)))
+			(format "[%s]%s%s"
+				(fg-emms-player-status-string)
+				(if (= 0 (length emms-playing-time-string))
+					"" (format " %s" (s-trim emms-playing-time-string)))
+				(if (not track) "" (format " :: %s" (or (emms-track-description track) "")))))
 		(case (intern action)
 			((play pause p) (emms-pause))
 			((track-next > +) (emms-next))
@@ -281,6 +287,7 @@ There's also separate emms-add (ea) command to add stuff to playlist."
 			((shuffle) (prog1 nil (emms-shuffle)))
 			((sort) (prog1 nil (emms-sort)))
 			((clear c) (emms-playlist-mode-clear))
+			((status) (fg-emms-player-status-string))
 			((path) (emms-track-get (emms-playlist-current-selected-track) 'name))
 			((playlist m3u)
 				(with-temp-buffer

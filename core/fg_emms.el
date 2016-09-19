@@ -30,6 +30,10 @@
 (add-to-list 'emms-player-list 'emms-player-mpv)
 (setq-default emms-player-list '(emms-player-mpv))
 
+(defun fg-emms-player-status-string ()
+	(if emms-player-playing-p
+		(if emms-player-paused-p "paused" "playing") "stopped"))
+
 
 ;;;; Playlist controls
 
