@@ -1,3 +1,5 @@
+(package-initialize) ; package.el wants this
+
 (defvar fg-path
 	(expand-file-name "~/.emacs.d")
 	"root for all emacs-related crap")
