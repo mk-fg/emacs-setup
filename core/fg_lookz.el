@@ -284,6 +284,7 @@ NAME can also be passed explicitly as an argument."
 	(tool-bar-mode -1)
 	(menu-bar-mode -1)
 	(scroll-bar-mode -1)
+	(horizontal-scroll-bar-mode -1)
 	(when (boundp 'fg-color-fg-core)
 		(set-cursor-color fg-color-fg-core)
 		(set-foreground-color fg-color-fg-core)
