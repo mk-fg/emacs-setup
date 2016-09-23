@@ -136,7 +136,7 @@ unless OVERWIRITE is specified and matches one of the following:
 				(when overwrite
 					(error "Unrecognized value for OVERWRITE: %s" overwrite))))
 		(with-current-buffer (fg-get-useful-buffer pattern buffers)
-			(flet
+			(cl-flet
 				((check-tag (prompt &optional tag prompt-pat)
 						(when (or (not prompt-pat) (s-match prompt-pat prompt))
 							(if
@@ -236,7 +236,7 @@ Will get the active buffer contents, put a mark there, and return the contents."
 	"Load and eval file at the specified local PATH.
 If PATH is already opened in some buffer, error is signaled.
 Result of the eval operation is not returned."
-	(flet
+	(cl-flet
 		((kill-buffer-force ()
 			(let (kill-buffer-query-functions)
 				(-when-let

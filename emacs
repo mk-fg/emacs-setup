@@ -205,7 +205,7 @@
 
 (defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
 	"Prevent annoying \"Active processes exist\" query when killing Emacs."
-	(flet ((process-list ())) ad-do-it))
+	(cl-flet ((process-list ())) ad-do-it))
 
 
 ;; Emacs server (client is bound to zsh ec/ece aliases)
