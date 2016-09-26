@@ -104,6 +104,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 ;;;; Snippet to rebind stuff online
 ;; (define-key fg-scite-core-map (key "s-,") 'emms-shuffle)
+;; (define-key fg-scite-core-map (key "M-c") 'fg-emacs-exit)
 
 
 (define-minor-mode fg-scite-core
@@ -139,7 +140,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "<M-tab>") . ibuffer)
 
 		;; -- File/buffer stuff --
-		(,(key "M-c") . save-buffers-kill-terminal)
+		(,(key "M-c") . fg-emacs-exit)
 		(,(key "M-b") . switch-to-buffer)
 		(,(key "M-f") . find-file)
 		(,(key "M-F") . fg-recentf-prompt)

@@ -14,6 +14,7 @@
 	emms-show-format "NP: %s")
 
 (emms-playing-time 1)
+(add-hook 'fg-emacs-exit-hook 'emms-stop)
 
 
 ;;;; Player

@@ -50,6 +50,19 @@ to avoid spamming them with MOTD entries and notices."
 				fg-erc-connect-last (float-time))
 			(apply (car link) (cdr link)))))
 
+(defun fg-erc-quit (&optional reason)
+	"Disconnect (/quit) from all connected IRC servers immediately
+and unset `process-query-on-exit-flag' on all `erc-server-process' subprocesses.
+This doesn't wait for when subprocesses exit and run their disconnect hooks,
+and intended to be synchronous best-effort 'cleanup before exit' thing."
+	(interactive)
+	(erc-with-all-buffers-of-server nil
+		#'erc-open-server-buffer-p
+		(erc-quit-server reason)
+		(set-process-query-on-exit-flag erc-server-process nil)))
+
+(add-hook 'fg-emacs-exit-hook 'fg-erc-quit)
+
 
 ;; Common erc message processing routines
 

@@ -4,6 +4,16 @@
 	(expand-file-name "~/.emacs.d")
 	"root for all emacs-related crap")
 
+(defcustom fg-emacs-exit-hook ()
+	"Called before exiting emacs to run any cleanups and confirmation-killing stuff."
+	:group 'erc-hooks :type 'hook)
+
+(defun fg-emacs-exit ()
+	(interactive)
+	;; (cl-flet ((process-list ())) ad-do-it))
+	(run-hooks 'fg-emacs-exit-hook)
+	(save-buffers-kill-terminal))
+
 
 ;; Extend include path
 (add-to-list 'load-path (concat fg-path "/core"))
@@ -202,11 +212,6 @@
 		(equal (or (ad-get-arg 0) (buffer-name)) "*scratch*")
 		(bury-buffer)
 		ad-do-it))
-
-(defadvice save-buffers-kill-emacs (around no-query-kill-emacs activate)
-	"Prevent annoying \"Active processes exist\" query when killing Emacs."
-	(cl-flet ((process-list ())) ad-do-it))
-
 
 ;; Emacs server (client is bound to zsh ec/ece aliases)
 (server-start)
