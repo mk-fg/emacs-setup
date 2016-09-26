@@ -466,10 +466,11 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 (defun fg-ibuffer-mark (&optional move)
 	"Mark the buffer on this line (or ARG lines), w/o moving the point.
 If point is on a group name, this function operates on that group."
-	(if
-		(looking-at "^>")
-		(ibuffer-unmark-forward nil)
-		(ibuffer-mark-forward nil))
+	(let ((args (ibuffer-get-region-and-prefix)))
+		(if
+			(looking-at "^>")
+			(apply 'ibuffer-unmark-forward args)
+			(apply 'ibuffer-mark-forward args)))
 	(unless move (forward-line -1)))
 
 (define-keys ibuffer-mode-map
