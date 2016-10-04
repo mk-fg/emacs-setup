@@ -605,6 +605,10 @@ Only used when `erc-channel-users' is unavailable or bogus (e.g. only has 1 user
 		(timeout . ,(* 10 3600)))
 	"Parameters for cleanup of unused nicks from `fg-erc-highlight-name-set'.")
 
+(defcustom fg-erc-highlight-name-lowercase t
+	"Lowercase all highlighted nicks, to make them somewhat easier to read."
+	:group 'erc :type 'boolean)
+
 (defun fg-erc-highlight-nicknames-cleanup (name-set params)
 	"Cleanup NAME-SET according to PARAMS.
 PARAMS should probably be `fg-erc-highlight-name-set-cleanup'."
@@ -655,6 +659,8 @@ PARAMS should probably be `fg-erc-highlight-name-set-cleanup'."
 								(and erc-channel-users (erc-get-channel-user nick))
 								(ht-contains? fg-erc-highlight-name-set (downcase nick)))
 							(not (string-equal nick nick-self)))
+						(when fg-erc-highlight-name-lowercase
+							(downcase-region (car bounds) (cdr bounds)))
 						(put-text-property
 							(car bounds) (cdr bounds) 'face
 							(cons 'foreground-color (fg-erc-get-color-for-nick nick)))))))
