@@ -246,6 +246,7 @@ NAME can also be passed explicitly as an argument."
 		;; ERC
 		`(erc-timestamp-face ((t (:foreground ,fg-color-comment :weight normal))))
 		`(erc-keyword-face ((t (:foreground ,fg-color-kw :weight bold))))
+		`(erc-nick-default-face ((t (:weight normal))))
 		`(erc-current-nick-face ((t (:foreground ,fg-color-kw :weight bold))))
 		`(erc-notice-face ((t (:foreground ,fg-color-fg-modeline))))
 		`(erc-prompt-face ((t (:foreground ,fg-color-fg-core :background nil))))
