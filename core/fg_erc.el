@@ -335,6 +335,8 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 	;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
 	fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
+
+		;; Filter for hipchat to get actual info like repo-name and commit info from html blob
 		`((:chan "^#datascienceltd-" :net "^BitlBee$" :nick "Bitbucket"
 			:func ,(lambda ()
 				(let*
@@ -366,7 +368,38 @@ and MSG regexp patterns. MSG can have $ at the end."
 								(erc-put-text-property ;; hide old (html) msg
 									(+ (point-min) (caar text-html-pos))
 									(+ (point-min) (cdar text-html-pos) 1)
-									'invisible t (current-buffer))))))))))
+									'invisible t (current-buffer))))))))
+
+			;; Chan with a bot that has !upper and no rules - what can possibly go wrong?
+			(:chan "^#archlinux-offtopic$" :net "^freenode$"
+				:func ,(lambda ()
+					(let*
+						((dc-at-percent 0.8) (dc-at-min 20)
+							(dc-mark-face '(:foreground "green"))
+							(line-a (point-min))
+							(line-b (1- (or (search-forward "\n" nil t) (point-max))))
+							(line (buffer-substring-no-properties line-a line-b)))
+						(multiple-value-bind (c-all c-uc)
+							(cl-reduce
+								#'(lambda (v c)
+									(multiple-value-bind (c-all c-uc) v
+										(when (= ?w (char-syntax c))
+											(setq c-all (1+ c-all)
+												c-uc (+ c-uc (if (= c (upcase c)) 1 0))))
+										(list c-all c-uc)))
+								line
+								:initial-value '(0 0))
+							;; (message
+							;; 	"--erc-debug dc-mark: %S [%s %s %s%%]"
+							;; 	line c-uc c-all (/ c-uc (float c-all)))
+							(when
+								(and (> c-all c-uc dc-at-min)
+									(> (/ c-uc (float c-all)) dc-at-percent))
+								(downcase-region (point-min) line-b)
+								(goto-char line-b)
+								(insert " [downcased]"))
+							(put-text-property line-b (point) 'face dc-mark-face)))))))
+
 	;; )
 
 	erc-server-auto-reconnect t
