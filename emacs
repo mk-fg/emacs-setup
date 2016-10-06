@@ -9,8 +9,8 @@
 	:group 'erc-hooks :type 'hook)
 
 (defun fg-emacs-exit ()
+	"Run `fg-emacs-exit-hook' to cleanup stray pid/tasks and exit emacs."
 	(interactive)
-	;; (cl-flet ((process-list ())) ad-do-it))
 	(run-hooks 'fg-emacs-exit-hook)
 	(save-buffers-kill-terminal))
 
