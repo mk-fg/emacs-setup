@@ -385,7 +385,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 									(multiple-value-bind (c-all c-uc) v
 										(when (= ?w (char-syntax c))
 											(setq c-all (1+ c-all)
-												c-uc (+ c-uc (if (= c (upcase c)) 1 0))))
+												c-uc (+ c-uc (if (/= c (downcase c)) 1 0))))
 										(list c-all c-uc)))
 								line
 								:initial-value '(0 0))
