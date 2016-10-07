@@ -383,7 +383,9 @@ and MSG regexp patterns. MSG can have $ at the end."
 							(cl-reduce
 								#'(lambda (v c)
 									(multiple-value-bind (c-all c-uc) v
-										(when (= ?w (char-syntax c))
+										(when
+											(and (= ?w (char-syntax c))
+												(/= (upcase c) (downcase c)))
 											(setq c-all (1+ c-all)
 												c-uc (+ c-uc (if (/= c (downcase c)) 1 0))))
 										(list c-all c-uc)))
@@ -397,8 +399,8 @@ and MSG regexp patterns. MSG can have $ at the end."
 									(> (/ c-uc (float c-all)) dc-at-percent))
 								(downcase-region (point-min) line-b)
 								(goto-char line-b)
-								(insert " [downcased]"))
-							(put-text-property line-b (point) 'face dc-mark-face)))))))
+								(insert " [downcased]")
+								(put-text-property line-b (point) 'face dc-mark-face))))))))
 
 	;; )
 
