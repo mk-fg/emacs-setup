@@ -705,17 +705,6 @@ PARAMS should probably be `fg-erc-highlight-name-set-cleanup'."
 
 (add-hook 'erc-insert-modify-hook 'fg-erc-highlight-nicknames)
 
-;; XXX: hacky debug for what looks like occasional nick-update failures in erc-server-NICK
-(defun erc-update-user-nick
-	(nick &optional new-nick host login full-name info)
-	(let*
-		((user (erc-get-server-user nick))
-			(res (erc-update-user user new-nick host login full-name info)))
-		(unless res
-			(message "--- erc-debug: nick update failed - %s"
-				(list user nick new-nick host login full-name info)))
-		res))
-
 
 ;; Putting a mark-lines into the buffers
 
