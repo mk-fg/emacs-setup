@@ -904,21 +904,3 @@ function each time you change `erc-autoaway-idle-seconds'."
 (when (and erc-auto-set-away (eq erc-autoaway-idle-method 'x))
 	(erc-autoaway-reestablish-idletimer) ;; definition should've been updated
 	(remove-hook 'erc-timer-hook 'erc-autoaway-possibly-set-away)) ;; based on emacs-idle-time, bogus
-
-
-;; Since DCC SEND handling in ERC was a bit broken before
-;;  my time, and I managed to "fix" it introducing a new regression
-;;  (which I've submitted a patch for, again)...
-;; It'd only make sense to leave this debug code here, for now.
-;; (setq debug-on-error t)
-;; (erc-dcc-handle-ctcp-send <process erc-Manchester.UK.EU.UnderNet.Org-6667>
-;; 	"DCC SEND SearchBot_results_for_quicksilver.txt.zip 1816743045 58560 2779"
-;; 	"seekbot" "seekbot" "108.73.76.133" "MK_FG")
-;; (let ((query "DCC SEND \"SearchBot results for quicksilver.txt.zip\" 1816743045 58560 2779"))
-;; 	(string-match erc-dcc-ctcp-query-send-regexp query)
-;; 	(or (match-string 5 query)
-;; 		(erc-dcc-unquote-filename (match-string 2 query))))
-;; (let ((query "DCC SEND SearchBot_results_for_quicksilver.txt.zip 1816743045 58560 2779"))
-;; 	(string-match erc-dcc-ctcp-query-send-regexp query)
-;; 	(or (match-string 5 query)
-;; 		(erc-dcc-unquote-filename (match-string 2 query))))
