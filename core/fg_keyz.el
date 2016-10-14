@@ -41,11 +41,9 @@ Not all modes are handled correctly (tested w/ p and r only)."
 ;; Includes
 (require 'redo) ; consistent redo, grabbed from XEmacs
 (autoload 'setnu "setnu" nil t) ; line numbers mode
-(dolist
-	(sym '(wcy-switch-buffer-forward wcy-switch-buffer-backward))
-	(autoload sym "wcy-swbuff" nil t)) ; buffer cycling thru minibuff
 (autoload 'browse-kill-ring "browse-kill-ring" nil t)
 (require 'acme-mouse) ; http://acme.cat-v.org/mouse
+(require 'wcy-swbuff) ; buffer cycling thru minibuff
 
 
 ;; Key-related settings
@@ -462,7 +460,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 			(erc-track-switch-buffer arg))))
 
 
-;; -- IBuffer mangling --
+;; -- IBuffer and such --
 (require 'ibuffer)
 (defun fg-ibuffer-mark (&optional move)
 	"Mark the buffer on this line (or ARG lines), w/o moving the point.
@@ -482,6 +480,8 @@ If point is on a group name, this function operates on that group."
 		("*" ibuffer-toggle-marks)
 		("SPC" ,(iwrapm fg-ibuffer-mark nil))
 		("<insert>" ,(iwrapm fg-ibuffer-mark t))))
+
+(setq-default wcy-buffer-exclude-regexps '("^\\*"))
 
 
 ;; -- Jabbra submode --
