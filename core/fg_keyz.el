@@ -294,6 +294,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; Skimming ops
 		(,(key "<f3>") . isearch-repeat-forward)
+		(,(key "<S-f3>") . isearch-repeat-backward)
 		(,(key "C-s") . isearch-forward)
 		(,(key "C-M-s") . isearch-forward-regexp)
 		(,(key "C-S-s") . query-replace)
