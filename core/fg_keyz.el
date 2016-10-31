@@ -482,7 +482,7 @@ If point is on a group name, this function operates on that group."
 		("SPC" ,(iwrapm fg-ibuffer-mark nil))
 		("<insert>" ,(iwrapm fg-ibuffer-mark t))))
 
-(setq-default wcy-buffer-exclude-regexps '("^\\*"))
+(setq-default wcy-buffer-exclude-regexps '("^ *\\*"))
 
 
 ;; -- Jabbra submode --
