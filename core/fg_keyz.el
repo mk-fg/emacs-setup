@@ -463,6 +463,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 ;; -- IBuffer and such --
 (require 'ibuffer)
+
 (defun fg-ibuffer-mark (&optional move)
 	"Mark the buffer on this line (or ARG lines), w/o moving the point.
 If point is on a group name, this function operates on that group."
@@ -473,9 +474,16 @@ If point is on a group name, this function operates on that group."
 			(apply 'ibuffer-mark-forward args)))
 	(unless move (forward-line -1)))
 
+(defun fg-ibuffer-bury-all ()
+	(interactive)
+	(dolist (buf-name (ibuffer-marked-buffer-names)) (bury-buffer buf-name))
+	(ibuffer-unmark-all ?\r)
+	(ibuffer-update nil t))
+
 (define-keys ibuffer-mode-map
 	`(("+" ,(iwrapm ibuffer-mark-by-file-name-regexp ".*"))
 		("-" ,(iwrapm ibuffer-unmark-all ibuffer-marked-char))
+		("B" fg-ibuffer-bury-all)
 		("<prior>" fg-scroll-up) ; pageup
 		("<next>" fg-scroll-down) ; pagedown
 		("*" ibuffer-toggle-marks)
