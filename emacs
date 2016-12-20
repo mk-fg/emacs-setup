@@ -186,10 +186,9 @@
 (setq-default auto-mode-alist
 	(-distinct (-concat auto-mode-alist
 		`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)$" . sh-mode)
-			("/PKGBUILD$" . pkgbuild-mode)
 			("\\.jl$" . lisp-mode) ("\\.rkt$" . scheme-mode)
 			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
-			("\\.yaml$" . yaml-mode)
+			("\\.yaml$" . yaml-mode) ("\\.edc$" . edje-mode)
 			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
 			("\\.coffee$" . coffee-mode) ("\\.scss$" . css-mode) ("\\.jade$" . jade-mode)
 			("\.lua$" . lua-mode) ("\\.go$" . go-mode) ("/*.\.php[345]?$" . php-mode)
