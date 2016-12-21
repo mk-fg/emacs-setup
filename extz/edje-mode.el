@@ -494,6 +494,7 @@
                              ))))
 
 
+;;;###autoload
 (define-derived-mode edje-mode c-mode "Edje"
   "Major mode for editing Edje files"
   (interactive)

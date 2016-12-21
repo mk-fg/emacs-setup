@@ -158,7 +158,7 @@ NAME can also be passed explicitly as an argument."
 	"markdown-mode" "Major mode for editing Markdown files" t)
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
 (autoload 'php-mode "php-mode.el" "Php mode." t)
-(autoload 'pkgbuild-mode "pkgbuild-mode.el" "PKGBUILD mode." t)
+(autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
 (load-library-safe "haskell-mode-autoloads")
 
 
