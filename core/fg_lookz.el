@@ -286,6 +286,7 @@ NAME can also be passed explicitly as an argument."
 		`(which-func ((t
 			(:inherit font-lock-function-name-face
 				:foreground ,fg-color-func-modeline t))))
+		`(sh-heredoc ((t (:foreground "olive drab"))))
 		;; Defaults
 		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
 		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))
