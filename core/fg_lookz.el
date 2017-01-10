@@ -47,8 +47,10 @@
 		(set-fontset-font t range-cons "IPA-11")))
 
 ;; Time is critical
-(setq-default display-time-day-and-date t
+(setq-default
+	display-time-day-and-date t
 	display-time-24hr-format t
+	display-time-default-load-average nil
 	calendar-date-style 'european
 	calendar-latitude [56 50 north]
 	calendar-longitude [60 35 east]
