@@ -94,7 +94,7 @@ calling FUNC for every path result."
 
 (defun* fg-emms-file-track-wash-name (title &key strip-ext)
 	"Process underscore-encoded spaces in name,
-split numeric prefix, strip file extension."
+split numeric prefix (if delimited in a standard fashion), strip file extension."
 	(let
 		((trackno
 			(dolist (sep '("_-_" "_" nil))
@@ -113,11 +113,12 @@ split numeric prefix, strip file extension."
 (defun* fg-emms-track-info-fs (track)
 	"Set TRACK info from fg_core standard pathname.
 Examples:
-		/some/path/Artist/2000_Album_X/07_-_Some_Track_Name.mp3
-		/some/path/Artist/2001_Album-_Aftercolon/01_Some_Track_Name.ogg
-		/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac
-		/some/path/Artist/Some_Track_Name.ogg
-		/some/path/Artist/01_Some_Track_Name.ogg (no year in album part - no album info)"
+	/some/path/Artist/2000_Album_X/07_-_Some_Track_Name.mp3
+	/some/path/Artist/2001_Album-_Aftercolon/01_Some_Track_Name.ogg
+	/some/path/Artist/2002_Single_File_Album_or_Standalone_Track.flac
+	/some/path/Artist/2015_-_Album_with_year/cd-03/Track_Name.mp3
+	/some/path/Artist/Some_Track_Name.ogg
+	/some/path/Artist/01_Some_Track_Name.ogg"
 	(when track
 		(let ((name (emms-track-name track)))
 			(setq name
@@ -132,14 +133,34 @@ Examples:
 					(info-title info-tracknumber info-album info-year info-artist)
 					(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
 					(when info-title
+						(setq name (--remove (string-match ; drop "cd 01" or similar components
+							"^[^[:alnum:]]*\\([Cc][Dd]\\)?[^[:alnum:]]*[0-9]\\{1,2\\}[^[:alnum:]]*$" it) name))
 						(if (<= (length name) 2)
 							(setq info-artist (car (last name 2)))
 							(multiple-value-setq
 								(info-album info-year)
 								(fg-emms-file-track-wash-name (car (last name 2))))
+							(when
+								(and (not info-year)
+									(string-match
+										(concat
+											"^\\s-*\\(\\(19\\|20\\)[0-9]\\{2\\}\\)"
+											"[^[:alnum:]].*?\\([[:alnum:]].*\\)$")
+										info-album)
+								(setq
+									info-year (match-string 1 info-album)
+									info-album (match-string 3 info-album))))
 							(if info-year
 								(setq info-artist (car (last name 3)))
-								(setq info-artist info-album info-album nil)))
+								(setq info-artist info-album info-album nil))
+							(when
+								(and (not info-tracknumber)
+									(string-match
+										"^\\s-*\\([0-9]\\{2\\}\\)[^[:alnum:]].*?\\([[:alnum:]].*\\)$"
+										info-title))
+								(setq
+									info-tracknumber (match-string 1 info-title)
+									info-title (match-string 2 info-title))))
 						(setq info-artist (replace-regexp-in-string "_+" " " info-artist))
 						;; Actually set the values
 						(dolist
