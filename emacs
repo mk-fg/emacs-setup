@@ -197,6 +197,12 @@
 					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
 				"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?$") . conf-mode)))))
 
+;; Disable vc-* modes, which slow stuff down pointlessly, esp. on sshfs and such
+(eval-after-load "vc" '(progn
+	(remove-hook 'find-file-hooks 'vc-find-file-hook)
+	(remove-hook 'find-file-hooks 'vc-refresh-state)))
+(setq-default vc-handled-backends ())
+
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
 ;; Simple way to expand this list is "!" on confirm and fishing them from custom
