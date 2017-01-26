@@ -62,8 +62,13 @@
 ;; Smooth scrolling
 (setq-default
 	scroll-preserve-screen-position t ; keep vertical pos
+	scroll-conservatively 0
+	scroll-margin 5
+	scroll-step 1
 	line-move-visual t ; keep horizontal pos
-	scroll-conservatively 5
+	mouse-wheel-scroll-amount '(1 ((shift) . 1))
+	mouse-wheel-progressive-speed nil
+	mouse-wheel-follow-mouse t
 	isearch-allow-scroll t) ; alas, it doesn't work for custom PgUp/PgDn, TODO: extend
 
 ;; Assorted minor tweaks

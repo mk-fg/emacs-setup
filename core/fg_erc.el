@@ -449,7 +449,12 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	(interactive)
 	(let ((buffer (current-buffer)))
 		(when (> (buffer-size buffer) erc-max-buffer-size-to-act)
-			(erc-truncate-buffer-to-size erc-max-buffer-size buffer))))
+			(erc-truncate-buffer-to-size erc-max-buffer-size buffer)))
+	;; Make sure point is not left at the top of empty window when truncating
+	(when
+		(<= (- (line-number-at-pos (point))
+			(line-number-at-pos (window-start))) 10)
+		(let ((recenter-positions '(bottom))) (recenter-top-bottom))))
 
 
 ;; Message content filter
