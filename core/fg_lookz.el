@@ -63,7 +63,7 @@
 (setq-default
 	scroll-preserve-screen-position t ; keep vertical pos
 	scroll-conservatively 0
-	scroll-margin 5
+	;; scroll-margin 5 - cursor tends to get stuck on margins, TODO: fix
 	scroll-step 1
 	line-move-visual t ; keep horizontal pos
 	mouse-wheel-scroll-amount '(1 ((shift) . 1))
