@@ -109,6 +109,7 @@
 	(load-library-safe "git-gutter")
 	(global-git-gutter-mode t)
 	(setq-default
+		git-gutter:update-interval 2
 		git-gutter:window-width 2
 		git-gutter:modified-sign "~"
 		git-gutter:added-sign "+"
