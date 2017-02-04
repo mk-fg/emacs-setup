@@ -227,6 +227,7 @@ NAME can also be passed explicitly as an argument."
 (defvar fg-color-fg-core)
 (defvar fg-color-bg-core)
 (defvar fg-color-bg-hl)
+(defvar fg-color-bg-hl2)
 (defvar fg-color-fg-modeline "firebrick")
 (defvar fg-color-spell-dupe "Gold3")
 (defvar fg-color-spell-err "OrangeRed")
@@ -257,6 +258,9 @@ NAME can also be passed explicitly as an argument."
 		`(py-builtins-face ((t (:foreground ,fg-color-kw))))
 		`(py-decorators-face ((t (:foreground ,fg-color-kw))))
 		`(py-pseudo-keyword-face ((t (:foreground ,fg-color-kw))))
+		;; Develock
+		`(develock-reachable-mail-address
+			((t (:foreground ,fg-color-irrelevant :background ,fg-color-bg-hl2))))
 		;; FlySpell
 		`(flyspell-duplicate ((t (:foreground ,fg-color-spell-dupe :underline t :weight normal))))
 		`(flyspell-incorrect ((t (:foreground ,fg-color-spell-err :underline t :weight normal))))
@@ -332,6 +336,7 @@ NAME can also be passed explicitly as an argument."
 		((fg-color-fg-core "#6ad468")
 			(fg-color-bg-core "#101c10")
 			(fg-color-bg-hl "DarkGreen")
+			(fg-color-bg-hl2 "#182403")
 			(fg-color-key "MistyRose2")
 			(fg-color-kw "springgreen")
 			(fg-color-type "SlateGrey")
@@ -349,6 +354,7 @@ NAME can also be passed explicitly as an argument."
 		((fg-color-fg-core "black")
 			(fg-color-bg-core "#e0f0ed")
 			(fg-color-bg-hl "lavender blush")
+			(fg-color-bg-hl2 "#e1e7dd")
 			(fg-color-func "saddle brown")
 			(fg-color-func-modeline "red4")
 			(fg-color-var "IndianRed4"))
