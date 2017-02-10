@@ -250,6 +250,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-S-u") . fg-kill-line-backwards)
 		(,(key "C-M-u") . fg-kill-line)
 
+		;; Lookz
+		(,(key "M-w") . toggle-truncate-lines)
+
 		;; Metabuffer stuff
 		(,(key "<C-M-return>") . fg-occur)
 		(,(key "<M-return>") . fg-wtf))
@@ -306,7 +309,6 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-<mouse-1>") . ffap-at-mouse)
 
 		;; Lookz
-		(,(key "M-w") . toggle-truncate-lines)
 		(,(key "C-M-w") . develock-mode)
 
 		;; Metacode ops (emacs stuff)
