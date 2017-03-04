@@ -370,6 +370,19 @@ and MSG regexp patterns. MSG can have $ at the end."
 									(+ (point-min) (cdar text-html-pos) 1)
 									'invisible t (current-buffer))))))))
 
+			;; Filter-out bitlbee twitter reconnect stuff
+			(:chan "^#twitter_" :net "^BitlBee$"
+			;; (:chan "." :net ".*"
+				:func ,(lambda ()
+					(-let [(line hook-type) (fg-erc-get-hook-msg text)]
+						(when
+							(string-match
+								(concat "^ *\\*\\*\\* \\("
+										"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #twitter_"
+										"\\|#twitter__\\S-+: topic set by "
+									"\\)") line)
+							(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer))))))
+
 			;; Chan with a bot that has !upper and no rules - what can possibly go wrong?
 			(:chan "^#archlinux-offtopic$" :net "^freenode$"
 				:func ,(lambda ()

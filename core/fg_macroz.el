@@ -3,10 +3,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; For most stuff, see:
+;;  https://www.gnu.org/software/emacs/manual/html_node/elisp/Control-Structures.html#Control-Structures
 ;;  https://github.com/magnars/s.el
 ;;  https://github.com/magnars/dash.el
 ;;  https://github.com/Wilfred/ht.el
 ;;  https://www.emacswiki.org/emacs/RegularExpression
+
 ;; TODO: dedup old macros with this stuff
 (require 's)
 (require 'dash)
