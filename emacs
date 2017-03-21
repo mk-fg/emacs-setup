@@ -185,7 +185,7 @@
 (delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
 (setq-default auto-mode-alist
 	(-distinct (-concat auto-mode-alist
-		`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)$" . sh-mode)
+		`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)$" . sh-mode) ("/PKGBUILD$" . sh-mode)
 			("\\.jl$" . lisp-mode) ("\\.rkt$" . scheme-mode)
 			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
 			("\\.yaml$" . yaml-mode) ("\\.edc$" . edje-mode)
