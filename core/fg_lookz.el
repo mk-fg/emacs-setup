@@ -167,6 +167,7 @@ NAME can also be passed explicitly as an argument."
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
 (autoload 'php-mode "php-mode.el" "Php mode." t)
 (autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
+(autoload 'web-mode "web-mode" "Major mode for HTML/JS/CSS mix" t)
 (load-library-safe "haskell-mode-autoloads")
 
 
