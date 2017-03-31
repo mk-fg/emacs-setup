@@ -9,7 +9,7 @@
 	(require 'dns)
 	(setq-default
 		server-host ;; ipv6 stuff doesn't seem to be supported yet
-			(dns-query-cached (concat system-name ".v4c"))))
+			(dns-query-cached (concat system-name ".c"))))
 
 
 (defun fg-remote (data)
