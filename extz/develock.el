@@ -1805,7 +1805,7 @@ IGNORE-POINT-POS are ignored."
 
 (let (current-load-list)
   (defadvice indent-region (around remove-useless-whitespace
-				   (start end column) activate)
+				   (start end &optional column) activate)
     "Advised by Develock.
 If Develock is on, remove useless leading and trailing whitespace in
 Lisp modes, C modes and Java mode.  You can turn off this advice
