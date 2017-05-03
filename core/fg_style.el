@@ -28,13 +28,6 @@
 	(dolist (mode '(emacs-lisp-mode html-mode))
 		(plist-put develock-max-column-plist mode 99)))
 
-;; web-mode has lot of advices and behavior overrides
-;; TODO: find a way to disable all but syntax-highlighting there
-(eval-after-load "web-mode" (progn
-	(setq-default web-mode-enable-auto-indentation nil)
-	(dolist (indent-opt '(args calls concats ternary))
-		(add-to-list 'web-mode-indentation-params '((format "lineup-%s" indent-opt) . nil)))))
-
 ;; Make absolutely sure python-mode uses tabs
 (add-hook 'python-mode-hook
 	#'(lambda () (setq tab-width 2 indent-tabs-mode t)))
