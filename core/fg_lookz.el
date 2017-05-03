@@ -111,8 +111,8 @@
 	(setq-default
 		git-gutter:update-interval 2
 		git-gutter:window-width 2
-		git-gutter:modified-sign "~"
-		git-gutter:added-sign "+"
+		git-gutter:modified-sign "xx"
+		git-gutter:added-sign "++"
 		git-gutter:deleted-sign "--"
 		git-gutter:lighter ""
 		git-gutter:always-show-gutter t
