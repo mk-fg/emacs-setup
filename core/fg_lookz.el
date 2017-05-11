@@ -20,8 +20,8 @@
 (when window-system
 	(set-frame-font "Luxi Sans-8")
 	(set-face-font 'variable-pitch "Luxi Sans-8")
-	(set-face-font 'fixed-pitch "DejaVu Sans Mono-7.5")
-	(set-fontset-font t '(?А . ?я) "DejaVu Sans-7.5")
+	(set-face-font 'fixed-pitch "DejaVu Sans Mono-8")
+	(set-fontset-font t '(?А . ?я) "DejaVu Sans-8")
 	;; Emoji ranges from https://en.wikipedia.org/wiki/Emoji
 	(dolist
 		(range-cons
