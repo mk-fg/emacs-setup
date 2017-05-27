@@ -19,10 +19,10 @@
 ;; - use font-ranges-to-elisp.py script for easier copy-pasting from wikipedia
 ;; - https://www.gnu.org/software/emacs/manual/html_node/emacs/Fonts.html
 (when window-system
-	(set-frame-font "Luxi Sans-8")
-	(set-face-font 'variable-pitch "Luxi Sans-8")
-	(set-face-font 'fixed-pitch "DejaVu Sans Mono-8")
-	(set-fontset-font t '(?А . ?я) "DejaVu Sans-8")
+	(set-frame-font "Luxi Sans-9")
+	(set-face-font 'variable-pitch "Luxi Sans-9")
+	(set-face-font 'fixed-pitch "DejaVu Sans Mono-9")
+	(set-fontset-font t '(?А . ?я) "DejaVu Sans-9")
 	;; Emoji ranges from https://en.wikipedia.org/wiki/Emoji
 	(dolist
 		(range-cons
