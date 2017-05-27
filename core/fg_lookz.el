@@ -17,6 +17,7 @@
 ;; - To debug: "M-` (universal arg, C-u) M-x what-cursor-position" on the weird letter
 ;; - "describe-fontset" can be useful, and then overriding ranges from there via "set-fontset-font"
 ;; - use font-ranges-to-elisp.py script for easier copy-pasting from wikipedia
+;; - https://www.gnu.org/software/emacs/manual/html_node/emacs/Fonts.html
 (when window-system
 	(set-frame-font "Luxi Sans-8")
 	(set-face-font 'variable-pitch "Luxi Sans-8")
