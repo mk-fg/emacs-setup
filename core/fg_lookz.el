@@ -104,6 +104,9 @@
 (aset standard-display-table ?\f (vconcat (make-vector 64 ?-) "^L"))
 ;; Tab indentation guides
 (aset standard-display-table ?\t (vconcat "˙ "))
+;; More distinct char for commas vs periods
+;; It's best to pick one from default font via gucharmap, to avoid mixing these
+(aset standard-display-table ?, (vconcat "˾"))
 
 ;; git-gutter
 (when
