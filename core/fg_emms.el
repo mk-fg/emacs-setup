@@ -29,7 +29,10 @@
 
 (require 'emms-player-mpv) ;; in extz
 (add-to-list 'emms-player-list 'emms-player-mpv)
-(setq-default emms-player-list '(emms-player-mpv))
+(setq-default
+	emms-player-list '(emms-player-mpv)
+	emms-player-mpv-parameters
+		'("--quiet" "--really-quiet" "--force-window=no" "--vo=null"))
 
 (defun fg-emms-player-status-string ()
 	(if emms-player-playing-p
