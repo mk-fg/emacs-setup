@@ -313,7 +313,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 		;; Metacode ops (emacs stuff)
 		(,(key "C-j") . eval-last-sexp) ; > minibuffer
-		(,(key "C-S-j") . eval-print-last-sexp))
+		(,(key "C-S-j") . eval-print-last-sexp)
+		(,(key "C-M-j") . fg-eval-py)
+		(,(key "C-M-S-j") . fg-eval-py-print))
 	:group 'fg-scite)
 (set-keymap-parent fg-scite-code-map fg-scite-aux-map)
 
