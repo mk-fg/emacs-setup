@@ -34,8 +34,7 @@
 		(setq py-code (concat "print(" (s-trim py-code) ", end='')")))
 	py-code)
 
-(defun fg-eval-py (start end)
-	(interactive "r")
+(defun fg-eval-py-message (start end)
 	(let ((py-code (buffer-substring start end)))
 		(with-temp-buffer
 			(insert (fg-eval-py-wrap-expr py-code))
@@ -44,8 +43,7 @@
 				fg-py-bin t t nil)
 			(message "%s" (buffer-string)))))
 
-(defun fg-eval-py-print (start end)
-	(interactive "r")
+(defun fg-eval-py-replace (start end)
 	(let*
 		((py-code (buffer-substring start end))
 			(py-code-wrap (fg-eval-py-wrap-expr py-code)))
@@ -56,7 +54,19 @@
 				(insert py-code-wrap)
 				(setq end (point))))
 		(call-process-region start end fg-py-bin t t nil)
-		(message "check: %s" (s-ends-with? "\n" py-code))
 		(when
 			(and (s-ends-with? "\n" py-code) (/= (char-before) ?\n))
 			(insert "\n"))))
+
+(defun fg-eval-py (&optional whole-lines-only)
+	(interactive)
+	(save-excursion
+		(fg-taint
+			:call 'fg-eval-py-message
+			:whole-lines-only whole-lines-only)))
+
+(defun fg-eval-py-print (&optional whole-lines-only)
+	(interactive)
+	(fg-taint
+		:call 'fg-eval-py-replace
+		:whole-lines-only whole-lines-only))
