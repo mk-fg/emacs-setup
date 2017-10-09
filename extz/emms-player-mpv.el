@@ -56,6 +56,8 @@
                   (if (memq track-type '(streamlist playlist))
                       (format "--playlist=%s" track-name)
                     track-name)))
+         (process-environment
+           (append process-environment '("PULSE_PROP_media.role=music")))
          (process (apply 'start-process
                          emms-player-simple-process-name
                          nil
