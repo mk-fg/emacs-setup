@@ -9,11 +9,18 @@ then
 	emacsclient "$@"
 	err=$?
 else
+	offset=()
 	for file in "$@"; do
-		emacsclient -n "$file"
-		errn=$?
-		[[ "$errn" -ne 0 ]] && err=$errn
+		[[ "$file" =~ ^\+ ]] && {
+			offset+=( "$file" )
+			continue
+		}
+		emacsclient -n "${offset[@]}" "$file"
+		err_file=$?
+		[[ "$err_file" -ne 0 ]] && err=$err_file
+		offset=()
 	done
 fi
 
-[[ -z "$silent" ]] && exit $err || exit 0
+[[ -z "$silent" ]] || err=0
+exit $err
