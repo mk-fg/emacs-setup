@@ -385,6 +385,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 	:init-value nil
 	:lighter "/!"
 	:keymap `(
+		(,(key "<f3>") . isearch-repeat-forward)
 		(,(key "<backspace>") . fg-emms-playlist-mode-del)
 		(,(key "<delete>") . fg-emms-playlist-mode-del)
 		(,(key "C-c") . fg-emms-playlist-mode-copy)
