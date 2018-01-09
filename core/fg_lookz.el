@@ -209,6 +209,9 @@ NAME can also be passed explicitly as an argument."
 
 
 ;; Ibuffer tweaks
+(require 'ibuffer)
+(require 'ibuf-ext)
+
 (setq-default
 	ibuffer-formats
 		'((mark modified read-only
@@ -218,9 +221,23 @@ NAME can also be passed explicitly as an argument."
 			" " filename-and-process)
 		(mark
 			" " (name 16 -1)
-			" " filename)))
+			" " filename))
+	ibuffer-filter-groups-global ; applied via fg-ibuffer-apply-locals or ibuffer-mode-hook
+		'(("files" (filename . ""))
+			("erc" (mode . erc-mode)))
+	ibuffer-show-empty-filter-groups nil)
 
+(defun fg-ibuffer-apply-locals (&optional name)
+	"Apply new locals in \"*Ibuffer*\" (or NAME, if specified) buffer."
+	(setf
+		(buffer-local-value 'ibuffer-filter-groups (get-buffer "*Ibuffer*"))
+		ibuffer-filter-groups-global))
 
+(defadvice ibuffer-insert-filter-group
+	(before fg-ibuffer-insert-filter-group-sep activate)
+	(insert "\n"))
+
+(add-hook 'ibuffer-mode-hook 'fg-ibuffer-apply-locals)
 
 
 ;; Mask for X (inits are bg-agnostic colors)
