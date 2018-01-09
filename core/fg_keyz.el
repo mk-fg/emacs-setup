@@ -130,6 +130,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-<") . delete-window)
 		(,(key "C->") . delete-other-windows)
 		(,(key "M-,") . ,(iwrapm kill-buffer nil)) ; kill current buffer w/o asking
+		(,(key "M-<") . bury-buffer)
 		;; (,(key "M-.") . split-window-vertically)
 
 		;; Tab cycling w/ status in minibuffer
@@ -488,6 +489,10 @@ If point is on a group name, this function operates on that group."
 (define-keys ibuffer-mode-map
 	`(("+" ,(iwrapm ibuffer-mark-by-file-name-regexp ".*"))
 		("-" ,(iwrapm ibuffer-unmark-all ibuffer-marked-char))
+		("/ \\" ibuffer-clear-filter-groups) ; same as default, here for clarity
+		("/ /" ,(lambda () (interactive) ; to be full counterpart to "/ \" combo
+			(fg-ibuffer-apply-locals) (ibuffer-filter-disable) (ibuffer-update nil t)))
+		("\\" ibuffer-clear-filter-groups) ; not used otherwise anyway
 		("B" fg-ibuffer-bury-all)
 		("<prior>" fg-scroll-up) ; pageup
 		("<next>" fg-scroll-down) ; pagedown

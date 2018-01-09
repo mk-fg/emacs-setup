@@ -230,7 +230,8 @@ NAME can also be passed explicitly as an argument."
 (defun fg-ibuffer-apply-locals (&optional name)
 	"Apply new locals in \"*Ibuffer*\" (or NAME, if specified) buffer."
 	(setf
-		(buffer-local-value 'ibuffer-filter-groups (get-buffer "*Ibuffer*"))
+		(buffer-local-value 'ibuffer-filter-groups
+			(get-buffer (or name "*Ibuffer*")))
 		ibuffer-filter-groups-global))
 
 (defadvice ibuffer-insert-filter-group
