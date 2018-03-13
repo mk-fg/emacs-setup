@@ -94,7 +94,8 @@
 	(autoload sym "fg_newsticker" nil t))
 (autoload 'notifications-notify "notifications" nil t)
 (eval-after-load "python-mode" (load-library "fg_py"))
-(autoload 'minimap-mode "minimap" nil t)
+(autoload 'mmap "minimap" nil t)
+
 
 ;; Compositing stuff
 (load-library "fg_style")

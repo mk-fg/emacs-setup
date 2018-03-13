@@ -343,6 +343,7 @@ automatically re-created as soon as you kill it."
 		(if (= 1 (length (frame-list))) (make-frame-command))
 		(select-window
 			(frame-selected-window (next-frame)))
+		(set-frame-parameter nil 'desktop-dont-save t)
 		;; Set up the minimap window:
 		;; You should not be able to enter the minimap window.
 		(set-window-parameter nil 'no-other-window t)
@@ -376,7 +377,23 @@ If REMOVE is non-nil, remove minimap from other modes."
     (add-hook 'hs-hide-hook 'minimap-sync-overlays)
     (add-hook 'hs-show-hook 'minimap-sync-overlays)))
 
+
 ;;; Minimap creation / killing
+
+(defvar minimap-mode-allow nil
+	"Allow switching to minimap-mode.
+Here to prevent switching to it on session load or any such thing.")
+
+;;;###autoload
+(defun mmap ()
+	"Activate `minimap-mode' in a separate frame, creating it if necessary."
+	(interactive)
+	(if (not (and minimap-mode-allow minimap-mode))
+		(progn
+			(setq minimap-mode-allow t)
+			(minimap-mode))
+		(minimap-kill)
+		(minimap-mode 0)))
 
 ;;;###autoload
 (define-minor-mode minimap-mode
@@ -384,7 +401,7 @@ If REMOVE is non-nil, remove minimap from other modes."
   :global t
   :group 'minimap
   :lighter " MMap"
-  (if minimap-mode
+  (if (and minimap-mode minimap-mode-allow)
       (progn
         (when (and minimap-major-modes
                    (apply 'derived-mode-p minimap-major-modes))
@@ -494,7 +511,7 @@ This is meant to be called from the idle-timer or the post command hook.
 When FORCE, enforce update of the active region."
   (interactive)
   ;; If we are in the minibuffer, do nothing.
-  (unless (active-minibuffer-window)
+  (unless (or (active-minibuffer-window) (not minimap-mode))
     (if (minimap-active-current-buffer-p)
 	;; We are still in the same buffer, so just update the minimap.
 	(let ((win (minimap-get-window))
