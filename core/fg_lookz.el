@@ -289,6 +289,9 @@ NAME can also be passed explicitly as an argument."
 		;; Vline
 		`(vline ((t (:background ,fg-color-bg-hl))))
 		`(vline-visual ((t (:background ,fg-color-bg-hl))))
+		;; minimap
+		`(minimap-highlight-line-face ((t (:background ,fg-color-bg-hl :foreground ,fg-color-fg-core))))
+		`(minimap-active-region-background ((t (:background ,fg-color-bg-hl2))))
 		;; Jabber
 		`(jabber-title-large ((t (:weight bold :height 1.5))))
 		`(jabber-title-medium ((t (:weight bold :height 1.2))))
@@ -376,7 +379,7 @@ NAME can also be passed explicitly as an argument."
 		((fg-color-fg-core "black")
 			(fg-color-bg-core "#e0f0ed")
 			(fg-color-bg-hl "lavender blush")
-			(fg-color-bg-hl2 "#e1e7dd")
+			(fg-color-bg-hl2 "#d1e7dd")
 			(fg-color-func "saddle brown")
 			(fg-color-func-modeline "red4")
 			(fg-color-var "IndianRed4"))
