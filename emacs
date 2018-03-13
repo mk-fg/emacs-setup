@@ -14,6 +14,11 @@
 	(run-hooks 'fg-emacs-exit-hook)
 	(save-buffers-kill-terminal))
 
+;; Removes "buffer has process associated with it" query
+;; See also: process-query-on-exit-flag
+;; (setq kill-buffer-query-functions
+;; 	(delq 'process-kill-buffer-query-function kill-buffer-query-functions))
+
 
 ;; Extend include path
 (add-to-list 'load-path (concat fg-path "/core"))
@@ -105,6 +110,7 @@
 ;; Adjust tmp path and use it for all backup and autosave files
 (require 'saveplace)
 (desktop-save-mode)
+
 (setq-default
 	; autosave
 	auto-save-list-file-prefix
@@ -151,8 +157,12 @@
 
 ;; Obligatory timer to save desktop every now and then - crashes do happen
 (defvar fg-desktop-autosave-timer
-	(run-at-time t 600 'desktop-save-in-desktop-dir) ;; 10 min
-	"Repetitive timer calling `desktop-save-in-desktop-dir'.")
+	(run-at-time t 600 ;; 10 min
+		 (lambda ()
+				(setq desktop-file-modtime (nth 5 (file-attributes (desktop-full-file-name))))
+				(desktop-save-in-desktop-dir)))
+	"Repetitive timer calling `desktop-save-in-desktop-dir', suppressing any queries.")
+
 
 ;; Default behavior tweaks / modes
 (fset 'yes-or-no-p 'y-or-n-p) ; use y or n instead of yes or no
