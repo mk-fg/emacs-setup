@@ -323,13 +323,8 @@ automatically re-created as soon as you kill it."
     (kill-buffer minimap-buffer-name)))
 
 (defun minimap-create-window ()
-	(let ((win (selected-window)) frame-init)
-		(when (= 1 (length (frame-list)))
-			(make-frame-command)
-			(setq frame-init t))
-		(select-window
-			(frame-selected-window (next-frame)))
-		(when frame-init (ibuffer) (ibuffer-auto-mode 1)) ;; reset contents/fonts/etc
+	(let ((win (selected-window)))
+		(fg-aux-frame)
 		(set-frame-parameter nil 'desktop-dont-save t)
 		;; Set up the minimap window:
 		;; You should not be able to enter the minimap window.

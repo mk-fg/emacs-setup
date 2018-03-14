@@ -805,6 +805,30 @@ Resulting color offset should be uniformly distributed between min/max shift lim
 ;; (setq fg-color-tweak-debug t)
 ;; (loop for n from 0 to 10 do (fg-color-tweak "#000" n 80))
 
+(defun fg-ibuffer-apply-locals (&optional name)
+	"Apply new locals in \"*Ibuffer*\" (or NAME, if specified) buffer."
+	(setf
+		(buffer-local-value 'ibuffer-filter-groups
+			(get-buffer (or name "*Ibuffer*")))
+		ibuffer-filter-groups-global))
+
+(defun fg-aux-frame ()
+	"Switch to or create aux frame, init it with auto-updating ibuffer
+and return its active (also currently selected) window."
+	(interactive)
+	(let (frame-init)
+		(when (= 1 (length (frame-list)))
+			(make-frame-command)
+			(setq frame-init t))
+		(prog1
+			(select-window
+				(frame-selected-window (next-frame)))
+			(when frame-init
+				(ibuffer nil "*Ibuffer-aux*")
+				(fg-ibuffer-apply-locals "*Ibuffer-aux*")
+				(ibuffer-update nil)
+				(ibuffer-auto-mode 1)))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Indentation descrimination (tab-only) stuff
