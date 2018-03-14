@@ -3,8 +3,11 @@ emacs-setup: my weird emacs configuration
 
 It's a bit unorthodox in a way that it replaces traditional emacs keybindings
 like "C-x ..." and "C-c ..." with more mainstream copy-paste ops, same for the
-rest of weirdish emacs-only conventions
-([obligatory illustration](https://c2.staticflickr.com/6/5012/5538744965_ff1e6f650d_z.jpg)).
+rest of weirdish emacs-only conventions.
+
+![emacs keyboard setup](
+	https://c2.staticflickr.com/6/5012/5538744965_ff1e6f650d_z.jpg
+	"Default emacs keyboard setup in action. Also pictured: typical operator for that.")
 
 Since I started using emacs as an $EDITOR in 2009 and didn't know about any
 modes that make it more mainstream-ish back then (not sure they existed at that
