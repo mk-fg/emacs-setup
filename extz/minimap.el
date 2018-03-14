@@ -69,8 +69,6 @@
 ;;   `prog-mode' (can be changed through `minimap-major-modes').  The
 ;;   minimap window will be automatically created or deleted
 ;;   (see `minimap-recreate-window').
-;; - Possibility to set a minimum width of the minimap window
-;;   (`minimap-minimum-width').
 ;; - Minimap window will be marked so that you should not be able to
 ;;   enter it.
 ;; - Semantic overlays will be automatically updated during editing.
@@ -129,24 +127,6 @@ By default, this is only a different background color."
 	     :inherit (font-lock-function-name-face minimap-font-face)
 	     :height 2.75 :background "gray90")))
   "Face used for types in the semantic overlay.")
-
-(defcustom minimap-width-fraction 0.15
-  "Fraction of width which should be used for minimap sidebar."
-  :type 'number
-  :group 'minimap)
-
-(defcustom minimap-minimum-width 30
-  "Minimum width of minimap in characters (default size).
-Use nil to disable."
-  :type 'number
-  :group 'minimap)
-
-(defcustom minimap-window-location 'left
-  "Location of the minimap window.
-Can be either the symbol `left' or `right'."
-  :type '(choice (const :tag "Left" left)
-		 (const :tag "Right" right))
-  :group 'minimap)
 
 (defcustom minimap-semantic-location 'middle
   "Location of semantic lables.
@@ -294,7 +274,7 @@ automatically re-created as soon as you kill it."
   :type 'boolean
   :group 'minimap)
 
-(defcustom minimap-show-mode-line t
+(defcustom minimap-show-mode-line nil
   "Whether the minimap should have a mode-line."
   :type 'boolean
   :group 'minimap)
