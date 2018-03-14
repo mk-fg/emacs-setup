@@ -79,12 +79,16 @@
   :group 'convenience)
 
 (defface minimap-font-face
-  '((default :family "DejaVu Sans Mono" :height 30))
+  '((default :family "Liberation Sans" :height 30))
   "Face used for text in minimap buffer, notably the font family and height.
 This height should be really small.  You probably want to use a
 TrueType font for this.  After changing this, you should
 recreate the minimap to avoid problems with recentering."
   :group 'minimap)
+
+;; (custom-set-faces
+;; 	'(minimap-font-face
+;; 		((default :family "Liberation Sans" :height 30))))
 
 (defface minimap-highlight-line-face
   '((default :background "yellow" :foreground "yellow"))
@@ -140,7 +144,7 @@ Can be either the symbol `top' or `middle'."
   :type 'string
   :group 'minimap)
 
-(defcustom minimap-update-delay 0.5
+(defcustom minimap-update-delay 1.0
   "Delay in seconds after which sidebar gets updated.
 Setting this to 0 will let the minimap react immediately, but
 this will slow down scrolling."
