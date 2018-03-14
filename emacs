@@ -165,6 +165,8 @@
 				(desktop-save-in-desktop-dir)))
 	"Repetitive timer calling `desktop-save-in-desktop-dir', suppressing any queries.")
 
+(add-hook 'desktop-after-read-hook 'ibuffer)
+
 
 ;; Default behavior tweaks / modes
 (fset 'yes-or-no-p 'y-or-n-p) ; use y or n instead of yes or no
