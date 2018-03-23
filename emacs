@@ -14,10 +14,11 @@
 	(run-hooks 'fg-emacs-exit-hook)
 	(save-buffers-kill-terminal))
 
-;; Removes "buffer has process associated with it" query
+;; Removes "buffer "* temp*" has process associated with it" query
+;; No idea why it pops-up on some boots, can't reproduce without crash/reboots
 ;; See also: process-query-on-exit-flag
-;; (setq kill-buffer-query-functions
-;; 	(delq 'process-kill-buffer-query-function kill-buffer-query-functions))
+(setq kill-buffer-query-functions
+	(delq 'process-kill-buffer-query-function kill-buffer-query-functions))
 
 
 ;; Extend include path
