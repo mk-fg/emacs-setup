@@ -80,6 +80,10 @@
 ; py: list[n]
 ; el: (nth N LIST)
 
+; py: list[2] = 123
+; el: (setcar (nthcdr 2 list) 123)
+; el: (fg-list-set list 2 123)
+
 ; py: list[n:m]
 ; el: (subseq LIST N M)
 
@@ -124,6 +128,9 @@
 
 ; py: len(some_dict)
 ; el: (hash-table-count SOME-DICT)
+
+; py: ast.literal_eval('x')
+; el: (symbol-value (intern "x"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -184,6 +191,11 @@ Based on `describe-function-1'."
 						f)
 					real-function)))
 		(format "%s" real-function)))
+
+(defun fg-advice-remove-all (sym)
+	"Remove all advice functions from symbol SYM."
+	(interactive "Function symbol: ")
+	(advice-mapc (lambda (advice props) (advice-remove sym advice)) sym))
 
 
 
@@ -1065,6 +1077,8 @@ Returns the resulting string."
 				(let ((match (car it)) (body (cdr it)))
 					`(,(if (eq match t) t `(string= ,expr ,match)) ,@body))
 				conds)))
+
+(defun fg-list-set (lst n v) (setcar (nthcdr n lst) v))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
