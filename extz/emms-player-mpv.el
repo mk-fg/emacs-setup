@@ -286,22 +286,22 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 (defun emms-player-mpv-playable-p (track)
 	(memq (emms-track-type track) '(file url streamlist playlist)))
 
-(defun emms-player-mpv-start (track &optional proc)
+(defun emms-player-mpv-start (track)
 	(setq emms-mpv-ev-stopped t)
 	(let
 		((cmd (if (memq (emms-track-get track 'type) '(streamlist playlist)) 'loadlist 'loadfile)))
 		(emms-player-mpv-cmd `(,cmd ,(emms-track-get track 'name) replace))))
 
-(defun emms-player-mpv-stop (&optional proc)
+(defun emms-player-mpv-stop ()
 	(setq emms-mpv-ev-stopped t)
 	(emms-player-mpv-cmd `(stop))
 	(emms-player-stopped))
 
 
-(defun emms-player-mpv-pause (&optional proc)
+(defun emms-player-mpv-pause ()
 	(emms-player-mpv-cmd `(set_property pause t)))
 
-(defun emms-player-mpv-resume (&optional proc)
+(defun emms-player-mpv-resume ()
 	(emms-player-mpv-cmd `(set_property pause ,json-false)))
 
 (defun emms-player-mpv-seek (sec)
