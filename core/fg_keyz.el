@@ -87,16 +87,15 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		;; Stack-buffer hop
 		("C-<return>" fg-stack-buffer)
 
-		;; Jump to often-used ERC buffers with F-keys
+		;; *Messages* on F5
+		("<f5>" ,(iwrapm fg-find-buffer "*Messages*"))
+
+		;; Jump to often-used ERC buffers with the rest of F-keys
 		;; local notification channels
-		("<f5>" ,(iwrapm fg-find-buffer "#bordercamp"))
-		("<S-f5>" ,(iwrapm fg-find-buffer "#snort"))
-		;; im and twitter stuff
-		("<f6>" ,(iwrapm fg-find-buffer "&bitlbee"))
-		("<S-f6>" ,(iwrapm fg-find-buffer "#twitter_bitlbee"))
+		("<f6>" ,(iwrapm fg-find-buffer "#bordercamp"))
+		("<S-f6>" ,(iwrapm fg-find-buffer "#snort"))
 		;; news-bots, docs and similar net-info chans
-		("<f7>" ,(iwrapm fg-find-buffer "#blazer"))
-		("<C-f6>" fg-erc-ddg-define))) ; prints the definition of whatever is selected
+		("<f7>" ,(iwrapm fg-find-buffer "#blazer"))))
 
 
 
