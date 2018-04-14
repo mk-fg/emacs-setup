@@ -19,20 +19,18 @@
 
 ;;;; Player
 
-;;; Use VLC
-;; (require 'emms-player-vlc)
-;; (setq-default
-;; 	emms-player-list
-;; 		'(emms-player-vlc-playlist emms-player-vlc)
-;; 	emms-player-vlc-parameters '("--intf=oldrc")
-;; 	emms-player-vlc-playlist-parameters '("--intf=oldrc"))
-
 (require 'emms-player-mpv) ;; in extz
 (add-to-list 'emms-player-list 'emms-player-mpv)
 (setq-default
 	emms-player-list '(emms-player-mpv)
-	emms-player-mpv-parameters
-		'("--quiet" "--really-quiet" "--force-window=no" "--vo=null"))
+	emms-player-mpv-command-environment
+		'("PULSE_PROP_media.role=music")
+	emms-player-mpv-command-parameters
+		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null"))
+
+;; (setq emms-mpv-ipc-debug t)
+;; (emms-player-mpv-start (emms-playlist-current-selected-track))
+;; (emms-mpv-ipc-stop)
 
 (defun fg-emms-player-status-string ()
 	(if emms-player-playing-p

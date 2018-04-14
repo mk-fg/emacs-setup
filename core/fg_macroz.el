@@ -66,6 +66,8 @@
 ; py: str.upper -> el: upcase
 ; py: str.lower -> el: downcase
 ; py: string.capitalize -> el: capitalize
+; py: int(s) -> el: string-to-number
+; py: str(n) -> el: number-to-string
 
 ;;;; list
 
