@@ -80,7 +80,7 @@ if it refuses to exit cleanly on `emms-mpv-proc-stop'.")
 (defvar emms-mpv-ipc-connect-timer nil
 	"Timer for connection attempts to mpv ipc unix socket.")
 (defvar emms-mpv-ipc-connect-delays
-	'(0.1 0.1 0.1 0.1 0.1 0.1 0.2 0.2 0.3 0.3 0.5 1.0)
+	'(0.1 0.1 0.1 0.1 0.1 0.1 0.2 0.2 0.3 0.3 0.5 1.0 1.0 2.0)
 	"List of delays before initiating socket connection for new mpv process.")
 
 (defvar emms-mpv-ipc-connect-command nil
