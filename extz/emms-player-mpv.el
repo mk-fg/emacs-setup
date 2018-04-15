@@ -435,15 +435,11 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 	(emms-player-stopped))
 
 
-;; XXX: fifo-p called before emms-mpv-ipc
-
 (defun emms-player-mpv-pause ()
-	(emms-player-mpv-cmd
-		(if (emms-mpv-ipc-fifo-p) `(set_property pause t) `(set pause yes))))
+	(emms-player-mpv-cmd `(set pause yes)))
 
 (defun emms-player-mpv-resume ()
-	(emms-player-mpv-cmd
-		(if (emms-mpv-ipc-fifo-p) `(set_property pause ,json-false) `(set pause no))))
+	(emms-player-mpv-cmd `(set pause no)))
 
 (defun emms-player-mpv-seek (sec)
 	(emms-player-mpv-cmd `(seek ,sec relative)))
