@@ -23,9 +23,9 @@
 (add-to-list 'emms-player-list 'emms-player-mpv)
 (setq-default
 	emms-player-list '(emms-player-mpv)
-	emms-player-mpv-command-environment
+	emms-player-mpv-environment
 		'("PULSE_PROP_media.role=music")
-	emms-player-mpv-command-parameters
+	emms-player-mpv-parameters
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null"))
 
 ;; (setq emms-mpv-ipc-debug t)

@@ -1,9 +1,6 @@
 ;;
-;; EMMS bindings for mpv player, using long-running mpv instance and JSON IPC interface.
-;;
-;; Only restarts mpv instance if it crashed (shouldn't happen),
-;;  allows querying stuff like file duration directly from mpv,
-;;  as well as handling any other events from it.
+;; EMMS bindings for mpv player, using long-running mpv instance and JSON IPC interface
+;; or fallback to oneshot mpv processes with --input-file for older versions (<0.7.0).
 ;;
 
 (require 'emms)
@@ -19,24 +16,24 @@
 	:type '(cons symbol alist)
 	:group 'emms-player-mpv)
 
-(defcustom emms-player-mpv-command "mpv"
+(defcustom emms-player-mpv-command-name "mpv"
 	"mpv binary to use. Can be absolute path or just binary name."
 	:type 'file
 	:group 'emms-player-mpv)
 
-(defcustom emms-player-mpv-command-parameters
+(defcustom emms-player-mpv-parameters
 	'("--quiet" "--really-quiet" "--no-audio-display")
-	"Extra command-line arguments for started mpv process.
+	"Extra command-line arguments for started mpv process(es).
 Either a list of strings or function returning such list.
 Extra arguments --idle and --input-file/--input-ipc-server
 are added automatically, depending on mpv version.
 Note that unless --no-config option is specified here,
 mpv will also use options from its configuration files.
-See `emms-player-mpv-binary' for mpv binary path."
+For mpv binary path, see `emms-player-mpv-command-name'."
 	:type '(choice (repeat :tag "List of mpv arguments" string) function)
 	:group 'emms-player-mpv)
 
-(defcustom emms-player-mpv-command-environment ()
+(defcustom emms-player-mpv-environment ()
 	"List of extra environment variables (\"VAR=value\" strings) to pass on to mpv process.
 These are added on top of `process-environment' by default.
 Adding nil as an element to this list will discard emacs
@@ -60,7 +57,7 @@ support for various feedback and metadata options from mpv."
 
 (defcustom emms-player-mpv-ipc-socket
 	(expand-file-name (locate-user-emacs-file "emms-mpv-ipc.sock"))
-	"Unix IPC socket or FIFO to use with of of mpv --input-* options,
+	"Unix IPC socket or FIFO to use with mpv --input-* options,
 depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	:type 'file
 	:group 'emms-player-mpv)
@@ -142,7 +139,7 @@ Strips whitespace from start/end of TPL-OR-MSG and strings in TPL-VALUES."
 Runs `emms-mpv-ipc-detect' to init `emms-player-mpv-ipc-method' if necessary."
 	(unless emms-player-mpv-ipc-method
 		(setq emms-player-mpv-ipc-method
-			(emms-mpv-ipc-detect emms-player-mpv-command)))
+			(emms-mpv-ipc-detect emms-player-mpv-command-name)))
 	(eq emms-player-mpv-ipc-method 'file))
 
 (defun emms-mpv-ipc-detect (cmd)
@@ -197,14 +194,14 @@ MEDIA-ARGS are used instead of --idle, if specified."
 	(when (emms-mpv-ipc-fifo-p)
 		(emms-mpv-proc-init-fifo emms-player-mpv-ipc-socket))
 	(let*
-		((argv emms-player-mpv-command-parameters)
+		((argv emms-player-mpv-parameters)
 			(argv (append
-				(list emms-player-mpv-command)
+				(list emms-player-mpv-command-name)
 				(if (functionp argv) (argv) argv)
 				(list (format "--input-%s=%s"
 					emms-player-mpv-ipc-method emms-player-mpv-ipc-socket))
 				(or media-args '("--idle"))))
-			(env emms-player-mpv-command-environment)
+			(env emms-player-mpv-environment)
 			(process-environment (append
 				(unless (seq-some 'not env) process-environment) (seq-filter 'identity env))))
 		(emms-mpv-debug-msg "emms-mpv-proc: start %s" argv)
