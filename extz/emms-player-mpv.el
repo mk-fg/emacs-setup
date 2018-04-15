@@ -9,9 +9,6 @@
 (require 'emms)
 (require 'json)
 
-;; XXX: replace s.el/dash.el with vanilla counterparts, check/require cl
-;; XXX: serialize and send --input-file commands, create fifo for it
-
 
 (defcustom emms-player-mpv
 	(emms-player
@@ -50,7 +47,7 @@ Adding nil as an element to this list will discard emacs
 (defcustom emms-player-mpv-ipc-method nil
 	"Switch for which IPC method to use with mpv.
 Possible symbols: detect, ipc-server, unix-socket, file.
-Defaults to nil value, which will cause `emms-mpv-ipc-init-detect'
+Defaults to nil value, which will cause `emms-mpv-ipc-detect'
 to pick one based on mpv --version output.
 Using JSON-IPC variants (ipc-server and unix-socket) enables
 support for various feedback and metadata options from mpv."
@@ -70,11 +67,11 @@ depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 
 
 (defvar emms-mpv-proc nil
-	"Long-running mpv --idle process controlled over --input-ipc-server/--input-file sockets.")
+	"Running mpv process, controlled over --input-ipc-server/--input-file sockets.")
 
 (defvar emms-mpv-proc-kill-delay 5
 	"Delay until SIGKILL gets sent to `emms-mpv-proc',
-if it refuses to exit cleanly on `emms-mpv-ipc-stop'.")
+if it refuses to exit cleanly on `emms-mpv-proc-stop'.")
 
 
 (defvar emms-mpv-ipc-proc nil
@@ -90,7 +87,7 @@ if it refuses to exit cleanly on `emms-mpv-ipc-stop'.")
 	"List of delays before initiating socket connection for new mpv process.")
 
 (defvar emms-mpv-ipc-connect-command nil
-	"json command for `emms-mpv-ipc-sentinel' to run as soon as it connects to mpv.
+	"JSON command for `emms-mpv-ipc-sentinel' to run as soon as it connects to mpv.
 I.e. last command that either initiated connection or was used while connecting to mpv.
 Set by `emms-player-mpv-start' and such, cleared once it gets sent by `emms-mpv-ipc-sentinel'.")
 
@@ -110,11 +107,14 @@ E.g. '(observe_property :duration duration) -> '(observe_property 1 duration).
 Existing IDs should never be changed at runtime without mpv restart.")
 
 
-;; XXX: add user-defined events/requests/handlers in this ns
+;; XXX: add user-defined events/requests/handlers
 (defvar emms-mpv-ev-stopped t
 	"Flag that is set when `emms-player-stopped' event is not supposed to be emitted.
 This is to avoid confusing emms logic when mpv emits stop-start events on track changes.")
 
+
+
+;; ----- helpers
 
 (defvar emms-mpv-ipc-debug nil
 	"Enable to print sent/received json lines and events
@@ -137,14 +137,102 @@ Strips whitespace from start/end of TPL-OR-MSG and strings in TPL-VALUES."
 		(apply 'message tpl-or-msg tpl-values)))
 
 
-;; ----- mpv process/connection handlers
-
 (defun emms-mpv-ipc-fifo-p ()
+	"Returns non-nil if --input-file fifo should be used.\
+Runs `emms-mpv-ipc-detect' to init `emms-player-mpv-ipc-method' if necessary."
+	(unless emms-player-mpv-ipc-method
+		(setq emms-player-mpv-ipc-method
+			(emms-mpv-ipc-detect emms-player-mpv-command)))
 	(eq emms-player-mpv-ipc-method 'file))
 
+(defun emms-mpv-ipc-detect (cmd)
+	"Run mpv --version and return symbol for best IPC method supported.
+CMD should be either name of mpv binary to use or full path to it.
+Return values correspond to `emms-player-mpv-ipc-method' options.
+Error is signaled if mpv binary fails to run."
+	(with-temp-buffer
+		(let ((exit-code (call-process cmd nil '(t t) nil "--version")))
+			(unless (zerop exit-code)
+				(insert (format "----- process exited with code %d -----" exit-code))
+				(error (format "Failed to run mpv binary [%s]:\n%s" cmd (buffer-string))))
+			(goto-char (point-min))
+			(pcase
+				(if (re-search-forward "^mpv\\s-+\\(\\([0-9]+\\.?\\)+\\)" nil t 1)
+					(mapconcat (lambda (n) (format "%03d" n))
+						(seq-map 'string-to-number
+							(split-string (match-string-no-properties 1) "\\." t)) ".")
+					"000.000.000")
+				((pred (string> "000.006.999")) 'file)
+				((pred (string> "000.016.999")) 'unix-socket)
+				(- 'ipc-server)))))
+
+
+;; ----- mpv process
+
+(defun emms-mpv-proc-init-fifo (path &optional mode)
+	"Create named pipe (fifo) socket for mpv --input-file PATH, if not exists already.
+Optional MODE should be 12-bit octal integer, e.g. #o600 (safe default).
+Signals error if mkfifo exits with non-zero code."
+	(let ((attrs (file-attributes path)))
+		(when ; remove non-fifo at the same path
+			(and attrs (not (string-prefix-p "p" (nth 8 attrs))))
+			(delete-file path) (setq attrs nil))
+		(unless attrs
+			(unless
+				(zerop (call-process "mkfifo" nil nil nil
+					(format "--mode=%o" (or mode #o600)) path))
+				(error (format "Failed to run mkfifo for mpv --input-file path: %s" path))))))
+
+(defun emms-mpv-proc-sentinel (proc ev)
+	(emms-mpv-debug-msg "emms-mpv-proc: [%s] %s" proc ev)
+	(when (and (emms-mpv-ipc-fifo-p) (eq (process-status proc) 'run))
+		(setq emms-mpv-ev-stopped nil))
+	(when (memq (process-status proc) '(exit signal))
+		(unless emms-mpv-ev-stopped (emms-player-stopped))))
+
+(defun emms-mpv-proc-init (&rest media-args)
+	"initialize new mpv process as `emms-mpv-proc'.
+MEDIA-ARGS are used instead of --idle, if specified."
+	(emms-mpv-proc-stop)
+	(when (emms-mpv-ipc-fifo-p)
+		(emms-mpv-proc-init-fifo emms-player-mpv-ipc-socket))
+	(let*
+		((argv emms-player-mpv-command-parameters)
+			(argv (append
+				(list emms-player-mpv-command)
+				(if (functionp argv) (argv) argv)
+				(list (format "--input-%s=%s"
+					emms-player-mpv-ipc-method emms-player-mpv-ipc-socket))
+				(or media-args '("--idle"))))
+			(env emms-player-mpv-command-environment)
+			(process-environment (append
+				(unless (seq-some 'not env) process-environment) (seq-filter 'identity env))))
+		(emms-mpv-debug-msg "emms-mpv-proc: start %s" argv)
+		(setq emms-mpv-proc
+			(make-process :name "emms-mpv"
+				:buffer nil :command argv :noquery t :sentinel 'emms-mpv-proc-sentinel))))
+
+(defun emms-mpv-proc-stop ()
+	"Stop running `emms-mpv-proc' instance via SIGINT, if any.
+`delete-process' (SIGKILL) timer is started if `emms-mpv-proc-kill-delay' is non-nil."
+	(when emms-mpv-proc
+		(let ((proc emms-mpv-proc))
+			(setq
+				emms-mpv-proc nil
+				emms-mpv-ev-stopped t)
+			(if (not (process-live-p proc)) (delete-process proc)
+				(interrupt-process proc)
+				(when emms-mpv-proc-kill-delay
+					(run-at-time
+						emms-mpv-proc-kill-delay nil
+						(lambda (proc) (delete-process proc)) proc))))))
+
+
+;; ----- IPC socket/fifo
+
 (defun emms-mpv-ipc-sentinel (proc ev)
-	(emms-mpv-debug-msg "emms-mpv-ipc-sentinel: [%s] %s" proc ev)
-	(when (s-starts-with? "open" ev)
+	(emms-mpv-debug-msg "emms-mpv-ipc: [%s] %s" proc ev)
+	(when (memq (process-status proc) '(open run))
 		(emms-mpv-ipc-req-send
 			'(observe_property :duration duration) nil proc)
 		(when emms-mpv-ipc-connect-command
@@ -193,13 +281,14 @@ Sets `emms-mpv-ipc-proc' value to resulting process on success."
 	(when (and (not emms-mpv-ipc-proc) delays)
 		(run-at-time (car delays) nil 'emms-mpv-ipc-connect (cdr delays))))
 
-(defun emms-mpv-ipc-open-fifo ()
+(defun emms-mpv-ipc-connect-fifo ()
 	"Set `emms-mpv-ipc-proc' to process wrapper for
 writing to a named pipe (fifo) file/node or signal error."
 	(setq emms-mpv-ipc-proc
 		(start-process-shell-command "emms-mpv-input-file" nil
 			(format "cat > '%s'"
 				(replace-regexp-in-string "'" "'\"'\"'" emms-player-mpv-ipc-socket t t))))
+	(set-process-query-on-exit-flag emms-mpv-ipc-proc nil)
 	(unless emms-mpv-ipc-proc (error (format
 		"Failed to start cat-pipe to fifo: %s" emms-player-mpv-ipc-socket)))
 	(when emms-mpv-ipc-connect-command
@@ -207,110 +296,35 @@ writing to a named pipe (fifo) file/node or signal error."
 			(setq emms-mpv-ipc-connect-command nil)
 			(emms-mpv-ipc-fifo-cmd cmd emms-mpv-ipc-proc))))
 
-(defun emms-mpv-ipc-init-detect (cmd)
-	"Run mpv --version and return symbol for best IPC method supported.
-CMD should be either name of mpv binary to use or full path to it.
-Return values correspond to `emms-player-mpv-ipc-method' options.
-Error is signaled if mpv binary fails to run."
-	(with-temp-buffer
-		(let ((exit-code (call-process cmd nil '(t t) nil "--version")))
-			(unless (zerop exit-code)
-				(insert (format "----- process exited with code %d -----" exit-code))
-				(error (format "Failed to run mpv binary [%s]:\n%s" cmd (buffer-string))))
-			(goto-char (point-min))
-			(pcase
-				(if (re-search-forward "^mpv\\s-+\\(\\([0-9]+\\.?\\)+\\)" nil t 1)
-					(mapconcat (lambda (n) (format "%03d" n))
-						(seq-map 'string-to-number
-							(split-string (match-string-no-properties 1) "\\." t)) ".")
-					"000.000.000")
-				((pred (string> "000.006.999")) 'file)
-				((pred (string> "000.016.999")) 'unix-socket)
-				(- 'ipc-server)))))
-
-(defun emms-mpv-ipc-init-fifo (path &optional mode)
-	"Create named pipe (fifo) socket for mpv --input-file PATH, if not exists already.
-Optional MODE should be 12-bit octal integer, e.g. #o600 (safe default).
-Signals error if mkfifo exits with non-zero code."
-	(let ((attrs (file-attributes path)))
-		(when (and attrs (not (string-prefix-p "p" (nth 8 attrs)))) ; node type check
-			(delete-file path)
-			(setq attrs nil))
-		(unless attrs
-			(unless
-				(zerop (call-process "mkfifo" nil nil nil
-					(format "--mode=%o" (or mode #o600)) path))
-				(error (format "Failed to run mkfifo for mpv --input-file path: %s" path))))))
-
-(defun emms-mpv-ipc-init-player ()
-	"initialize new mpv process and associated variables."
-	(setq emms-mpv-proc
-		(let*
-			((cmd emms-player-mpv-command)
-				(cmd-args emms-player-mpv-command-parameters)
-				(cmd-env emms-player-mpv-command-environment)
-				(process-environment (append
-					(unless (seq-some 'not cmd-env) process-environment)
-					(seq-filter 'identity cmd-env))))
-			(unless emms-player-mpv-ipc-method
-				(setq emms-player-mpv-ipc-method (emms-mpv-ipc-init-detect cmd)))
-			(when (emms-mpv-ipc-fifo-p)
-				(emms-mpv-ipc-init-fifo emms-player-mpv-ipc-socket))
-			(let
-				((argv (append (list cmd)
-					(if (functionp cmd-args) (cmd-args) cmd-args)
-					(list "--idle" (format "--input-%s=%s"
-						emms-player-mpv-ipc-method emms-player-mpv-ipc-socket)))))
-				(emms-mpv-debug-msg "emms-mpv-ipc-start: %s %s" cmd argv)
-				(apply 'start-process "emms-mpv" nil cmd argv))))
-	(set-process-query-on-exit-flag emms-mpv-proc nil))
-
-(defun emms-mpv-ipc-init-socket ()
-	"initialize new mpv ipc socket/file process and associated variables."
-	(when emms-mpv-ipc-connect-timer (cancel-timer emms-mpv-ipc-connect-timer))
-	(when emms-mpv-ipc-proc (delete-process emms-mpv-ipc-proc))
-	(with-current-buffer (get-buffer-create emms-mpv-ipc-buffer) (erase-buffer))
-	(setq
-		emms-mpv-ipc-proc nil
-		emms-mpv-ipc-connect-timer nil
-		emms-mpv-ipc-req-id 1
-		emms-mpv-ipc-req-table nil)
-	(if (emms-mpv-ipc-fifo-p)
-		(emms-mpv-ipc-open-fifo)
-		(setq emms-mpv-ipc-connect-timer
-			(run-at-time (car emms-mpv-ipc-connect-delays)
-				nil 'emms-mpv-ipc-connect (cdr emms-mpv-ipc-connect-delays)))))
+(defun emms-mpv-ipc-init ()
+	"initialize new mpv ipc socket/file process and associated state."
+	(when emms-mpv-ipc-proc
+		(delete-process emms-mpv-ipc-proc)
+		(setq emms-mpv-ipc-proc nil))
+	(if (emms-mpv-ipc-fifo-p) (emms-mpv-ipc-connect-fifo)
+		(when emms-mpv-ipc-connect-timer (cancel-timer emms-mpv-ipc-connect-timer))
+		(with-current-buffer (get-buffer-create emms-mpv-ipc-buffer) (erase-buffer))
+		(setq
+			emms-mpv-ipc-req-id 1
+			emms-mpv-ipc-req-table nil
+			emms-mpv-ipc-connect-timer nil
+			emms-mpv-ipc-connect-timer
+				(run-at-time (car emms-mpv-ipc-connect-delays)
+					nil 'emms-mpv-ipc-connect (cdr emms-mpv-ipc-connect-delays)))))
 
 (defun emms-mpv-ipc ()
 	"Returns live+open ipc socket process or nil, (re-)starting mpv/connection if necessary.
-Will always return nil when starting async process/connection,
-and any follow-up command should be stored to `emms-mpv-ipc-connect-command' in this case."
-	(unless (process-live-p emms-mpv-proc) (emms-mpv-ipc-init-player))
-	(unless (process-live-p emms-mpv-ipc-proc) (emms-mpv-ipc-init-socket))
+Can return nil when starting async process/connection, and any follow-up
+command should be stored to `emms-mpv-ipc-connect-command' in this case."
+	(unless (process-live-p emms-mpv-proc) (emms-mpv-proc-init))
+	(unless (process-live-p emms-mpv-ipc-proc) (emms-mpv-ipc-init))
 	(and
 		emms-mpv-ipc-proc
 		(memq (process-status emms-mpv-ipc-proc) '(open run))
 		emms-mpv-ipc-proc))
 
-;; Not used anywhere - player process/connection hang around forever
-(defun emms-mpv-ipc-stop ()
-	"Stop running `emms-mpv-proc' instance via SIGINT,
-which should also close `emms-mpv-ipc-proc' socket.
-`delete-process' (SIGKILL) timer is started if `emms-mpv-proc-kill-delay' is non-nil."
-	(when emms-mpv-proc
-		(let ((proc emms-mpv-proc))
-			(setq
-				emms-mpv-proc nil
-				emms-mpv-ev-stopped t)
-			(when (process-live-p proc)
-				(interrupt-process proc)
-				(when emms-mpv-proc-kill-delay
-					(run-at-time
-						emms-mpv-proc-kill-delay nil
-						(lambda (proc) (delete-process proc)) proc))))))
 
-
-;; ----- IPC protocol handling
+;; ----- IPC protocol
 
 (defun emms-mpv-ipc-id-subst (cmd)
 	"Return CMD with keyword symbols replaces according to `emms-mpv-ipc-ids'.
@@ -359,7 +373,7 @@ PROC can be specified to avoid `emms-mpv-ipc' call (e.g. from sentinel/filter fu
 		(when handler (funcall handler data err))))
 
 (defun emms-mpv-ipc-req-error-printer (data err)
-	(when err (message "emms-mpv-ipc-error: %s" (s-trim err))))
+	(when err (message "emms-mpv-ipc-error: %s" err)))
 
 (defun emms-mpv-ipc-recv (json)
 	"Handler for all JSON lines from mpv process.
@@ -425,9 +439,15 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 (defun emms-player-mpv-start (track)
 	(setq emms-mpv-ev-stopped t)
 	(let
-		((cmd (if (memq (emms-track-get track 'type) '(streamlist playlist)) 'loadlist 'loadfile)))
-		(emms-player-mpv-cmd `(,cmd ,(emms-track-get track 'name) replace)))
-	(when (emms-mpv-ipc-fifo-p) (emms-player-started emms-player-mpv)))
+		((track-name (emms-track-get track 'name))
+			(track-is-playlist (memq (emms-track-get track 'type) '(streamlist playlist))))
+		(if (emms-mpv-ipc-fifo-p)
+			(progn
+				(emms-mpv-proc-init (if track-is-playlist "--playlist" "--") track-name)
+				(emms-player-started emms-player-mpv))
+			(let
+				((cmd (if track-is-playlist 'loadlist 'loadfile)))
+				(emms-player-mpv-cmd `(,cmd ,track-name replace))))))
 
 (defun emms-player-mpv-stop ()
 	(setq emms-mpv-ev-stopped t)
