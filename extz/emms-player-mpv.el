@@ -1,7 +1,62 @@
+;;; emms-player-mpv.el --- mpv support for EMMS
 ;;
-;; EMMS bindings for mpv player, using long-running mpv instance and JSON IPC interface
-;; or fallback to oneshot mpv processes with --input-file for older versions (<0.7.0).
+;; Copyright (C) 2018 Free Software Foundation, Inc.
+
+;; Authors: Mike Kazantsev <mk.fraggod@gmail.com>
+
+;; This file is part of EMMS.
+
+;; EMMS is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License
+;; as published by the Free Software Foundation; either version 3
+;; of the License, or (at your option) any later version.
+
+;; EMMS is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with EMMS; if not, write to the Free Software Foundation,
+;; Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+
+;;; Commentary:
+
 ;;
+;; This code provides EMMS backend for using mpv player.
+;;
+;; It works in one of two modes, depending on `emms-player-mpv-ipc-method'
+;; customizable value or installed mpv version:
+;;
+;;  - Using long-running mpv instance and JSON IPC interface to switch tracks
+;;    and receive player feedback/metadata - for mpv 0.7.0 2014-10-16 and later.
+;;
+;;  - Starting new mpv instance for each track, using its exit
+;;    as "next track" signal and --input-file interface for pause/seek.
+;;    Used as a fallback for any older mpv versions (supported in all of them).
+;;
+;; In default configuration, mpv will read its configuration files
+;; (see its manpage for locations), and can display window for
+;; video, subtitles, album-art or audio visualization.
+;;
+;; Useful `emms-player-mpv-parameters' tweaks:
+;;
+;;  - Ignore config file(s): (add-to-list 'emms-player-mpv-parameters "--no-config")
+;;  - Disable vo window: (add-to-list 'emms-player-mpv-parameters "--vo=null")
+;;  - Show simple cqt visualizer window:
+;;      (add-to-list 'emms-player-mpv-parameters
+;;        "--lavfi-complex=[aid1]asplit[ao][a]; [a]showcqt[vo]")
+;;
+;; See "M-x customize-group emms-player-mpv" and mpv manpage for more options.
+;;
+;; See `emms-mpv-event-connect-hook' and `emms-mpv-event-functions',
+;; as well as `emms-mpv-ipc-req-send' for handling more mpv events,
+;; processing more playback info and metadata from it, as well as extending
+;; control over its vast functionality.
+;;
+
+;;; Code:
+
 
 (require 'emms)
 (require 'json)
@@ -214,7 +269,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 		((argv emms-player-mpv-parameters)
 			(argv (append
 				(list emms-player-mpv-command-name)
-				(if (functionp argv) (argv) argv)
+				(if (functionp argv) (funcall argv) argv)
 				(list (format "--input-%s=%s"
 					emms-player-mpv-ipc-method emms-player-mpv-ipc-socket))
 				(or media-args '("--idle"))))
@@ -318,7 +373,7 @@ writing to a named pipe (fifo) file/node or signal error."
 		(when emms-mpv-ipc-connect-timer (cancel-timer emms-mpv-ipc-connect-timer))
 		(with-current-buffer (get-buffer-create emms-mpv-ipc-buffer) (erase-buffer))
 		(setq
-			emms-mpv-ipc-req-id 1
+			emms-mpv-ipc-id 1
 			emms-mpv-ipc-req-table nil
 			emms-mpv-ipc-connect-timer nil
 			emms-mpv-ipc-connect-timer
@@ -331,19 +386,19 @@ writing to a named pipe (fifo) file/node or signal error."
 		(delete-process emms-mpv-ipc-proc)
 		(setq emms-mpv-ipc-proc nil)))
 
-(cl-defun emms-mpv-ipc ()
+(defun emms-mpv-ipc ()
 	"Returns open ipc socket/fifo process or nil, (re-)starting mpv/connection if necessary.
 Will return nil when starting async process/connection, and any follow-up
 command should be stored to `emms-mpv-ipc-connect-command' in this case."
-	(unless (process-live-p emms-mpv-proc)
-		 ;; Don't start idle processes for fifo - just ignore ipc requests
-		(when (emms-mpv-ipc-fifo-p) (cl-return-from emms-mpv-ipc))
-		(emms-mpv-proc-init))
-	(unless (process-live-p emms-mpv-ipc-proc) (emms-mpv-ipc-init))
-	(and
-		emms-mpv-ipc-proc
-		(memq (process-status emms-mpv-ipc-proc) '(open run))
-		emms-mpv-ipc-proc))
+	(unless
+		;; Don't start idle processes for fifo - just ignore all ipc requests there
+		(and (not (process-live-p emms-mpv-proc)) (emms-mpv-ipc-fifo-p))
+		(unless (process-live-p emms-mpv-proc) (emms-mpv-proc-init))
+		(unless (process-live-p emms-mpv-ipc-proc) (emms-mpv-ipc-init))
+		(and
+			emms-mpv-ipc-proc
+			(memq (process-status emms-mpv-ipc-proc) '(open run))
+			emms-mpv-ipc-proc)))
 
 
 ;; ----- IPC protocol
@@ -507,3 +562,4 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 
 
 (provide 'emms-player-mpv)
+;;; emms-player-mpv.el ends here
