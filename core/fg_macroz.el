@@ -59,7 +59,7 @@
 ; py:
 ;   string.replace(s, old, new[, maxreplace])
 ; el:
-;   (replace-regexp-in-string OLD-RE NEW-RE S)
+;   (replace-regexp-in-string OLD-RE NEW-RE S t t)
 ;   (fg-string-replace-pairs S (OLD-RE NEW-RE)...)
 ;   https://www.emacswiki.org/emacs/RegularExpression
 
@@ -995,7 +995,7 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 	"Replace regex-replacement pairs in string."
 	(mapc
 		(lambda (arg)
-			(setq string (replace-regexp-in-string (car arg) (cadr arg) string)))
+			(setq string (replace-regexp-in-string (car arg) (cadr arg) string t t)))
 		pairs)
 	string)
 
@@ -1052,14 +1052,14 @@ Returns the resulting string."
 			(set 'regexp (cons (format "\\(%s\\)+$" frags) regexp)))
 		(when (memq from '(both l left))
 			(set 'regexp (cons (format "^\\(%s\\)+" frags) regexp)))
-		(replace-regexp-in-string (apply 'fg-string-join "\\|" regexp) "" string)))
+		(replace-regexp-in-string (apply 'fg-string-join "\\|" regexp) "" string t t)))
 
 (defun* fg-string-strip-chars (string chars &key (from 'both) &allow-other-keys)
 	(apply 'fg-string-strip string :from from (mapcar 'char-to-string "asddsa")))
 
 (defun fg-string-strip-whitespace (string)
 	"Remove whitespace characters from STRING margins, returns the resulting string."
-	(replace-regexp-in-string "\\(^[[:space:]\n]+\\|[[:space:]\n]+$\\)" "" string))
+	(replace-regexp-in-string "\\(^[[:space:]\n]+\\|[[:space:]\n]+$\\)" "" string t t))
 
 (defadvice wildcard-to-regexp (around fg-wildcard-to-regexp activate)
 	"Make `wildcard-to-regexp' not fail if square brackets are present in the filename."
