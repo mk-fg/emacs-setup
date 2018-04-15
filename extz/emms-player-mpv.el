@@ -88,44 +88,48 @@ if it refuses to exit cleanly on `emms-mpv-proc-stop'.")
 I.e. last command that either initiated connection or was used while connecting to mpv.
 Set by `emms-player-mpv-start' and such, cleared once it gets sent by `emms-mpv-ipc-sentinel'.")
 
-(defvar emms-mpv-ipc-req-id 1
-	"Auto-incremented request_id value sent in JSON requests.
-Wraps-around upon reaching `emms-mpv-ipc-req-id'-max automatically (unlikely to ever happen).")
-(defvar emms-mpv-ipc-req-id-max (expt 2 30)
-	"Max value for emms-mpv-ipc-req-id to wrap around after.
+(defvar emms-mpv-ipc-id 1
+	"Auto-incremented value sent in JSON requests for request_id and observe_property id's.
+Use `emms-mpv-ipc-id-get' to get a new unique id, not this value directly.
+Wraps-around upon reaching `emms-mpv-ipc-id-max' automatically (unlikely to ever happen).")
+
+(defvar emms-mpv-ipc-id-max (expt 2 30)
+	"Max value for `emms-mpv-ipc-id' to wrap around after.
 Should be fine with both mpv and emacs, and probably never reached anyway.")
 
 (defvar emms-mpv-ipc-req-table nil
 	"Auto-initialized hash table of outstanding API req_ids to their handler funcs.")
 
-(defvar emms-mpv-ipc-ids '(:duration 1)
-	"plist of ID integers assigned to keyword symbols, which get auto-replaced in requests.
-E.g. '(observe_property :duration duration) -> '(observe_property 1 duration).
-Existing IDs should never be changed at runtime without mpv restart.")
 
+(defvar emms-mpv-event-connect-hook nil
+	"Normal hook run right after establishing new JSON IPC
+connection to mpv instance and before `emms-mpv-ipc-connect-command'  if any.
+Best place to send any observe_property, request_log_messages, enable_event commands.
+See also `emms-mpv-event-functions'.")
 
-;; XXX: add user-defined events/requests/handlers
-(defvar emms-mpv-ev-stopped t
-	"Flag that is set when `emms-player-stopped' event is not supposed to be emitted.
-This is to avoid confusing emms logic when mpv emits stop-start events on track changes.")
+(defvar emms-mpv-event-functions nil
+	"List of functions to call for each event emitted from JSON IPC.
+One argument is passed to each function - JSON line,
+as sent by mpv and decoded by `json-read-from-string'.
+See also `emms-mpv-event-connect-hook'.")
 
 
 
 ;; ----- helpers
 
-(defvar emms-mpv-ipc-debug nil
-	"Enable to print sent/received json lines and events
-to *Messages* buffer using `emms-mpv-debug-msg'.")
+(defvar emms-mpv-debug nil
+	"Enable to print sent/received JSON lines and process
+start/stop events to *Messages* buffer using `emms-mpv-debug-msg'.")
 
 (defun emms-mpv-debug-trim (s)
 	(if (stringp s)
 		(replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" s t t) s))
 
 (defun emms-mpv-debug-msg (tpl-or-msg &rest tpl-values)
-	"Print debug message to *Messages* if `emms-mpv-ipc-debug' is non-nil.
+	"Print debug message to *Messages* if `emms-mpv-debug' is non-nil.
 Message is only formatted if TPL-VALUES is non-empty.
 Strips whitespace from start/end of TPL-OR-MSG and strings in TPL-VALUES."
-	(when emms-mpv-ipc-debug
+	(when emms-mpv-debug
 		(setq
 			tpl-or-msg (emms-mpv-debug-trim tpl-or-msg)
 			tpl-values (seq-map 'emms-mpv-debug-trim tpl-values))
@@ -166,6 +170,18 @@ Error is signaled if mpv binary fails to run."
 
 ;; ----- mpv process
 
+(defun emms-mpv-proc-stopped-p (&optional proc)
+	"Return whether playback in PROC or `emms-mpv-proc' is stopped,
+and no extra calls to `emms-player-stopped' should be made.
+This is to avoid confusing emms logic when mpv emits stop-start events on track changes."
+	(let ((proc (or proc emms-mpv-proc)))
+		(if proc (process-get proc 'mpv-stopped) t)))
+
+(defun emms-mpv-proc-stopped (state &optional proc)
+	"Set process mpv-stopped state value for `emms-mpv-proc-stopped-p'."
+	(let ((proc (or proc emms-mpv-proc)))
+		(when proc (process-put proc 'mpv-stopped state))))
+
 (defun emms-mpv-proc-init-fifo (path &optional mode)
 	"Create named pipe (fifo) socket for mpv --input-file PATH, if not exists already.
 Optional MODE should be 12-bit octal integer, e.g. #o600 (safe default).
@@ -181,11 +197,12 @@ Signals error if mkfifo exits with non-zero code."
 				(error (format "Failed to run mkfifo for mpv --input-file path: %s" path))))))
 
 (defun emms-mpv-proc-sentinel (proc ev)
-	(emms-mpv-debug-msg "emms-mpv-proc: [%s] %s" proc ev)
-	(when (and (emms-mpv-ipc-fifo-p) (eq (process-status proc) 'run))
-		(setq emms-mpv-ev-stopped nil))
-	(when (memq (process-status proc) '(exit signal))
-		(unless emms-mpv-ev-stopped (emms-player-stopped))))
+	(let
+		((status (process-status proc))
+			(stopped (emms-mpv-proc-stopped-p proc)))
+		(emms-mpv-debug-msg
+			"emms-mpv-proc: [%s] %s (status=%s, stopped=%s)" proc ev status stopped)
+		(when (and (memq status '(exit signal)) (not stopped)) (emms-player-stopped))))
 
 (defun emms-mpv-proc-init (&rest media-args)
 	"initialize new mpv process as `emms-mpv-proc'.
@@ -204,20 +221,20 @@ MEDIA-ARGS are used instead of --idle, if specified."
 			(env emms-player-mpv-environment)
 			(process-environment (append
 				(unless (seq-some 'not env) process-environment) (seq-filter 'identity env))))
-		(emms-mpv-debug-msg "emms-mpv-proc: start %s" argv)
 		(setq emms-mpv-proc
 			(make-process :name "emms-mpv"
-				:buffer nil :command argv :noquery t :sentinel 'emms-mpv-proc-sentinel))))
+				:buffer nil :command argv :noquery t :sentinel 'emms-mpv-proc-sentinel))
+		(emms-mpv-debug-msg "emms-mpv-proc: [%s] start %s" emms-mpv-proc argv)))
 
 (defun emms-mpv-proc-stop ()
 	"Stop running `emms-mpv-proc' instance via SIGINT, if any.
 `delete-process' (SIGKILL) timer is started if `emms-mpv-proc-kill-delay' is non-nil."
 	(when emms-mpv-proc
 		(let ((proc emms-mpv-proc))
-			(setq
-				emms-mpv-proc nil
-				emms-mpv-ev-stopped t)
+			(emms-mpv-debug-msg "emms-mpv-proc: [%s] stop" proc)
+			(setq emms-mpv-proc nil)
 			(if (not (process-live-p proc)) (delete-process proc)
+				(emms-mpv-proc-stopped t proc)
 				(interrupt-process proc)
 				(when emms-mpv-proc-kill-delay
 					(run-at-time
@@ -230,8 +247,8 @@ MEDIA-ARGS are used instead of --idle, if specified."
 (defun emms-mpv-ipc-sentinel (proc ev)
 	(emms-mpv-debug-msg "emms-mpv-ipc: [%s] %s" proc ev)
 	(when (memq (process-status proc) '(open run))
-		(emms-mpv-ipc-req-send
-			'(observe_property :duration duration) nil proc)
+		(emms-mpv-event-connect)
+		(run-hooks emms-mpv-event-connect-hook)
 		(when emms-mpv-ipc-connect-command
 			(let ((cmd emms-mpv-ipc-connect-command))
 				(setq emms-mpv-ipc-connect-command nil)
@@ -295,9 +312,8 @@ writing to a named pipe (fifo) file/node or signal error."
 
 (defun emms-mpv-ipc-init ()
 	"initialize new mpv ipc socket/file process and associated state."
-	(when emms-mpv-ipc-proc
-		(delete-process emms-mpv-ipc-proc)
-		(setq emms-mpv-ipc-proc nil))
+	(emms-mpv-ipc-stop)
+	(emms-mpv-debug-msg "emms-mpv-ipc: init")
 	(if (emms-mpv-ipc-fifo-p) (emms-mpv-ipc-connect-fifo)
 		(when emms-mpv-ipc-connect-timer (cancel-timer emms-mpv-ipc-connect-timer))
 		(with-current-buffer (get-buffer-create emms-mpv-ipc-buffer) (erase-buffer))
@@ -309,11 +325,20 @@ writing to a named pipe (fifo) file/node or signal error."
 				(run-at-time (car emms-mpv-ipc-connect-delays)
 					nil 'emms-mpv-ipc-connect (cdr emms-mpv-ipc-connect-delays)))))
 
-(defun emms-mpv-ipc ()
+(defun emms-mpv-ipc-stop ()
+	(when emms-mpv-ipc-proc
+		(emms-mpv-debug-msg "emms-mpv-ipc: stop")
+		(delete-process emms-mpv-ipc-proc)
+		(setq emms-mpv-ipc-proc nil)))
+
+(cl-defun emms-mpv-ipc ()
 	"Returns live+open ipc socket process or nil, (re-)starting mpv/connection if necessary.
 Can return nil when starting async process/connection, and any follow-up
 command should be stored to `emms-mpv-ipc-connect-command' in this case."
-	(unless (process-live-p emms-mpv-proc) (emms-mpv-proc-init))
+	(unless (process-live-p emms-mpv-proc)
+		 ;; Don't start idle processes for fifo - just ignore ipc requests
+		(when (emms-mpv-ipc-fifo-p) (cl-return-from emms-mpv-ipc))
+		(emms-mpv-proc-init))
 	(unless (process-live-p emms-mpv-ipc-proc) (emms-mpv-ipc-init))
 	(and
 		emms-mpv-ipc-proc
@@ -323,51 +348,43 @@ command should be stored to `emms-mpv-ipc-connect-command' in this case."
 
 ;; ----- IPC protocol
 
-(defun emms-mpv-ipc-id-subst (cmd)
-	"Return CMD with keyword symbols replaces according to `emms-mpv-ipc-ids'.
-:json-* symbols are ignored, unrecognized symbols will signal error."
-	(let (res)
-		(dolist (v cmd (reverse res))
-			(when (and (keywordp v) (not (string-prefix-p ":json-" (symbol-name v))))
-				(setq v (or (plist-get emms-mpv-ipc-ids v)
-					(error (format "ipc-id symbol not found in emms-mpv-ipc-ids: %s" v)))))
-			(setq res (cons v res)))))
-
-(defun emms-mpv-ipc-id-resolve (ipc-id)
-	"Return keyword symbol corresponding to specified IPC-ID from `emms-mpv-ipc-ids' or nil."
-	(let (res)
-		(dolist (v emms-mpv-ipc-ids)
-			(if (not res) (setq res v)
-				(if (= v ipc-id) (cl-return res) (setq res nil))))))
+(defun emms-mpv-ipc-id-get ()
+	"Get new connection-unique id value, tracked via `emms-mpv-ipc-id'."
+	(let ((ipc-id emms-mpv-ipc-id))
+		(setq emms-mpv-ipc-id
+			(if (< emms-mpv-ipc-id emms-mpv-ipc-id-max) (1+ emms-mpv-ipc-id) 1))
+		ipc-id))
 
 (defun emms-mpv-ipc-req-send (cmd &optional handler proc)
 	"Send JSON IPC request and assign HANDLER to response for it, if any.
+CMD value is encoded via `json-encode'.
 HANDLER func will be called with decoded response JSON as (handler data err),
-where ERR will be either nil on \"success\" or whatever is in JSON.
+where ERR will be either nil on \"success\", 'connection-error or whatever is in JSON.
 If HANDLER is nil, default `emms-mpv-ipc-req-error-printer' will be used to at least log errors.
 PROC can be specified to avoid `emms-mpv-ipc' call (e.g. from sentinel/filter funcs)."
 	(let
-		((req-id emms-mpv-ipc-req-id)
-			(cmd (emms-mpv-ipc-id-subst cmd))
-			(proc (or proc (emms-mpv-ipc)))
+		((req-id (emms-mpv-ipc-id-get))
+			(req-proc (or proc (emms-mpv-ipc)))
 			(handler (or handler 'emms-mpv-ipc-req-error-printer)))
-		(setq emms-mpv-ipc-req-id
-			(if (< emms-mpv-ipc-req-id emms-mpv-ipc-req-id-max)
-				(1+ emms-mpv-ipc-req-id) 1))
 		(unless emms-mpv-ipc-req-table
 			(setq emms-mpv-ipc-req-table (make-hash-table)))
 		(let ((json (concat (json-encode (list :command cmd :request_id req-id)) "\n")))
 			(emms-mpv-debug-msg "emms-mpv-ipc-json >> %s" json)
-			(process-send-string proc json))
-		(puthash req-id handler emms-mpv-ipc-req-table)))
+			(condition-case err
+				(process-send-string req-proc json) ; can disconnect at any time
+				(error
+					(emms-mpv-proc-stop) ; assume that mpv process is to blame and force restart
+					(funcall handler nil 'connection-error) (setq handler nil))))
+		(when handler (puthash req-id handler emms-mpv-ipc-req-table))))
 
 (defun emms-mpv-ipc-req-resolve (req-id data err)
 	"Run handler-func for specified req-id."
-	(let
-		((handler (gethash req-id emms-mpv-ipc-req-table))
-			(err (if (string= err "success") nil err)))
-		(remhash req-id emms-mpv-ipc-req-table)
-		(when handler (funcall handler data err))))
+	(when emms-mpv-ipc-req-table
+		(let
+			((handler (gethash req-id emms-mpv-ipc-req-table))
+				(err (if (string= err "success") nil err)))
+			(remhash req-id emms-mpv-ipc-req-table)
+			(when handler (funcall handler data err)))))
 
 (defun emms-mpv-ipc-req-error-printer (data err)
 	(when err (message "emms-mpv-ipc-error: %s" err)))
@@ -383,71 +400,86 @@ Only used with JSON IPC, never called with --input-file as there's no feedback t
 		(when req-id ; response to command
 			(emms-mpv-ipc-req-resolve req-id
 				(alist-get 'data json-data) (alist-get 'error json-data)))
-		(pcase ev ; mpv event, if non-nil
-			('nil) ; fast path for non-event messages
-			;; XXX: add user-defined event handling here
-			("property-change"
-				(pcase (emms-mpv-ipc-id-resolve (alist-get 'id json-data))
-					(:duration
-						(let
-							((total (alist-get 'data json-data))
-								(track (emms-playlist-current-selected-track)))
-							(when total
-								(setq total (round total))
-								(emms-track-set track 'info-playing-time total)
-								(emms-track-set track 'info-playing-time-min (/ total 60))
-								(emms-track-set track 'info-playing-time-sec (% total 60)))))))
-			;; On track-change after emms-player-start, mpv emits end-file + start-file,
-			;;   and first one of these must not call emms-player-stopped, as that'd switch track again.
-			("start-file" (setq emms-mpv-ev-stopped nil))
-			("playback-restart" (emms-player-started emms-player-mpv))
-			("end-file" (unless emms-mpv-ev-stopped (emms-player-stopped))))))
+		(when ev ; mpv event
+			(emms-mpv-event-handler json-data)
+			(run-hook-with-args emms-mpv-event-functions json-data))))
 
 (defun emms-mpv-ipc-fifo-cmd (cmd proc)
 	"Send --input-file command string for older mpv versions.
 PROC can be specified to avoid `emms-mpv-ipc' call."
 	(let
 		((proc (or proc (emms-mpv-ipc)))
-			(cmd-line (concat (mapconcat
-				(lambda (s) (format "%s" s))
-				(emms-mpv-ipc-id-subst cmd) " ") "\n")))
-			(emms-mpv-debug-msg "emms-mpv-ipc-fifo >> %s" cmd-line)
-			(process-send-string proc cmd-line)))
+			(cmd-line (concat (mapconcat (lambda (s) (format "%s" s)) cmd " ") "\n")))
+		(emms-mpv-debug-msg "emms-mpv-ipc-fifo >> %s" cmd-line)
+		(process-send-string proc cmd-line)))
+
+(defun emms-mpv-event-connect ()
+	"Handler for supported mpv events, including property changes.
+Called before `emms-mpv-event-connect-hook' and does same thing as these hooks."
+	(let ((prop-id (emms-mpv-ipc-id-get)))
+		(emms-mpv-ipc-req-send `(observe_property ,prop-id duration))))
+
+(defun emms-mpv-event-handler (json-data)
+	"Handler for supported mpv events, including property changes.
+Called before `emms-mpv-event-functions' and does same thing as these hooks."
+	(pcase (alist-get 'event json-data)
+		("property-change"
+			(pcase (alist-get 'name json-data)
+				("duration"
+					(let
+						((total (alist-get 'data json-data))
+							(track (emms-playlist-current-selected-track)))
+						(when total
+							(setq total (round total))
+							(emms-track-set track 'info-playing-time total)
+							(emms-track-set track 'info-playing-time-min (/ total 60))
+							(emms-track-set track 'info-playing-time-sec (% total 60)))))))
+		;; On track-change after emms-player-start, mpv emits end-file + start-file,
+		;;   and first one of these must not call emms-player-stopped, as that'd switch track again.
+		("start-file" (emms-mpv-proc-stopped nil))
+		("playback-restart" (emms-player-started emms-player-mpv))
+		("end-file"
+			(unless (emms-mpv-proc-stopped-p)
+				(emms-mpv-proc-stopped t) (emms-player-stopped)))))
 
 
 ;; ----- High-level EMMS interface
 
-(defun emms-player-mpv-cmd (cmd &optional proc)
+(defun emms-player-mpv-cmd (cmd &optional handler)
 	"Send mpv command to process/connection if both are running,
 or otherwise schedule start/connect and set
 `emms-mpv-ipc-start-track' for `emms-mpv-ipc-sentinel'.
 PROC can be specified to avoid `emms-mpv-ipc' call."
-	(unless proc (setq proc (emms-mpv-ipc)))
-	(if proc
-		(if (emms-mpv-ipc-fifo-p)
-			(emms-mpv-ipc-fifo-cmd cmd proc)
-			(emms-mpv-ipc-req-send cmd nil proc))
-		(setq emms-mpv-ipc-connect-command cmd)))
+	(setq emms-mpv-ipc-connect-command nil)
+	(let ((proc (emms-mpv-ipc)))
+		(if proc
+			(if (emms-mpv-ipc-fifo-p)
+				(emms-mpv-ipc-fifo-cmd cmd proc)
+				(emms-mpv-ipc-req-send cmd handler proc))
+			(setq emms-mpv-ipc-connect-command cmd))))
 
 
 (defun emms-player-mpv-playable-p (track)
 	(memq (emms-track-type track) '(file url streamlist playlist)))
 
 (defun emms-player-mpv-start (track)
-	(setq emms-mpv-ev-stopped t)
+	(emms-mpv-proc-stopped t)
 	(let
 		((track-name (emms-track-get track 'name))
 			(track-is-playlist (memq (emms-track-get track 'type) '(streamlist playlist))))
 		(if (emms-mpv-ipc-fifo-p)
 			(progn
+				(emms-mpv-ipc-stop) ; to clear any buffered commands
 				(emms-mpv-proc-init (if track-is-playlist "--playlist" "--") track-name)
 				(emms-player-started emms-player-mpv))
 			(let
-				((cmd (if track-is-playlist 'loadlist 'loadfile)))
-				(emms-player-mpv-cmd `(,cmd ,track-name replace))))))
+				((cmd (list (if track-is-playlist 'loadlist 'loadfile) track-name 'replace)))
+				(emms-player-mpv-cmd cmd (lambda (data err)
+					;; Reconnect and restart playback if current connection fails (e.g. mpv crash)
+					(when (eq err 'connection-error) (emms-player-mpv-cmd cmd))))))))
 
 (defun emms-player-mpv-stop ()
-	(setq emms-mpv-ev-stopped t)
+	(emms-mpv-proc-stopped t)
 	(emms-player-mpv-cmd `(stop))
 	(emms-player-stopped))
 

@@ -28,9 +28,11 @@
 	emms-player-mpv-parameters
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null"))
 
-;; (setq emms-mpv-ipc-debug t)
+;; (setq emms-mpv-debug t)
 ;; (emms-player-mpv-start (emms-playlist-current-selected-track))
-;; (emms-mpv-ipc-stop)
+;; (emms-player-stop)
+;; (emms-mpv-proc-stop)
+;; (emms-mpv-ipc-proc-stop)
 
 (defun fg-emms-player-status-string ()
 	(if emms-player-playing-p
