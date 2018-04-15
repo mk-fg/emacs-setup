@@ -75,10 +75,10 @@ if it refuses to exit cleanly on `emms-mpv-proc-stop'.")
 	"Unix socket process that communicates with running `emms-mpv-proc' instance.")
 
 (defvar emms-mpv-ipc-buffer " *emms-mpv-ipc*"
-	"Buffer to associate with `emms-mpv-ipc-proc' socket-process.")
+	"Buffer to associate with `emms-mpv-ipc-proc' socket/pipe process.")
 
 (defvar emms-mpv-ipc-connect-timer nil
-	"Timer for connection attempts to mpv ipc unix socket.")
+	"Timer for connection attempts to JSON IPC unix socket.")
 (defvar emms-mpv-ipc-connect-delays
 	'(0.1 0.1 0.1 0.1 0.1 0.1 0.2 0.2 0.3 0.3 0.5 1.0 1.0 2.0)
 	"List of delays before initiating socket connection for new mpv process.")
@@ -90,8 +90,8 @@ Set by `emms-player-mpv-start' and such, cleared once it gets sent by `emms-mpv-
 
 (defvar emms-mpv-ipc-id 1
 	"Auto-incremented value sent in JSON requests for request_id and observe_property id's.
-Use `emms-mpv-ipc-id-get' to get a new unique id, not this value directly.
-Wraps-around upon reaching `emms-mpv-ipc-id-max' automatically (unlikely to ever happen).")
+Use `emms-mpv-ipc-id-get' to get and increment this value, instead of using it directly.
+Wraps-around upon reaching `emms-mpv-ipc-id-max' (unlikely to ever happen).")
 
 (defvar emms-mpv-ipc-id-max (expt 2 30)
 	"Max value for `emms-mpv-ipc-id' to wrap around after.
@@ -105,6 +105,7 @@ Should be fine with both mpv and emacs, and probably never reached anyway.")
 	"Normal hook run right after establishing new JSON IPC
 connection to mpv instance and before `emms-mpv-ipc-connect-command'  if any.
 Best place to send any observe_property, request_log_messages, enable_event commands.
+Use `emms-mpv-ipc-id-get' to get unique id values for these.
 See also `emms-mpv-event-functions'.")
 
 (defvar emms-mpv-event-functions nil
@@ -137,10 +138,9 @@ Strips whitespace from start/end of TPL-OR-MSG and strings in TPL-VALUES."
 			(setq tpl-or-msg (replace-regexp-in-string "%" "%%" tpl-or-msg t t)))
 		(apply 'message tpl-or-msg tpl-values)))
 
-
 (defun emms-mpv-ipc-fifo-p ()
-	"Returns non-nil if --input-file fifo should be used.\
-Runs `emms-mpv-ipc-detect' to init `emms-player-mpv-ipc-method' if necessary."
+	"Returns non-nil if --input-file fifo should be used.
+Runs `emms-mpv-ipc-detect' to detect/set `emms-player-mpv-ipc-method' if necessary."
 	(unless emms-player-mpv-ipc-method
 		(setq emms-player-mpv-ipc-method
 			(emms-mpv-ipc-detect emms-player-mpv-command-name)))
@@ -178,7 +178,7 @@ This is to avoid confusing emms logic when mpv emits stop-start events on track 
 		(if proc (process-get proc 'mpv-stopped) t)))
 
 (defun emms-mpv-proc-stopped (state &optional proc)
-	"Set process mpv-stopped state value for `emms-mpv-proc-stopped-p'."
+	"Set process mpv-stopped state flag for `emms-mpv-proc-stopped-p'."
 	(let ((proc (or proc emms-mpv-proc)))
 		(when proc (process-put proc 'mpv-stopped state))))
 
@@ -332,8 +332,8 @@ writing to a named pipe (fifo) file/node or signal error."
 		(setq emms-mpv-ipc-proc nil)))
 
 (cl-defun emms-mpv-ipc ()
-	"Returns live+open ipc socket process or nil, (re-)starting mpv/connection if necessary.
-Can return nil when starting async process/connection, and any follow-up
+	"Returns open ipc socket/fifo process or nil, (re-)starting mpv/connection if necessary.
+Will return nil when starting async process/connection, and any follow-up
 command should be stored to `emms-mpv-ipc-connect-command' in this case."
 	(unless (process-live-p emms-mpv-proc)
 		 ;; Don't start idle processes for fifo - just ignore ipc requests
@@ -387,6 +387,7 @@ PROC can be specified to avoid `emms-mpv-ipc' call (e.g. from sentinel/filter fu
 			(when handler (funcall handler data err)))))
 
 (defun emms-mpv-ipc-req-error-printer (data err)
+	"Simple default `emms-mpv-ipc-req-send' handler to log errors, if any."
 	(when err (message "emms-mpv-ipc-error: %s" err)))
 
 (defun emms-mpv-ipc-recv (json)
@@ -404,7 +405,7 @@ Only used with JSON IPC, never called with --input-file as there's no feedback t
 			(emms-mpv-event-handler json-data)
 			(run-hook-with-args emms-mpv-event-functions json-data))))
 
-(defun emms-mpv-ipc-fifo-cmd (cmd proc)
+(defun emms-mpv-ipc-fifo-cmd (cmd &optional proc)
 	"Send --input-file command string for older mpv versions.
 PROC can be specified to avoid `emms-mpv-ipc' call."
 	(let
@@ -414,8 +415,11 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 		(process-send-string proc cmd-line)))
 
 (defun emms-mpv-event-connect ()
-	"Handler for supported mpv events, including property changes.
-Called before `emms-mpv-event-connect-hook' and does same thing as these hooks."
+	"Default JSON IPC connection event handler.
+mpv maintains per-connection state, so any commands like
+observe_property, request_log_messages, enable_event and such
+should be re-sent here, even to the same instance.
+See `emms-mpv-event-connect-hook' for extending this."
 	(let ((prop-id (emms-mpv-ipc-id-get)))
 		(emms-mpv-ipc-req-send `(observe_property ,prop-id duration))))
 
