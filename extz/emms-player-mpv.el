@@ -60,6 +60,7 @@
 
 (require 'emms)
 (require 'json)
+(require 'cl)
 
 
 (defcustom emms-player-mpv
@@ -521,6 +522,17 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 				(emms-mpv-ipc-req-send cmd handler proc))
 			(setq emms-mpv-ipc-connect-command cmd))))
 
+(defmacro emms-player-mpv-cmd-prog (cmd &rest handler-body)
+	"Macro around `emms-player-mpv-cmd' that creates
+handler callback (see `emms-mpv-ipc-req-send') from HANDLER-BODY forms,
+which have following bindings:
+- mpv-cmd for CMD.
+- mpv-data for response data (decoded json, nil if none).
+- mpv-error for response error (nil if no error, decoded json or 'connection-error)."
+	`(lexical-let ((mpv-cmd ,cmd))
+		(emms-player-mpv-cmd mpv-cmd
+			(lambda (mpv-data mpv-error) ,@handler-body))))
+
 
 (defun emms-player-mpv-playable-p (track)
 	(memq (emms-track-type track) '(file url streamlist playlist)))
@@ -535,11 +547,10 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 				(emms-mpv-ipc-stop) ; to clear any buffered commands
 				(emms-mpv-proc-init (if track-is-playlist "--playlist" "--") track-name)
 				(emms-player-started emms-player-mpv))
-			(let
-				((cmd (list (if track-is-playlist 'loadlist 'loadfile) track-name 'replace)))
-				(emms-player-mpv-cmd cmd (lambda (data err)
-					;; Reconnect and restart playback if current connection fails (e.g. mpv crash)
-					(when (eq err 'connection-error) (emms-player-mpv-cmd cmd))))))))
+			(emms-player-mpv-cmd-prog
+				(list (if track-is-playlist 'loadlist 'loadfile) track-name 'replace)
+				;; Reconnect and restart playback if current connection fails (e.g. mpv crash)
+				(when (eq mpv-error 'connection-error) (emms-player-mpv-cmd mpv-cmd))))))
 
 (defun emms-player-mpv-stop ()
 	(emms-mpv-proc-stopped t)

@@ -20,7 +20,6 @@
 ;;;; Player
 
 (require 'emms-player-mpv) ;; in extz
-(add-to-list 'emms-player-list 'emms-player-mpv)
 (setq-default
 	emms-player-list '(emms-player-mpv)
 	emms-player-mpv-environment
@@ -29,6 +28,7 @@
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null"))
 
 ;; (setq emms-mpv-debug t)
+;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-audio-display"))
 ;; (emms-player-mpv-start (emms-playlist-current-selected-track))
 ;; (emms-player-stop)
 ;; (emms-mpv-proc-stop)
