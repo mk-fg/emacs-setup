@@ -493,10 +493,14 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 							(emms-track-set track 'info-playing-time total)
 							(emms-track-set track 'info-playing-time-min (/ total 60))
 							(emms-track-set track 'info-playing-time-sec (% total 60)))))))
-		;; On track-change after emms-player-start, mpv emits end-file + start-file,
-		;;   and first one of these must not call emms-player-stopped, as that'd switch track again.
-		("start-file" (emms-mpv-proc-stopped nil))
-		("playback-restart" (emms-player-started emms-player-mpv))
+		;; On track-change after emms-player-start, mpv emits end-file + start,
+		;;  and first one of these must not call emms-player-stopped, as that'd switch track again.
+		("playback-restart"
+			(when (emms-mpv-proc-stopped-p)
+				(emms-mpv-proc-stopped nil)
+				(emms-player-started emms-player-mpv)))
+		;; Corresponding "start-file" also issued
+		;;  for playlist starts, before actual plaback, so not as useful.
 		("end-file"
 			(unless (emms-mpv-proc-stopped-p)
 				(emms-mpv-proc-stopped t) (emms-player-stopped)))))
