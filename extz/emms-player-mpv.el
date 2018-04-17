@@ -549,8 +549,12 @@ which have following bindings:
 				(emms-player-started emms-player-mpv))
 			(emms-player-mpv-cmd-prog
 				(list (if track-is-playlist 'loadlist 'loadfile) track-name 'replace)
-				;; Reconnect and restart playback if current connection fails (e.g. mpv crash)
-				(when (eq mpv-error 'connection-error) (emms-player-mpv-cmd mpv-cmd))))))
+				(if (eq mpv-error 'connection-error)
+					;; Reconnect and restart playback if current connection fails (e.g. mpv crash)
+					(emms-player-mpv-cmd-prog
+						(emms-player-mpv-cmd mpv-cmd)
+						(emms-player-mpv-cmd `(set pause no)))
+					(emms-player-mpv-cmd `(set pause no)))))))
 
 (defun emms-player-mpv-stop ()
 	(emms-mpv-proc-stopped t)
