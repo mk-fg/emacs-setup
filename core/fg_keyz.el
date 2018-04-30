@@ -524,7 +524,8 @@ If point is on a group name, this function operates on that group."
 
 ;; -- CSV mode keys --
 
-(defun fg-csv-col-get ()
+(defun fg-csv-col-looking-at ()
+	"Return index of field at point or nil if none."
 	(if (csv-not-looking-at-record) nil
 		(save-excursion
 			(let ((lbp (line-beginning-position)) (field 1))
@@ -532,23 +533,51 @@ If point is on a group name, this function operates on that group."
 					(setq field (1+ field)))
 				field))))
 
-(defun fg-csv-col-kill (start end)
-	(let ((col (fg-csv-col-get)))
+(defun fg-csv-col-kill (&optional start end no-align)
+	"Kill column at point in specified region and re-align fields.
+START and END default to `point-min' and `point-max'.
+NO-ALIGN disables `csv-align-fields' call."
+	(setq
+		start (or start (point-min))
+		end (or end (point-max)))
+	(let ((col (fg-csv-col-looking-at)))
 		(csv-kill-fields (list col) start end))
-	(call-interactively 'csv-align-fields)) csv-align-style start end))
+	(unless no-align (call-interactively 'csv-align-fields)))
 
 (defun fg-csv-col-kill-taint ()
+	"Kill column at point in `fg-taint' region or whole csv if none."
 	(interactive)
 	(if (use-region-p)
 		(fg-taint
 			:call 'fg-csv-col-kill
 			:whole-lines-only whole-lines-only)
-		(fg-csv-col-kill (point-min) (point-max))))
+		(fg-csv-col-kill)))
+
+(defun fg-csv-header-line-around (func &optional use-current-line)
+	"Use first non-comment line unless USE-CURRENT-LINE is specified."
+	(save-excursion
+		(unless use-current-line
+			(goto-char (point-min))
+			(while (and (not (eobp)) (csv-not-looking-at-record)) (forward-line)))
+		(apply func '(t))))
+(advice-add 'csv-header-line :around #'fg-csv-header-line-around)
+
+(defun fg-csv-align-fields-after (func &rest args)
+	"Update header line after csv align/unalign calls, if it's displayed."
+	(when csv--header-line
+		(let ((pos csv--header-line))
+			(save-excursion
+				(csv-header-line)
+				(goto-char pos)
+				(csv-header-line t)))))
+(advice-add 'csv-align-fields :after #'fg-csv-align-fields-after)
+(advice-add 'csv-unalign-fields :after #'fg-csv-align-fields-after)
 
 (eval-after-load "csv-mode" '(progn
 	(define-keys csv-mode-map
 		'(("C-M-k" fg-csv-col-kill-taint)
-			("C-j" csv-align-fields)))))
+			("C-S-j" csv-header-line)
+			("C-j" csv-align-fields) ("C-M-j" csv-unalign-fields)))))
 
 
 ;; -- JS/Perl/Go/YAML mode eclectic/electric crap removal --

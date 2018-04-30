@@ -178,6 +178,8 @@ NAME can also be passed explicitly as an argument."
 (autoload 'csv-mode "csv-mode" "Major mode for editing CSV files." t)
 (eval-after-load "csv-mode" '(progn
 	(custom-set-variables `(csv-separators '("," "\t" ";") t))
+	;; Emacs tabulation thing works weirdly with
+	;;  long header names unless plenty of padding is added.
 	(setq-default csv-align-padding 5)))
 
 
