@@ -522,6 +522,35 @@ If point is on a group name, this function operates on that group."
 	(defalias 'browse-kill-ring-quit 'quit-window)))
 
 
+;; -- CSV mode keys --
+
+(defun fg-csv-col-get ()
+	(if (csv-not-looking-at-record) nil
+		(save-excursion
+			(let ((lbp (line-beginning-position)) (field 1))
+				(while (re-search-backward csv-separator-regexp lbp 1)
+					(setq field (1+ field)))
+				field))))
+
+(defun fg-csv-col-kill (start end)
+	(let ((col (fg-csv-col-get)))
+		(csv-kill-fields (list col) start end))
+	(call-interactively 'csv-align-fields)) csv-align-style start end))
+
+(defun fg-csv-col-kill-taint ()
+	(interactive)
+	(if (use-region-p)
+		(fg-taint
+			:call 'fg-csv-col-kill
+			:whole-lines-only whole-lines-only)
+		(fg-csv-col-kill (point-min) (point-max))))
+
+(eval-after-load "csv-mode" '(progn
+	(define-keys csv-mode-map
+		'(("C-M-k" fg-csv-col-kill-taint)
+			("C-j" csv-align-fields)))))
+
+
 ;; -- JS/Perl/Go/YAML mode eclectic/electric crap removal --
 (mapc
 	(lambda (vars)
@@ -646,6 +675,7 @@ If point is on a group name, this function operates on that group."
 	(if buffer-file-name ; nil for system buffers and terminals
 		(cond
 			((eq major-mode 'lisp-mode) (fg-scite-lisp t))
+			((eq major-mode 'csv-mode) (fg-scite-aux t)) ; it has specific bindings
 			((eq major-mode 'doc-view-mode) t) ; it has specific bindings
 			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond

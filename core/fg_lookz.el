@@ -174,6 +174,13 @@ NAME can also be passed explicitly as an argument."
 (load-library-safe "haskell-mode-autoloads")
 
 
+;; CSV mode
+(autoload 'csv-mode "csv-mode" "Major mode for editing CSV files." t)
+(eval-after-load "csv-mode" '(progn
+	(custom-set-variables `(csv-separators '("," "\t" ";") t))
+	(setq-default csv-align-padding 5)))
+
+
 ;; Nice, but crashes current emacs (24.0.50.1)
 ;; (autoload 'lambda-mode
 ;; 	"lambda-mode" "Minor mode to display 'lambda' as a greek letter" t)
