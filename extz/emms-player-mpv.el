@@ -178,6 +178,10 @@ See also `emms-mpv-event-connect-hook'.")
 	"Enable to print sent/received JSON lines and process
 start/stop events to *Messages* buffer using `emms-mpv-debug-msg'.")
 
+(defvar emms-mpv-debug-ts-offset nil
+	"Timestamp offset for `emms-mpv-debug-msg'.
+Set on first use, with intent to both shorten and obfuscate time in logs.")
+
 (defun emms-mpv-debug-trim (s)
 	(if (stringp s)
 		(replace-regexp-in-string "\\(^[ \t\n\r]+\\|[ \t\n\r]+$\\)" "" s t t) s))
@@ -192,7 +196,11 @@ Strips whitespace from start/end of TPL-OR-MSG and strings in TPL-VALUES."
 			tpl-values (seq-map 'emms-mpv-debug-trim tpl-values))
 		(unless tpl-values
 			(setq tpl-or-msg (replace-regexp-in-string "%" "%%" tpl-or-msg t t)))
-		(apply 'message tpl-or-msg tpl-values)))
+		(let ((ts (float-time)))
+			(unless emms-mpv-debug-ts-offset (setq emms-mpv-debug-ts-offset ts))
+			(apply 'message
+				(concat "emms-mpv %.1f " tpl-or-msg)
+				(- ts emms-mpv-debug-ts-offset) tpl-values))))
 
 (defun emms-mpv-ipc-fifo-p ()
 	"Returns non-nil if --input-file fifo should be used.
@@ -257,7 +265,7 @@ Signals error if mkfifo exits with non-zero code."
 		((status (process-status proc))
 			(stopped (emms-mpv-proc-stopped-p proc)))
 		(emms-mpv-debug-msg
-			"emms-mpv-proc: [%s] %s (status=%s, stopped=%s)" proc ev status stopped)
+			"proc[%s]: %s (status=%s, stopped=%s)" proc ev status stopped)
 		(when (and (memq status '(exit signal)) (not stopped)) (emms-player-stopped))))
 
 (defun emms-mpv-proc-init (&rest media-args)
@@ -280,14 +288,14 @@ MEDIA-ARGS are used instead of --idle, if specified."
 		(setq emms-mpv-proc
 			(make-process :name "emms-mpv"
 				:buffer nil :command argv :noquery t :sentinel 'emms-mpv-proc-sentinel))
-		(emms-mpv-debug-msg "emms-mpv-proc: [%s] start %s" emms-mpv-proc argv)))
+		(emms-mpv-debug-msg "proc[%s]: start %s" emms-mpv-proc argv)))
 
 (defun emms-mpv-proc-stop ()
 	"Stop running `emms-mpv-proc' instance via SIGINT, if any.
 `delete-process' (SIGKILL) timer is started if `emms-mpv-proc-kill-delay' is non-nil."
 	(when emms-mpv-proc
 		(let ((proc emms-mpv-proc))
-			(emms-mpv-debug-msg "emms-mpv-proc: [%s] stop" proc)
+			(emms-mpv-debug-msg "proc[%s]: stop" proc)
 			(setq emms-mpv-proc nil)
 			(if (not (process-live-p proc)) (delete-process proc)
 				(emms-mpv-proc-stopped t proc)
@@ -301,7 +309,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 ;; ----- IPC socket/fifo
 
 (defun emms-mpv-ipc-sentinel (proc ev)
-	(emms-mpv-debug-msg "emms-mpv-ipc: [%s] %s" proc ev)
+	(emms-mpv-debug-msg "ipc[%s]: %s" proc ev)
 	(when (memq (process-status proc) '(open run))
 		(emms-mpv-event-connect)
 		(run-hooks emms-mpv-event-connect-hook)
@@ -336,7 +344,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 (cdr DELAYS) gets passed to next connection attempt,
 so it can be rescheduled further until function runs out of DELAYS values.
 Sets `emms-mpv-ipc-proc' value to resulting process on success."
-	(emms-mpv-debug-msg "emms-mpv-ipc-connect-delay: %s" (car delays))
+	(emms-mpv-debug-msg "ipc: connect-delay %s" (car delays))
 	(setq emms-mpv-ipc-proc
 		(make-network-process ; returns nil if there's no socket yet
 			:name "emms-mpv-ipc"
@@ -369,7 +377,7 @@ writing to a named pipe (fifo) file/node or signal error."
 (defun emms-mpv-ipc-init ()
 	"initialize new mpv ipc socket/file process and associated state."
 	(emms-mpv-ipc-stop)
-	(emms-mpv-debug-msg "emms-mpv-ipc: init")
+	(emms-mpv-debug-msg "ipc: init")
 	(if (emms-mpv-ipc-fifo-p) (emms-mpv-ipc-connect-fifo)
 		(when emms-mpv-ipc-connect-timer (cancel-timer emms-mpv-ipc-connect-timer))
 		(with-current-buffer (get-buffer-create emms-mpv-ipc-buffer) (erase-buffer))
@@ -383,7 +391,7 @@ writing to a named pipe (fifo) file/node or signal error."
 
 (defun emms-mpv-ipc-stop ()
 	(when emms-mpv-ipc-proc
-		(emms-mpv-debug-msg "emms-mpv-ipc: stop")
+		(emms-mpv-debug-msg "ipc: stop")
 		(delete-process emms-mpv-ipc-proc)
 		(setq emms-mpv-ipc-proc nil)))
 
@@ -425,7 +433,7 @@ PROC can be specified to avoid `emms-mpv-ipc' call (e.g. from sentinel/filter fu
 		(unless emms-mpv-ipc-req-table
 			(setq emms-mpv-ipc-req-table (make-hash-table)))
 		(let ((json (concat (json-encode (list :command cmd :request_id req-id)) "\n")))
-			(emms-mpv-debug-msg "emms-mpv-ipc-json >> %s" json)
+			(emms-mpv-debug-msg "json >> %s" json)
 			(condition-case err
 				(process-send-string req-proc json) ; can disconnect at any time
 				(error
@@ -449,7 +457,7 @@ PROC can be specified to avoid `emms-mpv-ipc' call (e.g. from sentinel/filter fu
 (defun emms-mpv-ipc-recv (json)
 	"Handler for all JSON lines from mpv process.
 Only used with JSON IPC, never called with --input-file as there's no feedback there."
-	(emms-mpv-debug-msg "emms-mpv-ipc-json << %s" json)
+	(emms-mpv-debug-msg "json << %s" json)
 	(let*
 		((json-data (json-read-from-string json))
 			(req-id (alist-get 'request_id json-data))
@@ -467,7 +475,7 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 	(let
 		((proc (or proc (emms-mpv-ipc)))
 			(cmd-line (concat (mapconcat (lambda (s) (format "%s" s)) cmd " ") "\n")))
-		(emms-mpv-debug-msg "emms-mpv-ipc-fifo >> %s" cmd-line)
+		(emms-mpv-debug-msg "fifo >> %s" cmd-line)
 		(process-send-string proc cmd-line)))
 
 (defun emms-mpv-event-connect ()
