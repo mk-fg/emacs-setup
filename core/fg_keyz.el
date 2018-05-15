@@ -449,6 +449,21 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		("C-<return>" automatic)))
 
 
+;; -- *Messages* buffer keys --
+
+(defmacro fg-messages-buffer-func (&rest body)
+	"Run BODY as interactive lambda in writable *Messages* buffer."
+	`(lambda () (interactive)
+		(with-current-buffer "*Messages*"
+			(let ((buffer-read-only nil)) ,@body))))
+
+(define-keys messages-buffer-mode-map
+	`(("C-j" ,(iwrapm message "---------- %.1f ----------" (float-time)))
+		("C-S-j" ,(fg-messages-buffer-func
+			(erase-buffer)
+			(message "---------- %.1f [clear] ----------" (float-time))))))
+
+
 ;; -- Common activity-switch-to/reset routines
 (defun fg-track-reset ()
 	"Drop annoying status line notifications"
@@ -709,6 +724,7 @@ NO-ALIGN disables `csv-align-fields' call."
 			(t (fg-scite-code t))) ; if it's a file, then it's at least code
 		(cond
 			((eq major-mode 'occur-mode) (fg-scite-aux t))
+			((eq major-mode 'messages-buffer-mode) (fg-scite-aux t))
 			((eq major-mode 'browse-kill-ring-mode) (fg-scite-aux t))
 			((eq major-mode 'term-mode) ; term-mode minors should probably be set via multi-term hooks
 				(fg-scite-term t))
