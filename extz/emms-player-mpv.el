@@ -119,6 +119,11 @@ depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	:group 'emms-player-mpv)
 
 
+(defvar emms-mpv-stopped-by-user nil
+	"Non-nil if playback was stopped by user.
+Similar to `emms-player-stopped-p', but set for future async events,
+to indicate that playback should stop instead of switching to next track.")
+
 (defvar emms-mpv-proc nil
 	"Running mpv process, controlled over --input-ipc-server/--input-file sockets.")
 
@@ -484,8 +489,9 @@ mpv maintains per-connection state, so any commands like
 observe_property, request_log_messages, enable_event and such
 should be re-sent here, even to the same instance.
 See `emms-mpv-event-connect-hook' for extending this."
-	(let ((prop-id (emms-mpv-ipc-id-get)))
-		(emms-mpv-ipc-req-send `(observe_property ,prop-id duration))))
+	(cl-flet ((new-id #'emms-mpv-ipc-id-get))
+		(emms-mpv-ipc-req-send `(observe_property ,(new-id) duration)))
+		(emms-mpv-ipc-req-send `(observe_property ,(new-id) filename)))
 
 (defun emms-mpv-event-handler (json-data)
 	"Handler for supported mpv events, including property changes.
@@ -501,16 +507,25 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 							(setq total (round total))
 							(emms-track-set track 'info-playing-time total)
 							(emms-track-set track 'info-playing-time-min (/ total 60))
-							(emms-track-set track 'info-playing-time-sec (% total 60)))))))
-		;; On track-change after emms-player-start, mpv emits end-file + start,
-		;;  and first one of these must not call emms-player-stopped, as that'd switch track again.
+							(emms-track-set track 'info-playing-time-sec (% total 60)))))
+				("filename"
+					;; Empty filename means mpv is in idle state with no pending transition.
+					;; Tracked instead of "idle" event because
+					;;  event can indicate temporarily state before opening file.
+					(unless (alist-get 'data json-data)
+						(emms-mpv-proc-stopped t)
+						(unless emms-mpv-stopped-by-user (emms-player-stopped))))))
 		("playback-restart"
+			;; On track-change after emms-player-start, mpv will emit end-file + start-file,
+			;;  and end-file there must not call emms-player-stopped, as that'd switch track again.
+			;; Same end+start sequence also happens when mpv goes from playlist to track.
+			;; Which is why playback-restart is used to reset emms-mpv-proc-stopped after these.
 			(when (emms-mpv-proc-stopped-p)
 				(emms-mpv-proc-stopped nil)
 				(emms-player-started emms-player-mpv)))
-		;; Corresponding "start-file" also issued
-		;;  for playlist starts, before actual plaback, so not as useful.
 		("end-file"
+			;; Does not mean "playback stopped" unless it is known to be started before.
+			;; Example can be playlist, where end+start will mean switching from playlist to file.
 			(unless (emms-mpv-proc-stopped-p)
 				(emms-mpv-proc-stopped t) (emms-player-stopped)))))
 
@@ -546,6 +561,7 @@ which have following bindings:
 	(memq (emms-track-type track) '(file url streamlist playlist)))
 
 (defun emms-player-mpv-start (track)
+	(setq emms-mpv-stopped-by-user nil)
 	(emms-mpv-proc-stopped t)
 	(let
 		((track-name (emms-track-get track 'name))
@@ -565,6 +581,7 @@ which have following bindings:
 					(emms-player-mpv-cmd `(set pause no)))))))
 
 (defun emms-player-mpv-stop ()
+	(setq emms-mpv-stopped-by-user t)
 	(emms-mpv-proc-stopped t)
 	(emms-player-mpv-cmd `(stop))
 	(emms-player-stopped))

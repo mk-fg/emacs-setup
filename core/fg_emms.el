@@ -33,6 +33,7 @@
 ;; (emms-player-stop)
 ;; (emms-mpv-proc-stop)
 ;; (emms-mpv-ipc-proc-stop)
+;; (emms-play-url "https://somafm.com/sf1033130.pls")
 
 (defun fg-emms-player-status-string ()
 	(if emms-player-playing-p
