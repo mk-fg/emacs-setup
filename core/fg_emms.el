@@ -172,16 +172,22 @@ Examples:
 							(sym '(info-artist info-album info-title info-tracknumber) track)
 							(emms-track-set track sym (eval sym)))))))))
 
+(defvar fg-emms-info-max-len 50
+	"Max length of emms-info string in `emms-track-description-function'.
+Anything longer will be truncated to that length via `s-truncate'.")
+
 (defun fg-emms-info-track-description (track &optional no-fallback)
 	"Return a description of TRACK."
 	(let
 		((desc (mapconcat
-			(apply-partially 'emms-track-get track)
+			(lambda (sym)
+				(let ((s (emms-track-get track sym)))
+					(if (and s (> (length s) fg-emms-info-max-len))
+						(s-truncate fg-emms-info-max-len s) s)))
 			'(info-artist info-album info-title) " :: ")))
 		(if (string= desc " ::  :: ")
 			(if no-fallback
 				(emms-track-name track)
-				;; TODO: check why emms doesn't fetch info immediately, disable it
 				(fg-emms-track-info-fs track)
 				(fg-emms-info-track-description track t))
 			desc)))
