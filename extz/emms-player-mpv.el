@@ -132,7 +132,7 @@ Uses `emms-mpv-event-connect-hook' and `emms-mpv-event-functions' hooks."
 					(when (process-live-p emms-mpv-ipc-proc) (emms-mpv-info-connect-func)))
 				(progn
 					(remove-hook 'emms-mpv-event-connect-hook 'emms-mpv-info-connect-func)
-					(remove-hook 'emms-mpqv-event-functions 'emms-mpv-info-event-func))))
+					(remove-hook 'emms-mpv-event-functions 'emms-mpv-info-event-func))))
 			value))
 	:group 'emms-player-mpv)
 
@@ -574,7 +574,8 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 		(and
 			(string= (alist-get 'event json-data) "property-change")
 			(string= (alist-get 'name json-data) "metadata"))
-		(emms-mpv-info-update-current-track (alist-get 'data json-data))))
+		(let ((info-alist (alist-get 'data json-data)))
+			(when info-alist (emms-mpv-info-update-current-track info-alist)))))
 
 (defun emms-mpv-info-update-current-track (info-alist &optional track)
 	"Update TRACK with mpv metadata from INFO-ALIST.
