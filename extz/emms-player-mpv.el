@@ -118,6 +118,24 @@ depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	:type 'file
 	:group 'emms-player-mpv)
 
+(defcustom emms-player-mpv-dynamic-metadata nil
+	"Update metadata for currently played entries from mpv events.
+This allows to dynamically update stream info from ICY tags, for example.
+Uses `emms-mpv-event-connect-hook' and `emms-mpv-event-functions' hooks."
+	:type 'boolean
+	:set (lambda (sym value)
+		(run-at-time 0.1 nil
+			(lambda (value) (if value
+				(progn
+					(add-hook 'emms-mpv-event-connect-hook 'emms-mpv-info-connect-func)
+					(add-hook 'emms-mpv-event-functions 'emms-mpv-info-event-func)
+					(when (process-live-p emms-mpv-ipc-proc) (emms-mpv-info-connect-func)))
+				(progn
+					(remove-hook 'emms-mpv-event-connect-hook 'emms-mpv-info-connect-func)
+					(remove-hook 'emms-mpqv-event-functions 'emms-mpv-info-event-func))))
+			value))
+	:group 'emms-player-mpv)
+
 
 (defvar emms-mpv-proc nil
 	"Running mpv process, controlled over --input-ipc-server/--input-file sockets.")
@@ -253,6 +271,14 @@ Used to signal emms via `emms-player-started' and `emms-player-stopped' calls."
 	"Set process mpv-playing state flag for `emms-mpv-proc-playing-p'."
 	(let ((proc (or proc emms-mpv-proc)))
 		(when proc (process-put proc 'mpv-playing state))))
+
+(defun emms-mpv-proc-symbol-id (sym &optional proc)
+	"Get unique process-specific id integer for SYM or nil if it was already requested."
+	(let
+		((proc (or proc emms-mpv-proc))
+			(sym-id (intern (concat "mpv-sym-" (symbol-name sym)))))
+		(unless (process-get proc sym-id)
+			(let ((id (emms-mpv-ipc-id-get))) (process-put proc sym-id id) id))))
 
 (defun emms-mpv-proc-init-fifo (path &optional mode)
 	"Create named pipe (fifo) socket for mpv --input-file PATH, if not exists already.
@@ -486,14 +512,20 @@ PROC can be specified to avoid `emms-mpv-ipc' call."
 		(emms-mpv-debug-msg "fifo >> %s" cmd-line)
 		(process-send-string proc cmd-line)))
 
+(defun emms-mpv-observe-property (sym)
+	"Send mpv observe_property command for property identified by SYM.
+Only sends command once per process, removing any
+potential duplication if used for same properties from different functions."
+	(let ((id (emms-mpv-proc-symbol-id sym)))
+		(when id (emms-mpv-ipc-req-send `(observe_property ,id ,sym)))))
+
 (defun emms-mpv-event-connect ()
 	"Default JSON IPC connection event handler.
 mpv maintains per-connection state, so any commands like
 observe_property, request_log_messages, enable_event and such
 should be re-sent here, even to the same instance.
 See `emms-mpv-event-connect-hook' for extending this."
-	(cl-flet ((new-id #'emms-mpv-ipc-id-get))
-		(emms-mpv-ipc-req-send `(observe_property ,(new-id) duration))))
+	(emms-mpv-observe-property 'duration))
 
 (defun emms-mpv-event-handler (json-data)
 	"Handler for supported mpv events, including property changes.
@@ -528,6 +560,44 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 			(setq emms-mpv-idle-timer
 				(run-at-time emms-mpv-idle-delay nil 'emms-player-stopped)))
 		("start-file" (cancel-timer emms-mpv-idle-timer))))
+
+
+;; ----- Example metadata update hooks
+
+(defun emms-mpv-info-connect-func ()
+	"Hook function for `emms-mpv-event-connect-hook' to update metadata from mpv."
+	(emms-mpv-observe-property 'metadata))
+
+(defun emms-mpv-info-event-func (json-data)
+	"Hook function for `emms-mpv-event-functions' to update metadata from mpv."
+	(when
+		(and
+			(string= (alist-get 'event json-data) "property-change")
+			(string= (alist-get 'name json-data) "metadata"))
+		(emms-mpv-info-update-current-track (alist-get 'data json-data))))
+
+(defun emms-mpv-info-update-current-track (info-alist &optional track)
+	"Update TRACK with mpv metadata from INFO-ALIST.
+`emms-playlist-current-selected-track' is used by default."
+	(mapc
+		(lambda (cc) (setcar cc (intern (downcase (symbol-name (car cc))))))
+		info-alist)
+	(cl-macrolet
+		((key (k) `(alist-get ',k info-alist))
+			(set-track-info (track &rest body) (cons 'progn
+				(cl-loop for (k v) on body by 'cddr collect
+					`(let ((value ,v)) (when value
+						(emms-track-set ,track ',(intern (format "info-%s" k)) value)))))))
+		(unless track (setq track (emms-playlist-current-selected-track)))
+		(set-track-info track
+			title (or (key title) (key icy-title))
+			artist (or (key artist) (key album_artist) (key icy-name))
+			album (key album)
+			tracknumber (key track)
+			year (key date)
+			genre (key genre)
+			note (key comment))
+		(emms-track-updated track)))
 
 
 ;; ----- High-level EMMS interface
