@@ -119,11 +119,6 @@ depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	:group 'emms-player-mpv)
 
 
-(defvar emms-mpv-stopped-by-user nil
-	"Non-nil if playback was stopped by user.
-Similar to `emms-player-stopped-p', but set for future async events,
-to indicate that playback should stop instead of switching to next track.")
-
 (defvar emms-mpv-proc nil
 	"Running mpv process, controlled over --input-ipc-server/--input-file sockets.")
 
@@ -174,6 +169,14 @@ See also `emms-mpv-event-functions'.")
 One argument is passed to each function - JSON line,
 as sent by mpv and decoded by `json-read-from-string'.
 See also `emms-mpv-event-connect-hook'.")
+
+
+(defvar emms-mpv-idle-timer (timer-create)
+	"Timer to delay `emms-player-stopped' when mpv unexpectedly goes idle.")
+
+(defvar emms-mpv-idle-delay 0.5
+	"Delay before issuing `emms-player-stopped' when mpv unexpectedly goes idle.")
+
 
 
 
@@ -239,17 +242,17 @@ Error is signaled if mpv binary fails to run."
 
 ;; ----- mpv process
 
-(defun emms-mpv-proc-stopped-p (&optional proc)
-	"Return whether playback in PROC or `emms-mpv-proc' is stopped,
-and no extra calls to `emms-player-stopped' should be made.
-This is to avoid confusing emms logic when mpv emits stop-start events on track changes."
+(defun emms-mpv-proc-playing-p (&optional proc)
+	"Return whether playback in PROC or `emms-mpv-proc' is started,
+which is distinct from 'start-command sent' and 'process is running' states.
+Used to signal emms via `emms-player-started' and `emms-player-stopped' calls."
 	(let ((proc (or proc emms-mpv-proc)))
-		(if proc (process-get proc 'mpv-stopped) t)))
+		(if proc (process-get proc 'mpv-playing) nil)))
 
-(defun emms-mpv-proc-stopped (state &optional proc)
-	"Set process mpv-stopped state flag for `emms-mpv-proc-stopped-p'."
+(defun emms-mpv-proc-playing (state &optional proc)
+	"Set process mpv-playing state flag for `emms-mpv-proc-playing-p'."
 	(let ((proc (or proc emms-mpv-proc)))
-		(when proc (process-put proc 'mpv-stopped state))))
+		(when proc (process-put proc 'mpv-playing state))))
 
 (defun emms-mpv-proc-init-fifo (path &optional mode)
 	"Create named pipe (fifo) socket for mpv --input-file PATH, if not exists already.
@@ -268,10 +271,10 @@ Signals error if mkfifo exits with non-zero code."
 (defun emms-mpv-proc-sentinel (proc ev)
 	(let
 		((status (process-status proc))
-			(stopped (emms-mpv-proc-stopped-p proc)))
+			(playing (emms-mpv-proc-playing-p proc)))
 		(emms-mpv-debug-msg
-			"proc[%s]: %s (status=%s, stopped=%s)" proc ev status stopped)
-		(when (and (memq status '(exit signal)) (not stopped)) (emms-player-stopped))))
+			"proc[%s]: %s (status=%s, playing=%s)" proc ev status playing)
+		(when (and (memq status '(exit signal)) playing) (emms-player-stopped))))
 
 (defun emms-mpv-proc-init (&rest media-args)
 	"initialize new mpv process as `emms-mpv-proc'.
@@ -303,7 +306,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 			(emms-mpv-debug-msg "proc[%s]: stop" proc)
 			(setq emms-mpv-proc nil)
 			(if (not (process-live-p proc)) (delete-process proc)
-				(emms-mpv-proc-stopped t proc)
+				(emms-mpv-proc-playing nil proc)
 				(interrupt-process proc)
 				(when emms-mpv-proc-kill-delay
 					(run-at-time
@@ -490,8 +493,7 @@ observe_property, request_log_messages, enable_event and such
 should be re-sent here, even to the same instance.
 See `emms-mpv-event-connect-hook' for extending this."
 	(cl-flet ((new-id #'emms-mpv-ipc-id-get))
-		(emms-mpv-ipc-req-send `(observe_property ,(new-id) duration)))
-		(emms-mpv-ipc-req-send `(observe_property ,(new-id) filename)))
+		(emms-mpv-ipc-req-send `(observe_property ,(new-id) duration))))
 
 (defun emms-mpv-event-handler (json-data)
 	"Handler for supported mpv events, including property changes.
@@ -507,27 +509,25 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 							(setq total (round total))
 							(emms-track-set track 'info-playing-time total)
 							(emms-track-set track 'info-playing-time-min (/ total 60))
-							(emms-track-set track 'info-playing-time-sec (% total 60)))))
-				("filename"
-					;; Empty filename means mpv is in idle state with no pending transition.
-					;; Tracked instead of "idle" event because
-					;;  event can indicate temporarily state before opening file.
-					(unless (alist-get 'data json-data)
-						(emms-mpv-proc-stopped t)
-						(unless emms-mpv-stopped-by-user (emms-player-stopped))))))
+							(emms-track-set track 'info-playing-time-sec (% total 60)))))))
 		("playback-restart"
-			;; On track-change after emms-player-start, mpv will emit end-file + start-file,
-			;;  and end-file there must not call emms-player-stopped, as that'd switch track again.
-			;; Same end+start sequence also happens when mpv goes from playlist to track.
-			;; Which is why playback-restart is used to reset emms-mpv-proc-stopped after these.
-			(when (emms-mpv-proc-stopped-p)
-				(emms-mpv-proc-stopped nil)
+			;; Separate emms-mpv-proc-playing state is used for emms started/stopped signals,
+			;;  because start-file/end-file are also emitted after track-change and for playlists,
+			;;  and don't correspond to actual playback state.
+			(unless (emms-mpv-proc-playing-p)
+				(emms-mpv-proc-playing t)
 				(emms-player-started emms-player-mpv)))
 		("end-file"
-			;; Does not mean "playback stopped" unless it is known to be started before.
-			;; Example can be playlist, where end+start will mean switching from playlist to file.
-			(unless (emms-mpv-proc-stopped-p)
-				(emms-mpv-proc-stopped t) (emms-player-stopped)))))
+			(when (emms-mpv-proc-playing-p)
+				(emms-mpv-proc-playing nil)
+				(emms-player-stopped)))
+		("idle"
+			;; Can mean any kind of error before or during playback.
+			;; Example can be access/format error, resulting in start+end without playback-restart.
+			(cancel-timer emms-mpv-idle-timer)
+			(setq emms-mpv-idle-timer
+				(run-at-time emms-mpv-idle-delay nil 'emms-player-stopped)))
+		("start-file" (cancel-timer emms-mpv-idle-timer))))
 
 
 ;; ----- High-level EMMS interface
@@ -561,8 +561,7 @@ which have following bindings:
 	(memq (emms-track-type track) '(file url streamlist playlist)))
 
 (defun emms-player-mpv-start (track)
-	(setq emms-mpv-stopped-by-user nil)
-	(emms-mpv-proc-stopped t)
+	(emms-mpv-proc-playing nil)
 	(let
 		((track-name (emms-track-get track 'name))
 			(track-is-playlist (memq (emms-track-get track 'type) '(streamlist playlist))))
@@ -581,8 +580,7 @@ which have following bindings:
 					(emms-player-mpv-cmd `(set pause no)))))))
 
 (defun emms-player-mpv-stop ()
-	(setq emms-mpv-stopped-by-user t)
-	(emms-mpv-proc-stopped t)
+	(emms-mpv-proc-playing nil)
 	(emms-player-mpv-cmd `(stop))
 	(emms-player-stopped))
 
