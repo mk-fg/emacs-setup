@@ -346,7 +346,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 	(emms-mpv-debug-msg "ipc[%s]: %s" proc ev)
 	(when (memq (process-status proc) '(open run))
 		(emms-mpv-event-connect)
-		(run-hooks emms-mpv-event-connect-hook)
+		(run-hooks 'emms-mpv-event-connect-hook)
 		(when emms-mpv-ipc-connect-command
 			(let ((cmd emms-mpv-ipc-connect-command))
 				(setq emms-mpv-ipc-connect-command nil)
