@@ -475,7 +475,7 @@ Only used with JSON IPC, never called with --input-file as there's no feedback t
 				(alist-get 'data json-data) (alist-get 'error json-data)))
 		(when ev ; mpv event
 			(emms-mpv-event-handler json-data)
-			(run-hook-with-args emms-mpv-event-functions json-data))))
+			(run-hook-with-args 'emms-mpv-event-functions json-data))))
 
 (defun emms-mpv-ipc-fifo-cmd (cmd &optional proc)
 	"Send --input-file command string for older mpv versions.
