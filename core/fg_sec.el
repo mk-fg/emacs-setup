@@ -56,6 +56,20 @@
 Simply leaving it up to emacs doesn't seem to work well,
 esp. since utf-8 is used everywhere and guessing doesn't make much sense anymore.")
 
+(defvar ghg-io-coding-system-force t
+	"If non-nil, override buffer-specific coding system
+settings for ghg buffers to `ghg-io-coding-system-default'.
+Idea is to prevent arbitrary coding system 'drift' into nonsense,
+which emacs seem to do with its prefer-* stuff.")
+
+(defun ghg-io-coding-system-fix ()
+	(when ghg-io-coding-system-force
+		(setq
+			buffer-file-coding-system ghg-io-coding-system-default
+			save-buffer-coding-system ghg-io-coding-system-default
+			last-coding-system-used ghg-io-coding-system-default)))
+
+
 (defun ghg-io-op-write-region (start end file &optional append visit lockname mustbenew)
 	(let*
 		((coding-system-used last-coding-system-used)
@@ -95,6 +109,7 @@ esp. since utf-8 is used everywhere and guessing doesn't make much sense anymore
 				(set-visited-file-modtime))))
 		(setq last-coding-system-used coding-system-used))
 
+	(ghg-io-coding-system-fix)
 	nil)
 
 (defun ghg-io-op-insert-file-contents (file &optional visit beg end replace)
@@ -156,6 +171,7 @@ esp. since utf-8 is used everywhere and guessing doesn't make much sense anymore
 			(when err-file-not-found
 				(signal 'file-error (cons "Opening input file" err-file-not-found))))
 
+		(ghg-io-coding-system-fix)
 		(list filename c-size)))
 
 
