@@ -170,7 +170,7 @@ Examples:
 						;; Actually set the values
 						(dolist
 							(sym '(info-artist info-album info-title info-tracknumber) track)
-							(emms-track-set track sym (eval sym)))))))))
+							(let ((val (eval sym))) (when val (emms-track-set track sym val))))))))))
 
 (defvar fg-emms-info-max-len 50
 	"Max length of emms-info string in `emms-track-description-function'.
@@ -198,6 +198,7 @@ and such simple stuff when no other metadata is available."
 	emms-track-description-function 'fg-emms-info-track-description
 	emms-track-initialize-functions '(emms-info-initialize-track)
 	emms-info-auto-update nil
+	emms-info-asynchronously nil
 	emms-info-functions '(fg-emms-track-info-fs))
 
 
