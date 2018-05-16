@@ -177,7 +177,9 @@ Examples:
 Anything longer will be truncated to that length via `s-truncate'.")
 
 (defun fg-emms-info-track-description (track &optional no-fallback)
-	"Return a description of TRACK."
+	"Return a description of TRACK.
+NO-FALLBACK disables fallback to filename/path
+and such simple stuff when no other metadata is available."
 	(let
 		((desc (mapconcat
 			(lambda (sym)
@@ -197,15 +199,6 @@ Anything longer will be truncated to that length via `s-truncate'.")
 	emms-track-initialize-functions '(emms-info-initialize-track)
 	emms-info-auto-update nil
 	emms-info-functions '(fg-emms-track-info-fs))
-
-;; Here's proper info getter. Pity it's so crippled...
-;; TODO: fix this, not all data gets assigned, check while loop
-;; TODO: perfomance impact here is huge, prehaps "call-process" is not async at all?
-;; TODO: synchronous crap, I should either make it async or drop it altogether
-;; (when (require 'emms-info-libtag nil t)
-;; 	(setq-default
-;; 		;; TODO: VERY slow over NFS, gotta do something about it first
-;; 		emms-info-functions '(emms-info-libtag)))
 
 
 
@@ -275,9 +268,6 @@ Anything longer will be truncated to that length via `s-truncate'.")
 
 
 ;;;; EMMS buffers
-
-;; TODO: emms-playlist-mode seem to be far from perfect.
-;;  One possible way to enhance it is to scavenge ideas from other emacs+emms configurations.
 
 ;; emms-playlist-mode-switch-buffer lacks:
 ;;  a) emms-play-directory-tree call
