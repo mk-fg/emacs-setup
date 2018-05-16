@@ -737,6 +737,9 @@ NO-ALIGN disables `csv-align-fields' call."
 					(symbol-name major-mode))
 				(fg-scite-aux t)))))
 
+;; This one can already exist at this point
+(ignore-errors (with-current-buffer "*Messages*" (fg-scite-aux t)))
+
 ;; Hooks can be added w/o loading var definitions
 (add-hook 'erc-mode-hook 'fg-scite-aux)
 (add-hook 'jabber-chat-mode-hook 'fg-scite-aux)
