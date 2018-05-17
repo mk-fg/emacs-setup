@@ -189,13 +189,16 @@ as sent by mpv and decoded by `json-read-from-string'.
 See also `emms-mpv-event-connect-hook'.")
 
 
+(defvar emms-mpv-stopped nil
+	"Non-nil if playback was stopped by call from emms.
+Similar to `emms-player-stopped-p', but set for future async events,
+to indicate that playback should stop instead of switching to next track.")
+
 (defvar emms-mpv-idle-timer (timer-create)
 	"Timer to delay `emms-player-stopped' when mpv unexpectedly goes idle.")
 
 (defvar emms-mpv-idle-delay 0.5
 	"Delay before issuing `emms-player-stopped' when mpv unexpectedly goes idle.")
-
-
 
 
 ;; ----- helpers
@@ -527,6 +530,11 @@ should be re-sent here, even to the same instance.
 See `emms-mpv-event-connect-hook' for extending this."
 	(emms-mpv-observe-property 'duration))
 
+(defun emms-mpv-event-idle ()
+	"Delayed check for switching tracks when mpv goes idle for no good reason."
+	(emms-mpv-debug-msg "idle-check (stopped=%s)" emms-mpv-stopped)
+	(unless emms-mpv-stopped (emms-player-stopped)))
+
 (defun emms-mpv-event-handler (json-data)
 	"Handler for supported mpv events, including property changes.
 Called before `emms-mpv-event-functions' and does same thing as these hooks."
@@ -558,7 +566,7 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 			;; Example can be access/format error, resulting in start+end without playback-restart.
 			(cancel-timer emms-mpv-idle-timer)
 			(setq emms-mpv-idle-timer
-				(run-at-time emms-mpv-idle-delay nil 'emms-player-stopped)))
+				(run-at-time emms-mpv-idle-delay nil 'emms-mpv-event-idle)))
 		("start-file" (cancel-timer emms-mpv-idle-timer))))
 
 
@@ -632,6 +640,7 @@ which have following bindings:
 	(memq (emms-track-type track) '(file url streamlist playlist)))
 
 (defun emms-player-mpv-start (track)
+	(setq emms-mpv-stopped nil)
 	(emms-mpv-proc-playing nil)
 	(let
 		((track-name (emms-track-get track 'name))
@@ -651,6 +660,7 @@ which have following bindings:
 					(emms-player-mpv-cmd `(set pause no)))))))
 
 (defun emms-player-mpv-stop ()
+	(setq emms-mpv-stopped t)
 	(emms-mpv-proc-playing nil)
 	(emms-player-mpv-cmd `(stop))
 	(emms-player-stopped))
