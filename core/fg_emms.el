@@ -172,7 +172,7 @@ Examples:
 							(sym '(info-artist info-album info-title info-tracknumber) track)
 							(let ((val (eval sym))) (when val (emms-track-set track sym val))))))))))
 
-(defvar fg-emms-info-max-len 50
+(defvar fg-emms-info-max-len 100
 	"Max length of emms-info string in `emms-track-description-function'.
 Anything longer will be truncated to that length via `s-truncate'.")
 
