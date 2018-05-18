@@ -17,6 +17,7 @@
 (add-hook 'fg-emacs-exit-hook 'emms-stop)
 
 
+
 ;;;; Player
 
 (require 'emms-player-mpv) ;; in extz
@@ -39,6 +40,7 @@
 (defun fg-emms-player-status-string ()
 	(if emms-player-playing-p
 		(if emms-player-paused-p "paused" "playing") "stopped"))
+
 
 
 ;;;; Playlist controls
@@ -93,6 +95,7 @@ calling FUNC for every path result."
 			emms-source-file-default-directory
 			emms-source-file-default-directory)))
 	(fg-emms-call-something-on-glob 'emms-add-file pattern))
+
 
 
 ;;;; Track info / description
@@ -172,27 +175,41 @@ Examples:
 							(sym '(info-artist info-album info-title info-tracknumber) track)
 							(let ((val (eval sym))) (when val (emms-track-set track sym val))))))))))
 
-(defvar fg-emms-info-max-len 100
-	"Max length of emms-info string in `emms-track-description-function'.
+(defvar fg-emms-info-max-len 160
+	"Max length of the whole info-string from `emms-track-description-function'.
+Fields get truncated to roughly equal length until it fits.")
+
+(defvar fg-emms-info-max-field-len 100
+	"Max length of emms-info field in `emms-track-description-function'.
 Anything longer will be truncated to that length via `s-truncate'.")
 
 (defun fg-emms-info-track-description (track &optional no-fallback)
 	"Return a description of TRACK.
 NO-FALLBACK disables fallback to filename/path
 and such simple stuff when no other metadata is available."
-	(let
-		((desc (mapconcat
-			(lambda (sym)
-				(let ((s (emms-track-get track sym)))
-					(if (and s (> (length s) fg-emms-info-max-len))
-						(s-truncate fg-emms-info-max-len s) s)))
-			'(info-artist info-album info-title) " :: ")))
-		(if (string= desc " ::  :: ")
+	(let*
+		(desc
+			(fields (mapcar
+				(lambda (sym) (or (emms-track-get track sym) ""))
+				'(info-artist info-album info-title)))
+			(field-len-min 15) (field-len-step 3) (field-sep " :: ")
+			(field-len
+				(min fg-emms-info-max-field-len
+					(apply 'max field-len-min (mapcar 'length fields)))))
+		(if (> (apply 'max (mapcar 'length fields)) 0)
+			(while
+				(or (not desc)
+					(and
+						(>= field-len field-len-min)
+						(> (length desc) fg-emms-info-max-len)))
+				(when desc (setq field-len (- field-len field-len-step)))
+				(setq desc (mapconcat
+					(apply-partially 's-truncate field-len) fields field-sep)))
 			(if no-fallback
 				(emms-track-name track)
 				(fg-emms-track-info-fs track)
-				(fg-emms-info-track-description track t))
-			desc)))
+				(fg-emms-info-track-description track t)))
+		desc))
 
 (setq-default
 	emms-track-description-function 'fg-emms-info-track-description
@@ -250,6 +267,7 @@ and such simple stuff when no other metadata is available."
 
 
 ;;;; Track change notification
+
 (defun fg-emms-notify ()
 	(interactive)
 	(let ((track (emms-playlist-current-selected-track)))
@@ -269,10 +287,10 @@ and such simple stuff when no other metadata is available."
 
 
 ;;;; EMMS buffers
-
 ;; emms-playlist-mode-switch-buffer lacks:
 ;;  a) emms-play-directory-tree call
 ;;  b) emms-playlist-mode-go
+
 (defun emms ()
 	"Switch to/from the current `emms-playlist' buffer or
 invoke `emms-play-directory-tree'."
