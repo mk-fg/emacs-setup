@@ -348,7 +348,6 @@ MEDIA-ARGS are used instead of --idle, if specified."
 (defun emms-mpv-ipc-sentinel (proc ev)
 	(emms-mpv-debug-msg "ipc[%s]: %s" proc ev)
 	(when (memq (process-status proc) '(open run))
-		(emms-mpv-event-connect)
 		(run-hooks 'emms-mpv-event-connect-hook)
 		(when emms-mpv-ipc-connect-command
 			(let ((cmd emms-mpv-ipc-connect-command))
@@ -522,14 +521,6 @@ potential duplication if used for same properties from different functions."
 	(let ((id (emms-mpv-proc-symbol-id sym)))
 		(when id (emms-mpv-ipc-req-send `(observe_property ,id ,sym)))))
 
-(defun emms-mpv-event-connect ()
-	"Default JSON IPC connection event handler.
-mpv maintains per-connection state, so any commands like
-observe_property, request_log_messages, enable_event and such
-should be re-sent here, even to the same instance.
-See `emms-mpv-event-connect-hook' for extending this."
-	(emms-mpv-observe-property 'duration))
-
 (defun emms-mpv-event-idle ()
 	"Delayed check for switching tracks when mpv goes idle for no good reason."
 	(emms-mpv-debug-msg "idle-check (stopped=%s)" emms-mpv-stopped)
@@ -539,24 +530,14 @@ See `emms-mpv-event-connect-hook' for extending this."
 	"Handler for supported mpv events, including property changes.
 Called before `emms-mpv-event-functions' and does same thing as these hooks."
 	(pcase (alist-get 'event json-data)
-		("property-change"
-			(pcase (alist-get 'name json-data)
-				("duration"
-					(let
-						((total (alist-get 'data json-data))
-							(track (emms-playlist-current-selected-track)))
-						(when total
-							(setq total (round total))
-							(emms-track-set track 'info-playing-time total)
-							(emms-track-set track 'info-playing-time-min (/ total 60))
-							(emms-track-set track 'info-playing-time-sec (% total 60)))))))
 		("playback-restart"
 			;; Separate emms-mpv-proc-playing state is used for emms started/stopped signals,
 			;;  because start-file/end-file are also emitted after track-change and for playlists,
 			;;  and don't correspond to actual playback state.
 			(unless (emms-mpv-proc-playing-p)
 				(emms-mpv-proc-playing t)
-				(emms-player-started emms-player-mpv)))
+				(emms-player-started emms-player-mpv)
+				(emms-mpv-info-update-duration-check)))
 		("end-file"
 			(when (emms-mpv-proc-playing-p)
 				(emms-mpv-proc-playing nil)
@@ -570,7 +551,7 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 		("start-file" (cancel-timer emms-mpv-idle-timer))))
 
 
-;; ----- Example metadata update hooks
+;; ----- Metadata update hooks
 
 (defun emms-mpv-info-connect-func ()
 	"Hook function for `emms-mpv-event-connect-hook' to update metadata from mpv."
@@ -607,6 +588,30 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 			genre (key genre)
 			note (key comment))
 		(emms-track-updated track)))
+
+(defun emms-mpv-info-update-duration-check ()
+	"Check current mpv track duration and update emms metadata from it."
+	(emms-mpv-ipc-req-send '(get_property stream-end) (lambda (pts-end err)
+		;; Duration can be inaccurate and dynamic if stream-end is not set, so ignored here
+		(emms-mpv-debug-msg "stream-end-pts: %s %s" pts-end err)
+		(if err
+			(unless (and (stringp err) (string= err "property unavailable"))
+				(emms-mpv-ipc-req-error-printer pts-end err))
+			(when pts-end
+				(emms-mpv-ipc-req-send '(get_property duration)
+					'emms-mpv-info-update-duration-handler))))))
+
+(defun emms-mpv-info-update-duration-handler (duration err)
+	"Handler for '(get_property duration) response to update current track info."
+	(if err
+		(emms-mpv-debug-msg "duration-req-error: %s" err)
+		(when (and (numberp duration) (> duration 0)) ; can be nil/0 for network streams
+			(let
+				((duration (round duration))
+					(track (emms-playlist-current-selected-track)))
+				(emms-track-set track 'info-playing-time duration)
+				(emms-track-set track 'info-playing-time-min (/ duration 60))
+				(emms-track-set track 'info-playing-time-sec (% duration 60))))))
 
 
 ;; ----- High-level EMMS interface
