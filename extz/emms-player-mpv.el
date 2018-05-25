@@ -118,8 +118,20 @@ depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	:type 'file
 	:group 'emms-player-mpv)
 
-(defcustom emms-player-mpv-dynamic-metadata nil
-	"Update metadata for currently played entries from mpv events.
+(defcustom emms-player-mpv-update-duration t
+	"Update track duration when played by mpv.
+Uses `emms-mpv-event-functions' hook."
+	:type 'boolean
+	:set (lambda (sym value)
+		(run-at-time 0.1 nil
+			(lambda (value) (if value
+				(add-hook 'emms-mpv-event-functions 'emms-mpv-info-duration-event-func)
+				(remove-hook 'emms-mpv-event-functions 'emms-mpv-info-duration-event-func)))
+			value))
+	:group 'emms-player-mpv)
+
+(defcustom emms-player-mpv-update-metadata nil
+	"Update track info (artist, album, name, etc) from mpv events, when it is played.
 This allows to dynamically update stream info from ICY tags, for example.
 Uses `emms-mpv-event-connect-hook' and `emms-mpv-event-functions' hooks."
 	:type 'boolean
@@ -127,12 +139,12 @@ Uses `emms-mpv-event-connect-hook' and `emms-mpv-event-functions' hooks."
 		(run-at-time 0.1 nil
 			(lambda (value) (if value
 				(progn
-					(add-hook 'emms-mpv-event-connect-hook 'emms-mpv-info-connect-func)
-					(add-hook 'emms-mpv-event-functions 'emms-mpv-info-event-func)
-					(when (process-live-p emms-mpv-ipc-proc) (emms-mpv-info-connect-func)))
+					(add-hook 'emms-mpv-event-connect-hook 'emms-mpv-info-meta-connect-func)
+					(add-hook 'emms-mpv-event-functions 'emms-mpv-info-meta-event-func)
+					(when (process-live-p emms-mpv-ipc-proc) (emms-mpv-info-meta-connect-func)))
 				(progn
-					(remove-hook 'emms-mpv-event-connect-hook 'emms-mpv-info-connect-func)
-					(remove-hook 'emms-mpv-event-functions 'emms-mpv-info-event-func))))
+					(remove-hook 'emms-mpv-event-connect-hook 'emms-mpv-info-meta-connect-func)
+					(remove-hook 'emms-mpv-event-functions 'emms-mpv-info-meta-event-func))))
 			value))
 	:group 'emms-player-mpv)
 
@@ -536,8 +548,7 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 			;;  and don't correspond to actual playback state.
 			(unless (emms-mpv-proc-playing-p)
 				(emms-mpv-proc-playing t)
-				(emms-player-started emms-player-mpv)
-				(emms-mpv-info-update-duration-check)))
+				(emms-player-started emms-player-mpv)))
 		("end-file"
 			(when (emms-mpv-proc-playing-p)
 				(emms-mpv-proc-playing nil)
@@ -553,20 +564,20 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 
 ;; ----- Metadata update hooks
 
-(defun emms-mpv-info-connect-func ()
+(defun emms-mpv-info-meta-connect-func ()
 	"Hook function for `emms-mpv-event-connect-hook' to update metadata from mpv."
 	(emms-mpv-observe-property 'metadata))
 
-(defun emms-mpv-info-event-func (json-data)
+(defun emms-mpv-info-meta-event-func (json-data)
 	"Hook function for `emms-mpv-event-functions' to update metadata from mpv."
 	(when
 		(and
 			(string= (alist-get 'event json-data) "property-change")
 			(string= (alist-get 'name json-data) "metadata"))
 		(let ((info-alist (alist-get 'data json-data)))
-			(when info-alist (emms-mpv-info-update-current-track info-alist)))))
+			(when info-alist (emms-mpv-info-meta-update-track info-alist)))))
 
-(defun emms-mpv-info-update-current-track (info-alist &optional track)
+(defun emms-mpv-info-meta-update-track (info-alist &optional track)
 	"Update TRACK with mpv metadata from INFO-ALIST.
 `emms-playlist-current-selected-track' is used by default."
 	(mapc
@@ -589,20 +600,24 @@ Called before `emms-mpv-event-functions' and does same thing as these hooks."
 			note (key comment))
 		(emms-track-updated track)))
 
-(defun emms-mpv-info-update-duration-check ()
-	"Check current mpv track duration and update emms metadata from it."
+(defun emms-mpv-info-duration-event-func (json-data)
+	"Hook function for `emms-mpv-event-functions' to update track duration from mpv."
+	(when
+		(string= (alist-get 'event json-data) "playback-restart")
+		(emms-mpv-info-duration-check)))
+
+(defun emms-mpv-info-duration-check ()
+	"Check whether current mpv track has reliable duration info and request it."
 	(emms-mpv-ipc-req-send '(get_property stream-end) (lambda (pts-end err)
-		;; Duration can be inaccurate and dynamic if stream-end is not set, so ignored here
-		(emms-mpv-debug-msg "stream-end-pts: %s %s" pts-end err)
 		(if err
 			(unless (and (stringp err) (string= err "property unavailable"))
 				(emms-mpv-ipc-req-error-printer pts-end err))
 			(when pts-end
 				(emms-mpv-ipc-req-send '(get_property duration)
-					'emms-mpv-info-update-duration-handler))))))
+					'emms-mpv-info-duration-handler))))))
 
-(defun emms-mpv-info-update-duration-handler (duration err)
-	"Handler for '(get_property duration) response to update current track info."
+(defun emms-mpv-info-duration-handler (duration err)
+	"Duration property request handler to update it for current emms track."
 	(if err
 		(emms-mpv-debug-msg "duration-req-error: %s" err)
 		(when (and (numberp duration) (> duration 0)) ; can be nil/0 for network streams
