@@ -60,7 +60,7 @@
 
 (require 'emms)
 (require 'json)
-(require 'cl)
+(require 'cl-lib)
 
 
 (defcustom emms-player-mpv
@@ -117,6 +117,8 @@ support for various feedback and metadata options from mpv."
 depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	:type 'file
 	:group 'emms-player-mpv)
+
+(defvar emms-mpv-ipc-proc nil) ; to avoid warnings while keeping useful defs at the top
 
 (defcustom emms-player-mpv-update-duration t
 	"Update track duration when played by mpv.
@@ -337,6 +339,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 		(setq emms-mpv-proc
 			(make-process :name "emms-mpv"
 				:buffer nil :command argv :noquery t :sentinel 'emms-mpv-proc-sentinel))
+		(when (emms-mpv-ipc-fifo-p) (emms-mpv-proc-playing t))
 		(emms-mpv-debug-msg "proc[%s]: start %s" emms-mpv-proc argv)))
 
 (defun emms-mpv-proc-stop ()
@@ -651,9 +654,8 @@ which have following bindings:
 - mpv-cmd for CMD.
 - mpv-data for response data (decoded json, nil if none).
 - mpv-error for response error (nil if no error, decoded json or 'connection-error)."
-	`(lexical-let ((mpv-cmd ,cmd))
-		(emms-player-mpv-cmd mpv-cmd
-			(lambda (mpv-data mpv-error) ,@handler-body))))
+	`(emms-player-mpv-cmd ,cmd (apply-partially
+		(lambda (mpv-cmd mpv-data mpv-error) ,@handler-body) ,cmd)))
 
 
 (defun emms-player-mpv-playable-p (track)

@@ -31,6 +31,7 @@
 
 ;; (setq emms-mpv-debug t)
 ;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-audio-display"))
+;; (setq emms-player-mpv-ipc-method 'file)
 ;; (emms-player-mpv-start (emms-playlist-current-selected-track))
 ;; (emms-player-stop)
 ;; (emms-mpv-proc-stop)
