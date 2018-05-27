@@ -10,6 +10,7 @@
 ;;  https://www.emacswiki.org/emacs/RegularExpression
 
 ;; TODO: dedup old macros with this stuff
+(require 'cl)
 (require 's)
 (require 'dash)
 (require 'dash-functional)
@@ -973,6 +974,7 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 
 ;; Comment-tabulata
 (defun fg-comment (arg)
+	"Comment-out or uncomment trainted lines."
 	(interactive "*P")
 	(let
 		((start-m (or (use-region-p) (point-marker)))
@@ -983,6 +985,11 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 		(when (markerp start-m)
 			(deactivate-mark)
 			(goto-char (marker-position start-m)))))
+
+(defun fg-autoindent (arg)
+	"Autoindent trainted lines via `indent-region'."
+	(interactive "*P")
+	(fg-taint :call 'indent-region :whole-lines-only t))
 
 
 

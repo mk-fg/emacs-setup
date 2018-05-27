@@ -52,6 +52,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 
 ;;;; Actual bindings
+;; (global-unset-key "\C-?")
 
 (global-set-keys
 	;; Mode setting globals
@@ -59,7 +60,6 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("M-?" fg-scite-lisp)
 		("M-'" fg-scite-aux)
 		("M-]" fg-scite-core)
-		("C-?" setnu-mode)
 		("C-M-o" (lambda () (interactive)
 			(multiple-value-bind (action msg)
 				(if (memq 'delete-trailing-whitespace before-save-hook)
@@ -101,7 +101,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 ;;;; Snippet to rebind stuff online
 ;; (define-key fg-scite-core-map (key "s-,") 'emms-shuffle)
-;; (define-key fg-scite-core-map (key "M-c") 'fg-emacs-exit)
+;; (define-key fg-scite-code-map (key "C-?") (transient-wrap 'fg-autoindent "P"))
 
 
 (define-minor-mode fg-scite-core
@@ -292,6 +292,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-U") . ,(transient-wrap 'capitalize-region "r"))
 		(,(key "M-l") . ,(transient-wrap 'downcase-region "r"))
 		(,(key "C-/") . ,(transient-wrap 'fg-comment "P"))
+		(,(key "C-?") . ,(transient-wrap 'fg-autoindent "P"))
 		(,(key "M-h") . hide-region-hide)
 		(,(key "C-M-h") . hide-region-unhide)
 
@@ -314,6 +315,10 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; Metacode ops (emacs stuff)
 		(,(key "C-j") . eval-last-sexp) ; > minibuffer
 		(,(key "C-S-j") . eval-print-last-sexp)
+		(,(key "C-;") . ,(lambda (arg) (interactive "P")
+			(fg-lisp-format :spaces (when arg (if (numberp arg) arg t)))))
+		(,(key "C-:") . ,(lambda (arg) (interactive "P")
+			(fg-lisp-format :pp t :spaces (when arg (if (numberp arg) arg t)))))
 		(,(key "C-M-j") . fg-eval-py)
 		(,(key "C-M-S-j") . fg-eval-py-print))
 	:group 'fg-scite)

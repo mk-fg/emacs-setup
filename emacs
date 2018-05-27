@@ -36,7 +36,6 @@
 (setq-default vc-follow-symlinks t) ;; it's just a noise anyway
 
 
-(load-library "fg_lisp") ; core language tweaks, should be first
 (load-library "fg_macroz")
 
 
@@ -62,6 +61,7 @@
 
 (load-library "fg_stack")
 (load-library "fg_lookz")
+(load-library "fg_lisp")
 (load-library "fg_diff")
 (load-library "fg_remote")
 

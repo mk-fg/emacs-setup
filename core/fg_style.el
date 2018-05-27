@@ -5,7 +5,6 @@
 	default-tab-width 2
 	indent-region-function
 		'fg-indent-command ; default one inserts spaces
-	basic-indent 2
 	require-final-newline t
 	tab-always-indent t ; overidden by fg-tab
 	fill-column 80
