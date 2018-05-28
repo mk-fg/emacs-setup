@@ -20,3 +20,10 @@
 
 (load-library "fg_macroz")
 (load-library "fg_lisp")
+
+
+;; Disable all implicit backup files
+(setq-default
+	make-backup-files nil
+	backup-inhibited t
+	backup-directory-alist nil)
