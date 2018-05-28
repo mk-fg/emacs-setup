@@ -320,7 +320,7 @@ Used to signal emms via `emms-player-started' and `emms-player-stopped' calls."
 Optional MODE should be 12-bit octal integer, e.g. #o600 (safe default).
 Signals error if mkfifo exits with non-zero code."
 	(let ((attrs (file-attributes path)))
-		(when ; remove non-fifo at the same path
+		(when
 			(and attrs (not (string-prefix-p "p" (nth 8 attrs))))
 			(delete-file path) (setq attrs nil))
 		(unless attrs
@@ -415,7 +415,7 @@ so it can be rescheduled further until function runs out of DELAYS values.
 Sets `emms-player-mpv-ipc-proc' value to resulting process on success."
 	(emms-player-mpv-debug-msg "ipc: connect-delay %s" (car delays))
 	(setq emms-player-mpv-ipc-proc
-		(make-network-process ; returns nil if there's no socket yet
+		(make-network-process
 			:name "emms-player-mpv-ipc"
 			:family 'local
 			:service emms-player-mpv-ipc-socket
@@ -505,9 +505,10 @@ PROC can be specified to avoid `emms-player-mpv-ipc' call (e.g. from sentinel/fi
 		(let ((json (concat (json-encode (list :command cmd :request_id req-id)) "\n")))
 			(emms-player-mpv-debug-msg "json >> %s" json)
 			(condition-case err
-				(process-send-string req-proc json) ; can disconnect at any time
+				;; On any disconnect, assume that mpv process is to blame and force restart.
+				(process-send-string req-proc json)
 				(error
-					(emms-player-mpv-proc-stop) ; assume that mpv process is to blame and force restart
+					(emms-player-mpv-proc-stop)
 					(funcall handler nil 'connection-error) (setq handler nil))))
 		(when handler (puthash req-id handler emms-player-mpv-ipc-req-table))))
 
@@ -532,10 +533,12 @@ Only used with JSON IPC, never called with --input-file as there's no feedback t
 		((json-data (json-read-from-string json))
 			(req-id (alist-get 'request_id json-data))
 			(ev (alist-get 'event json-data)))
-		(when req-id ; response to command
+		(when req-id
+			;; Response to command
 			(emms-player-mpv-ipc-req-resolve req-id
 				(alist-get 'data json-data) (alist-get 'error json-data)))
-		(when ev ; mpv event
+		(when ev
+			;; mpv event
 			(emms-player-mpv-event-handler json-data)
 			(run-hook-with-args 'emms-player-mpv-event-functions json-data))))
 
@@ -642,7 +645,8 @@ Called before `emms-player-mpv-event-functions' and does same thing as these hoo
 	"Duration property request handler to update it for current emms track."
 	(if err
 		(emms-player-mpv-debug-msg "duration-req-error: %s" err)
-		(when (and (numberp duration) (> duration 0)) ; can be nil/0 for network streams
+		;; Duration can be nil or 0 for network streams, depending on version/stream
+		(when (and (numberp duration) (> duration 0))
 			(let
 				((duration (round duration))
 					(track (emms-playlist-current-selected-track)))
@@ -688,7 +692,8 @@ which have following bindings:
 			(track-is-playlist (memq (emms-track-get track 'type) '(streamlist playlist))))
 		(if (emms-player-mpv-ipc-fifo-p)
 			(progn
-				(emms-player-mpv-ipc-stop) ; to clear any buffered commands
+				;; ipc-stop is to clear any buffered commands
+				(emms-player-mpv-ipc-stop)
 				(emms-player-mpv-proc-init (if track-is-playlist "--playlist" "--") track-name)
 				(emms-player-started emms-player-mpv))
 			(emms-player-mpv-cmd-prog
