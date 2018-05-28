@@ -65,9 +65,9 @@
 
 (defcustom emms-player-mpv
 	(emms-player
-		'emms-player-mpv-start
-		'emms-player-mpv-stop
-		'emms-player-mpv-playable-p)
+		#'emms-player-mpv-start
+		#'emms-player-mpv-stop
+		#'emms-player-mpv-playable-p)
 	"*Parameters for mpv player."
 	:type '(cons symbol alist)
 	:group 'emms-player-mpv)
@@ -129,10 +129,10 @@ Uses `emms-player-mpv-event-functions' hook."
 			(lambda (value) (if value
 				(add-hook
 					'emms-player-mpv-event-functions
-					'emms-player-mpv-info-duration-event-func)
+					#'emms-player-mpv-info-duration-event-func)
 				(remove-hook
 					'emms-player-mpv-event-functions
-					'emms-player-mpv-info-duration-event-func)))
+					#'emms-player-mpv-info-duration-event-func)))
 			value))
 	:group 'emms-player-mpv)
 
@@ -147,19 +147,19 @@ Uses `emms-player-mpv-event-connect-hook' and `emms-player-mpv-event-functions' 
 				(progn
 					(add-hook
 						'emms-player-mpv-event-connect-hook
-						'emms-player-mpv-info-meta-connect-func)
+						#'emms-player-mpv-info-meta-connect-func)
 					(add-hook
 						'emms-player-mpv-event-functions
-						'emms-player-mpv-info-meta-event-func)
+						#'emms-player-mpv-info-meta-event-func)
 					(when (process-live-p emms-player-mpv-ipc-proc)
 						(emms-player-mpv-info-meta-connect-func)))
 				(progn
 					(remove-hook
 						'emms-player-mpv-event-connect-hook
-						'emms-player-mpv-info-meta-connect-func)
+						#'emms-player-mpv-info-meta-connect-func)
 					(remove-hook
 						'emms-player-mpv-event-functions
-						'emms-player-mpv-info-meta-event-func))))
+						#'emms-player-mpv-info-meta-event-func))))
 			value))
 	:group 'emms-player-mpv)
 
@@ -250,7 +250,7 @@ Strips whitespace from start/end of TPL-OR-MSG and strings in TPL-VALUES."
 	(when emms-player-mpv-debug
 		(setq
 			tpl-or-msg (emms-player-mpv-debug-trim tpl-or-msg)
-			tpl-values (seq-map 'emms-player-mpv-debug-trim tpl-values))
+			tpl-values (seq-map #'emms-player-mpv-debug-trim tpl-values))
 		(unless tpl-values
 			(setq tpl-or-msg (replace-regexp-in-string "%" "%%" tpl-or-msg t t)))
 		(let ((ts (float-time)))
@@ -352,7 +352,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 				(unless (seq-some 'not env) process-environment) (seq-filter 'identity env))))
 		(setq emms-player-mpv-proc
 			(make-process :name "emms-player-mpv"
-				:buffer nil :command argv :noquery t :sentinel 'emms-player-mpv-proc-sentinel))
+				:buffer nil :command argv :noquery t :sentinel #'emms-player-mpv-proc-sentinel))
 		(when (emms-player-mpv-ipc-fifo-p) (emms-player-mpv-proc-playing t))
 		(emms-player-mpv-debug-msg "proc[%s]: start %s" emms-player-mpv-proc argv)))
 
@@ -419,10 +419,10 @@ Sets `emms-player-mpv-ipc-proc' value to resulting process on success."
 			:coding '(utf-8 . utf-8)
 			:buffer (get-buffer-create emms-player-mpv-ipc-buffer)
 			:noquery t
-			:filter 'emms-player-mpv-ipc-filter
-			:sentinel 'emms-player-mpv-ipc-sentinel))
+			:filter #'emms-player-mpv-ipc-filter
+			:sentinel #'emms-player-mpv-ipc-sentinel))
 	(when (and (not emms-player-mpv-ipc-proc) delays)
-		(run-at-time (car delays) nil 'emms-player-mpv-ipc-connect (cdr delays))))
+		(run-at-time (car delays) nil #'emms-player-mpv-ipc-connect (cdr delays))))
 
 (defun emms-player-mpv-ipc-connect-fifo ()
 	"Set `emms-player-mpv-ipc-proc' to process wrapper for
@@ -451,8 +451,8 @@ writing to a named pipe (fifo) file/node or signal error."
 			emms-player-mpv-ipc-req-table nil
 			emms-player-mpv-ipc-connect-timer nil
 			emms-player-mpv-ipc-connect-timer
-				(run-at-time (car emms-player-mpv-ipc-connect-delays)
-					nil 'emms-player-mpv-ipc-connect (cdr emms-player-mpv-ipc-connect-delays)))))
+				(run-at-time (car emms-player-mpv-ipc-connect-delays) nil
+					#'emms-player-mpv-ipc-connect (cdr emms-player-mpv-ipc-connect-delays)))))
 
 (defun emms-player-mpv-ipc-stop ()
 	(when emms-player-mpv-ipc-proc
@@ -495,7 +495,7 @@ PROC can be specified to avoid `emms-player-mpv-ipc' call (e.g. from sentinel/fi
 	(let
 		((req-id (emms-player-mpv-ipc-id-get))
 			(req-proc (or proc (emms-player-mpv-ipc)))
-			(handler (or handler 'emms-player-mpv-ipc-req-error-printer)))
+			(handler (or handler #'emms-player-mpv-ipc-req-error-printer)))
 		(unless emms-player-mpv-ipc-req-table
 			(setq emms-player-mpv-ipc-req-table (make-hash-table)))
 		(let ((json (concat (json-encode (list :command cmd :request_id req-id)) "\n")))
@@ -576,7 +576,7 @@ Called before `emms-player-mpv-event-functions' and does same thing as these hoo
 			;; Example can be access/format error, resulting in start+end without playback-restart.
 			(cancel-timer emms-player-mpv-idle-timer)
 			(setq emms-player-mpv-idle-timer
-				(run-at-time emms-player-mpv-idle-delay nil 'emms-player-mpv-event-idle)))
+				(run-at-time emms-player-mpv-idle-delay nil #'emms-player-mpv-event-idle)))
 		("start-file" (cancel-timer emms-player-mpv-idle-timer))))
 
 
@@ -632,7 +632,7 @@ Called before `emms-player-mpv-event-functions' and does same thing as these hoo
 				(emms-player-mpv-ipc-req-error-printer pts-end err))
 			(when pts-end
 				(emms-player-mpv-ipc-req-send '(get_property duration)
-					'emms-player-mpv-info-duration-handler))))))
+					#'emms-player-mpv-info-duration-handler))))))
 
 (defun emms-player-mpv-info-duration-handler (duration err)
 	"Duration property request handler to update it for current emms track."
@@ -715,10 +715,10 @@ which have following bindings:
 (defun emms-player-mpv-seek-to (sec)
 	(emms-player-mpv-cmd `(seek ,sec absolute)))
 
-(emms-player-set emms-player-mpv 'pause 'emms-player-mpv-pause)
-(emms-player-set emms-player-mpv 'resume 'emms-player-mpv-resume)
-(emms-player-set emms-player-mpv 'seek 'emms-player-mpv-seek)
-(emms-player-set emms-player-mpv 'seek-to 'emms-player-mpv-seek-to)
+(emms-player-set emms-player-mpv 'pause #'emms-player-mpv-pause)
+(emms-player-set emms-player-mpv 'resume #'emms-player-mpv-resume)
+(emms-player-set emms-player-mpv 'seek #'emms-player-mpv-seek)
+(emms-player-set emms-player-mpv 'seek-to #'emms-player-mpv-seek-to)
 
 
 (provide 'emms-player-mpv)
