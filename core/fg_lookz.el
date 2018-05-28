@@ -429,6 +429,51 @@ NAME can also be passed explicitly as an argument."
 		'("red1" "OrangeRed1" "orange1" "DarkOrange1")))
 
 
+;; Lisp namespace (ns) mode
+
+(defvar fg-ns-regex nil
+	"A regular expression matching namespace-prefix to shorten.")
+(make-variable-buffer-local 'fg-ns-regex)
+
+(defvar fg-ns-symbol "-ns-"
+	"String to use as short replacement.")
+;; (setq fg-ns-symbol "-ns-")
+
+(defun fg-ns-fontify (beg end)
+	(save-excursion
+		(goto-char beg)
+		(while (re-search-forward fg-ns-regex end t)
+			(let* ((o-list (overlays-at (match-beginning 0))) (o (car o-list)))
+				(unless (and o (eq (overlay-get o 'type) 'fg-ns))
+					(when (cdr o-list) (setq o (seq-some
+						(lambda (o) (eq (overlay-get o 'type) 'fg-ns)) (cdr os))))
+					(unless o
+						(setq o (make-overlay (match-beginning 0) (match-end 0)))
+						(overlay-put o 'type 'fg-ns)
+						(overlay-put o 'evaporate t)
+						(overlay-put o 'display fg-ns-symbol)))))))
+
+(defun fg-ns-unfontify (beg end)
+	(mapc
+		(lambda (o)
+			(when (eq (overlay-get o 'type) 'fg-ns) (delete-overlay o)))
+		(overlays-in beg end)))
+
+(define-minor-mode lisp-ns-mode
+	"Visually shorten namespace prefix in lisp files."
+	nil " LP" nil
+	(if (not lisp-ns-mode)
+		(progn ; disable
+			(jit-lock-unregister 'fg-ns-fontify)
+			(fg-ns-unfontify (point-min) (point-max)))
+		(setq fg-ns-regex (concat
+			(s-chop-suffix ".el"
+				(file-name-nondirectory buffer-file-name)) "-"))
+		(fg-ns-fontify (point-min) (point-max))
+		(jit-lock-register 'fg-ns-fontify)))
+
+
+
 ;; Set masq depending on time-of-the-day
 (require 'solar)
 (defvar fg-sunset-timer)
