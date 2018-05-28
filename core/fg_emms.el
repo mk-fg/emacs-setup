@@ -29,13 +29,13 @@
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null"))
 (custom-set-variables '(emms-player-mpv-update-metadata t t))
 
-;; (setq emms-mpv-debug t)
+;; (setq emms-player-mpv-debug t)
 ;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-audio-display"))
 ;; (setq emms-player-mpv-ipc-method 'file)
 ;; (emms-player-mpv-start (emms-playlist-current-selected-track))
 ;; (emms-player-stop)
-;; (emms-mpv-proc-stop)
-;; (emms-mpv-ipc-proc-stop)
+;; (emms-player-mpv-proc-stop)
+;; (emms-player-mpv-ipc-proc-stop)
 ;; (emms-play-url "https://somafm.com/sf1033130.pls")
 
 (defun fg-emms-player-status-string ()
