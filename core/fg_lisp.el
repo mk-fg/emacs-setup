@@ -31,31 +31,56 @@
 
 ;; TEH LISHP MUSHT FLOW...
 
-(cl-defun fg-lisp-format (&key pp spaces)
-	"Indent (default) or pretty-print (if PP is non-nil)
-s-expressions in tainted region or whole buffer.
+(cl-defmacro fg-lisp-format-func (&key type fill)
+	"Make interactive function to format s-expressions
+using `fg-lisp-format' with number of SPACES as interactive argument."
+	`(lambda (arg)
+		(interactive "P")
+		(fg-lisp-format :type ,type :fill ,fill
+			:spaces (when arg (if (numberp arg) arg t)))))
+
+(cl-defun fg-lisp-format (&key type spaces fill)
+	"Format s-expressions in tainted region or whole buffer.
+Default mode is to just auto-indent them.
+
+TYPE can be one of the following symbols:
+- nil - auto-indent using `indent-sexp' (emacs).
+- pp - pretty-print s-exps using `pp-buffer' (emacs).
+- lispy-oneline - format using `lispy-oneline' (lispy).
+- lispy-multiline - format using `lispy-multiline' (lispy).
+
 If SPACES is non-nil (number or t),
 also force indentation level to be equal to specified number of spaces
-(`tab-width' if t) and replace all tabs with these."
-	(interactive)
+(`tab-width' if t) and replace all tabs with these.
+
+FILL is only accepted as t and passed
+as 'fill argument to `lispy-multiline' at the moment."
 	(multiple-value-bind (start end)
 		(if (use-region-p)
 			(fg-taint :whole-lines-only t)
 			(list (point-min) (point-max)))
-		(if (not spaces) (fg-lisp-format-region start end)
-			(let ((end-marker (progn (goto-char end) (point-marker))))
-				(when (eq spaces t) (setq spaces tab-width))
-				(goto-char start)
-				(let ((indent (make-string spaces ? )))
-					(while (re-search-forward "^\t+" end-marker t) (replace-match
-						(replace-regexp-in-string "\t" indent (match-string 0) t t))))
-				(let
-					((indent-tabs-mode nil)
-						(tab-width spaces)
-						(indent-region-function nil))
-					(fg-lisp-format-region start (marker-position end-marker)))))))
+		(let
+			((func (pcase type
+				('nil #'indent-sexp)
+				('pp #'pp-buffer)
+				('lispy-oneline (require 'lispy) #'lispy-oneline)
+				('lispy-multiline (require 'lispy)
+					(apply-partially #'lispy-multiline (and fill 'fill)))
+				(- (error (format "Unrecognized fg-lisp-format type: %s" type))))))
+			(if (not spaces) (fg-lisp-format-region func start end)
+				(let ((end-marker (progn (goto-char end) (point-marker))))
+					(when (eq spaces t) (setq spaces tab-width))
+					(goto-char start)
+					(let ((indent (make-string spaces ? )))
+						(while (re-search-forward "^\t+" end-marker t) (replace-match
+							(replace-regexp-in-string "\t" indent (match-string 0) t t))))
+					(let
+						((indent-tabs-mode nil)
+							(tab-width spaces)
+							(indent-region-function nil))
+						(fg-lisp-format-region func start (marker-position end-marker))))))))
 
-(defun fg-lisp-format-region (start end)
+(defun fg-lisp-format-region (func start end)
 	(goto-char start)
 	(let (sexp-start sexp-end-marker sexp-end-last)
 		(loop
@@ -69,7 +94,7 @@ also force indentation level to be equal to specified number of spaces
 			(save-restriction
 				(narrow-to-region sexp-start sexp-end-marker)
 				(goto-char (point-min))
-				(if pp (pp-buffer) (indent-sexp))
+				(funcall func)
 				(goto-char (point-max))
 				(if (eq (char-before) ?\n) (delete-char -1)))
 			(goto-char sexp-end-marker)
