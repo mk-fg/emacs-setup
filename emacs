@@ -6,7 +6,7 @@
 
 (defcustom fg-emacs-exit-hook ()
 	"Called before exiting emacs to run any cleanups and confirmation-killing stuff."
-	:group 'erc-hooks :type 'hook)
+	:type 'hook)
 
 (defun fg-emacs-exit ()
 	"Run `fg-emacs-exit-hook' to cleanup stray pid/tasks and exit emacs."

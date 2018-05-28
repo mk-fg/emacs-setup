@@ -1,0 +1,22 @@
+;; Configuration for --batch mode
+;; Can be used like this:
+;;   /usr/bin/emacs --batch file.el
+;;     --eval '(load "~/.emacs.auto")'
+;;     --eval "(fg-lisp-format :type 'lispy-multiline :spaces t :fill t)"
+;;     -f save-buffer
+
+(package-initialize) ; package.el wants this
+
+(defvar fg-path (expand-file-name "~/.emacs.d"))
+(add-to-list 'load-path (concat fg-path "/core"))
+(add-to-list 'load-path (concat fg-path "/extz"))
+(add-to-list 'load-path (concat fg-path "/extz/yasnippet"))
+
+(defmacro load-library-safe (name &optional msg)
+	"Condition-wrapped inclusion of unsafe el code"
+	`(condition-case err
+		(load-library ,name)
+		(error (progn (message ,(or msg "Failed to load %s: %s") ,name err) nil))))
+
+(load-library "fg_macroz")
+(load-library "fg_lisp")
