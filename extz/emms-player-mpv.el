@@ -366,14 +366,14 @@ MEDIA-ARGS are used instead of --idle, if specified."
 	(when emms-player-mpv-proc
 		(let ((proc emms-player-mpv-proc))
 			(emms-player-mpv-debug-msg "proc[%s]: stop" proc)
-			(setq emms-player-mpv-proc nil)
 			(if (not (process-live-p proc)) (delete-process proc)
 				(emms-player-mpv-proc-playing nil proc)
 				(interrupt-process proc)
 				(when emms-player-mpv-proc-kill-delay
 					(run-at-time
 						emms-player-mpv-proc-kill-delay nil
-						(lambda (proc) (delete-process proc)) proc))))))
+						(lambda (proc) (delete-process proc)) proc))))
+		(setq emms-player-mpv-proc nil)))
 
 
 ;; ----- IPC socket/fifo
@@ -433,8 +433,7 @@ Sets `emms-player-mpv-ipc-proc' value to resulting process on success."
 writing to a named pipe (fifo) file/node or signal error."
 	(setq emms-player-mpv-ipc-proc
 		(start-process-shell-command "emms-player-mpv-input-file" nil
-			(format "cat > '%s'"
-				(replace-regexp-in-string "'" "'\"'\"'" emms-player-mpv-ipc-socket t t))))
+			(format "cat > \"%s\"" (shell-quote-argument emms-player-mpv-ipc-socket))))
 	(set-process-query-on-exit-flag emms-player-mpv-ipc-proc nil)
 	(unless emms-player-mpv-ipc-proc (error (format
 		"Failed to start cat-pipe to fifo: %s" emms-player-mpv-ipc-socket)))
