@@ -300,7 +300,7 @@ Error is signaled if mpv binary fails to run."
 which is distinct from 'start-command sent' and 'process is running' states.
 Used to signal emms via `emms-player-started' and `emms-player-stopped' calls."
 	(let ((proc (or proc emms-player-mpv-proc)))
-		(if proc (process-get proc 'mpv-playing) nil)))
+		(and proc (process-get proc 'mpv-playing))))
 
 (defun emms-player-mpv-proc-playing (state &optional proc)
 	"Set process mpv-playing state flag for `emms-player-mpv-proc-playing-p'."
@@ -401,7 +401,7 @@ MEDIA-ARGS are used instead of --idle, if specified."
 				(while
 					(progn
 						(goto-char p0) (end-of-line)
-						(equal (following-char) #xa))
+						(equal (following-char) ?\n))
 					(let*
 						((p1 (point))
 							(json (buffer-substring p0 p1)))
@@ -444,7 +444,7 @@ writing to a named pipe (fifo) file/node or signal error."
 			(emms-player-mpv-ipc-fifo-cmd cmd emms-player-mpv-ipc-proc))))
 
 (defun emms-player-mpv-ipc-init ()
-	"initialize new mpv ipc socket/file process and associated state."
+	"Initialize new mpv ipc socket/file process and associated state."
 	(emms-player-mpv-ipc-stop)
 	(emms-player-mpv-debug-msg "ipc: init")
 	(if (emms-player-mpv-ipc-fifo-p) (emms-player-mpv-ipc-connect-fifo)
@@ -465,8 +465,8 @@ writing to a named pipe (fifo) file/node or signal error."
 		(setq emms-player-mpv-ipc-proc nil)))
 
 (defun emms-player-mpv-ipc ()
-	"Returns open ipc socket/fifo process or nil, (re-)starting mpv/connection if necessary.
-Will return nil when starting async process/connection, and any follow-up
+	"Return open IPC socket/fifo process or nil, (re-)starting mpv/connection if necessary.
+Return nil when starting async process/connection, and any follow-up
 command should be stored to `emms-player-mpv-ipc-connect-command' in this case."
 	(unless
 		;; Don't start idle processes for fifo - just ignore all ipc requests there
