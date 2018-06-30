@@ -27,3 +27,7 @@
 	make-backup-files nil
 	backup-inhibited t
 	backup-directory-alist nil)
+
+
+;; Misc other relevant settings
+(setq-default fill-column 80)

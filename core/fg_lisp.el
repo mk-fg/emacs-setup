@@ -47,7 +47,7 @@ TYPE can be one of the following symbols:
 - nil - auto-indent using `indent-sexp' (emacs).
 - pp - pretty-print s-exps using `pp-buffer' (emacs).
 - lispy-oneline - format using `lispy-oneline' (lispy).
-- lispy-multiline - format using `lispy-multiline' (lispy).
+- lispy-multiline - format using `fg-lispy-multiline' (lispy).
 
 If SPACES is non-nil (number or t),
 also force indentation level to be equal to specified number of spaces
@@ -65,7 +65,7 @@ as 'fill argument to `lispy-multiline' at the moment."
 				('pp #'pp-buffer)
 				('lispy-oneline (require 'lispy) #'lispy-oneline)
 				('lispy-multiline (require 'lispy)
-					(apply-partially #'lispy-multiline (and fill 'fill)))
+					(apply-partially #'fg-lispy-multiline (and fill 'fill)))
 				(- (error (format "Unrecognized fg-lisp-format type: %s" type))))))
 			(if (not spaces) (fg-lisp-format-region func start end)
 				(let ((end-marker (progn (goto-char end) (point-marker))))
@@ -99,3 +99,49 @@ as 'fill argument to `lispy-multiline' at the moment."
 				(if (eq (char-before) ?\n) (delete-char -1)))
 			(goto-char sexp-end-marker)
 			(setq sexp-end-last (point)))))
+
+(defun fg-lispy-multiline (&optional arg)
+	"Spread current sexp over multiple lines.
+When ARG is `fill', do nothing for short expressions.
+Copy of `lispy-multiline' from 20180516.826,
+but with added `fill-column' check on splitting at `lispy-flow' with 'fill ARG."
+	(interactive "p")
+	(require 'lispy)
+	(unless (or (lispy-left-p) (lispy-right-p)) (lispy--out-backward 1))
+	(lispy-from-left
+		(let*
+			((bnd (lispy--bounds-list))
+				(str (lispy--string-dwim bnd))
+				(plain-expr (read str))
+				(expr (lispy--read str))
+				res)
+			(unless (listp plain-expr) (setq plain-expr nil))
+
+			(if
+				(or (cl-some #'listp plain-expr)
+					(member '(ly-raw newline) expr))
+
+				(let ((pt (point)))
+					(lispy-forward 1)
+					(when
+						(while (and (lispy-flow 1) (> (point) pt))
+							(unless
+								(or (looking-at "\]\\|)\\|\n")
+									(and (eq arg 'fill)
+										(<= (- (line-end-position) (line-beginning-position)) fill-column)))
+								(when (looking-at " *")
+									(replace-match "\n")
+									(backward-char 1)))))
+					(goto-char pt)
+					(indent-sexp))
+
+				(progn
+					(delete-region (car bnd) (cdr bnd))
+					(setq res
+						(butlast (cl-mapcan
+							(lambda (y)
+								(if (memq y '(ly-raw clojure-map clojure-set))
+									(list y) (list y '(ly-raw newline))))
+							(lispy--read str))))
+					(when (vectorp expr) (setq res (apply #'vector res)))
+					(lispy--insert res))))))
