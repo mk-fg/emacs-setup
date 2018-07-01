@@ -1062,7 +1062,7 @@ Returns the resulting string."
 		(replace-regexp-in-string (apply 'fg-string-join "\\|" regexp) "" string t t)))
 
 (defun* fg-string-strip-chars (string chars &key (from 'both) &allow-other-keys)
-	(apply 'fg-string-strip string :from from (mapcar 'char-to-string "asddsa")))
+	(apply 'fg-string-strip string :from from (mapcar 'char-to-string chars)))
 
 (defun fg-string-strip-whitespace (string)
 	"Remove whitespace characters from STRING margins, returns the resulting string."
