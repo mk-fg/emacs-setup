@@ -18,8 +18,8 @@ so can only be called once.
 Enables notifications only after connecting to the last server,
 to avoid spamming them with MOTD entries and notices."
 	(interactive)
-	(when fg-erc-links
-
+	(if (not fg-erc-links)
+		(fg-erc-update-networks)
 		(run-with-timer (* fg-erc-connect-lag 2) nil
 			(lambda ()
 				"Post-connected-to-all hook."
@@ -28,12 +28,13 @@ to avoid spamming them with MOTD entries and notices."
 				(setq fg-erc-track-save-timer
 					(run-with-timer fg-erc-track-save-interval
 						fg-erc-track-save-interval 'fg-erc-track-save))))
-
 		(fg-erc-connect-loop)))
 
 (defun fg-erc-connect-loop (&rest ignored)
 	(if (not fg-erc-links)
-		(remove-hook 'erc-after-connect 'fg-erc-connect-loop)
+		(progn
+			(fg-erc-update-networks)
+			(remove-hook 'erc-after-connect 'fg-erc-connect-loop))
 		(add-hook 'erc-after-connect 'fg-erc-connect-loop)
 		(run-with-timer (* 1.5 fg-erc-connect-lag) nil 'fg-erc-connect-next t)
 		(run-with-timer 1 nil 'fg-erc-connect-next)))
@@ -60,6 +61,19 @@ and intended to be synchronous best-effort 'cleanup before exit' thing."
 		#'erc-open-server-buffer-p
 		(erc-quit-server reason)
 		(set-process-query-on-exit-flag erc-server-process nil)))
+
+(defun fg-erc-update-networks ()
+	"Update `erc-network' values from `erc-determine-network'
+in all erc buffers and run `erc-update-mode-line' there."
+	(interactive)
+	(dolist (buff (erc-buffer-list))
+		(with-current-buffer buff
+			(unless
+				(and (erc-network-name)
+					(not (string= (erc-network-name) "Unknown")))
+				(erc-with-server-buffer
+					(setq erc-network (erc-determine-network))))
+			(erc-update-mode-line))))
 
 (add-hook 'fg-emacs-exit-hook 'fg-erc-quit)
 
