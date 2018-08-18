@@ -212,6 +212,11 @@
 					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
 				"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?$") . conf-mode)))))
 
+;; Blacklist modes from auto-mode-alist via earlier overrides
+(setq-default auto-mode-alist
+	;; blacklist sieve-mode - buggy, locks-up too often
+	(delete '("\\.s\\(v\\|iv\\|ieve\\)\\'" . sieve-mode) auto-mode-alist))
+
 ;; Disable vc-* modes, which slow stuff down pointlessly, esp. on sshfs and such
 (eval-after-load "vc" '(progn
 	(remove-hook 'find-file-hooks 'vc-find-file-hook)
