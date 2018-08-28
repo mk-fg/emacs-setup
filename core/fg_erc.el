@@ -5,10 +5,10 @@
 (defvar fg-erc-connect-last 0
 	"Timestamp when last irc net was connected,
 to make sure there are delays between these.
-Used from `fg-erc'.")
+Used to skip redundant `fg-erc-connect-next' calls in `fg-erc'.")
 
 (defvar fg-erc-connect-lag 10
-	"Timeout for irc connection to complete.
+	"Timeout for waiting on irc connection to complete properly.
 Used for misc sloppy time matching purposes as well.")
 
 (defun fg-erc ()
@@ -18,49 +18,48 @@ so can only be called once.
 Enables notifications only after connecting to the last server,
 to avoid spamming them with MOTD entries and notices."
 	(interactive)
-	(if (not fg-erc-links)
-		(fg-erc-update-networks)
-		(run-with-timer (* fg-erc-connect-lag 2) nil
-			(lambda ()
-				"Post-connected-to-all hook."
-				(add-hook 'erc-insert-post-hook 'fg-erc-notify)
-				;; (remove-hook 'erc-insert-post-hook 'fg-erc-notify)
-				(setq fg-erc-track-save-timer
-					(run-with-timer fg-erc-track-save-interval
-						fg-erc-track-save-interval 'fg-erc-track-save))))
-		(fg-erc-connect-loop)))
+	(if fg-erc-links (fg-erc-connect-loop) (fg-erc-update-networks)))
 
 (defun fg-erc-connect-loop (&rest ignored)
+	"Add itself to `erc-after-connect' hook and schedule
+`fg-erc-connect-next' to run right after that and after `fg-erc-connect-lag' timeout,
+which will then call this func again to schedule next connection.
+Idea is to chain `fg-erc-connect-next' that way until `fg-erc-links' is empty
+and call `fg-erc-connect-done' after that."
 	(if (not fg-erc-links)
 		(progn
-			(fg-erc-update-networks)
-			(remove-hook 'erc-after-connect 'fg-erc-connect-loop))
+			(remove-hook 'erc-after-connect 'fg-erc-connect-loop)
+			(run-with-timer 1 nil 'fg-erc-connect-done))
 		(add-hook 'erc-after-connect 'fg-erc-connect-loop)
 		(run-with-timer (* 1.5 fg-erc-connect-lag) nil 'fg-erc-connect-next t)
 		(run-with-timer 1 nil 'fg-erc-connect-next)))
 
 (defun fg-erc-connect-next (&optional timeout-hook)
-	(let
-		((link (car fg-erc-links))
-			(skip
-				(when timeout-hook
-					(< (- (float-time) fg-erc-connect-last) fg-erc-connect-lag))))
-		(when (and link (not skip))
-			(setq
-				fg-erc-links (cdr fg-erc-links)
-				fg-erc-connect-last (float-time))
-			(apply (car link) (cdr link)))))
+	"Pulls first tuple from `fg-erc-links' and connects there, if any,
+calling `fg-erc-connect-loop' afterwards.
+Checks `fg-erc-connect-last' to abort if something else connected within
+`fg-erc-connect-lag' interval already, as that'd should already schedule
+next call without the need to stampede it here as well."
+	(unless
+		(and timeout-hook
+			(< (- (float-time) fg-erc-connect-last) fg-erc-connect-lag))
+		(let ((link (car fg-erc-links)))
+			(when link
+				(setq
+					fg-erc-links (cdr fg-erc-links)
+					fg-erc-connect-last (float-time))
+				(apply (car link) (cdr link)))
+			(fg-erc-connect-loop))))
 
-(defun fg-erc-quit (&optional reason)
-	"Disconnect (/quit) from all connected IRC servers immediately
-and unset `process-query-on-exit-flag' on all `erc-server-process' subprocesses.
-This doesn't wait for when subprocesses exit and run their disconnect hooks,
-and intended to be synchronous best-effort 'cleanup before exit' thing."
-	(interactive)
-	(erc-with-all-buffers-of-server nil
-		#'erc-open-server-buffer-p
-		(erc-quit-server reason)
-		(set-process-query-on-exit-flag erc-server-process nil)))
+(defun fg-erc-connect-done ()
+	"Called after all irc networks are connected or timed-out.
+Maybe multiple times by some laggy timers."
+	(fg-erc-update-networks)
+	(add-hook 'erc-insert-post-hook 'fg-erc-notify)
+	(unless fg-erc-track-save-timer
+		(setq fg-erc-track-save-timer
+			(run-with-timer fg-erc-track-save-interval
+				fg-erc-track-save-interval 'fg-erc-track-save))))
 
 (defun fg-erc-update-networks ()
 	"Update `erc-network' values from `erc-determine-network'
@@ -74,6 +73,17 @@ in all erc buffers and run `erc-update-mode-line' there."
 				(erc-with-server-buffer
 					(setq erc-network (erc-determine-network))))
 			(erc-update-mode-line))))
+
+(defun fg-erc-quit (&optional reason)
+	"Disconnect (/quit) from all connected IRC servers immediately
+and unset `process-query-on-exit-flag' on all `erc-server-process' subprocesses.
+This doesn't wait for when subprocesses exit and run their disconnect hooks,
+and intended to be synchronous best-effort 'cleanup before exit' thing."
+	(interactive)
+	(erc-with-all-buffers-of-server nil
+		#'erc-open-server-buffer-p
+		(erc-quit-server reason)
+		(set-process-query-on-exit-flag erc-server-process nil)))
 
 (add-hook 'fg-emacs-exit-hook 'fg-erc-quit)
 
