@@ -70,7 +70,7 @@ in all erc buffers and run `erc-update-mode-line' there."
 		(with-current-buffer buff
 			(unless
 				(and (erc-network-name)
-					(not (string= (erc-network-name) "Unknown")))
+					(not (member (erc-network-name) '("Unknown" "nil"))))
 				(erc-with-server-buffer
 					(setq erc-network (erc-determine-network))))
 			(erc-update-mode-line))))
