@@ -1,0 +1,16 @@
+#!/bin/bash
+
+usage() {
+	bin=$(basename $0)
+	echo >&2 "Usage: $bin"
+	exit ${1:-0}
+}
+[[ "$1" = -h || "$1" = --help ]] && usage
+[[ "$1" != -p ]] || { print=t; shift; }
+[[ -z "$1" ]] || usage 1
+
+p=$(emacsclient -e '(expand-file-name
+	(with-current-buffer (window-buffer (selected-window)) default-directory))')
+p=${p%\"}; p=${p#\"}
+
+echo "$p"
