@@ -246,7 +246,7 @@ List of plists with any number of following keys (in each):
 
 (defun fg-erc-msg-block-pattern (nick msg)
 	"Build proper pattern for regular channel messages
- (including ZNC-buffered messages) from specified NICK
+(including ZNC-buffered messages) from specified NICK
 and MSG regexp patterns. MSG can have $ at the end."
 	(concat
 		"^\\(?:\\s-*\\[[0-9:]+\\]\\)?\\s-*<" nick
@@ -348,14 +348,28 @@ and MSG regexp patterns. MSG can have $ at the end."
 		;; 		(apply-partially 'apply 'fg-erc-msg-block-pattern)
 		;; 			'(("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")))
 
-	fg-erc-msg-block-plists (append fg-erc-msg-block-plists-local) ;; net+chan+nick+msg ignore-patterns
-		;; `((:chan "^#\\(cjdns\\|projectmeshnet\\|hyperboria\\)$"
-		;; 		:net "^EFNet$" :nick "i2p"
-		;; 		:msg "\\(<--\\|-->\\)\\s-+\\S-+ has \\(joined\\|quit\\|left\\) ")
-		;; 	(:chan "^#\\(unhosted\\|remotestorage\\)$"
-		;; 		:net "^FreeNode$" :nick "unposted"
-		;; 		:msg ,(concat "\\[\\(" "website\\(/master\\)?"
-		;; 			"\\|remoteStorage\\.js\\(/[[:word:]\-_]+\\)?" "\\)\\]\\s-+")))
+	;; net+chan+nick+msg ignore-patterns
+	fg-erc-msg-block-plists (append fg-erc-msg-block-plists-local
+		`((:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
+				:msg ,(concat "discord - \\(" "Error: Failed to read ws header\\."
+					"\\|Performing soft-reconnect" "\\|Remote host is closing websocket connection" "\\)")
+			(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
+				:msg ,(concat "oscar - \\("
+					"Error: Disconnected\\."
+					;; "62 seconds" is used to match only first reconnect, making noise on others
+					"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
+					"\\|Logging in: \\(" "Signon: [0-9]+"
+						"\\|Connection established, cookie sent" "\\|Logged in" "\\)"
+					"\\|Login error: SNAC threw error: Not supported by host" "\\)"))
+			(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
+				:msg ,(concat "gtalk - \\("
+					"Error: Error while reading from server"
+					;; "62 seconds" is used to match only first reconnect, making noise on others
+					"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
+					"\\|Logging in: \\(" "Connecting" "\\|Logged in"
+						"\\|Connected to server, logging in" "\\|Converting stream to TLS"
+						"\\|Server changed session resource string to `Indirect[0-9A-F]+'"
+						"\\|Authentication finished" "\\|Authenticated, requesting buddy list" "\\)" "\\)"))))
 
 	;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
 	fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
