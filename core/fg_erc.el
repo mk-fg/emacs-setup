@@ -352,7 +352,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	fg-erc-msg-block-plists (append fg-erc-msg-block-plists-local
 		`((:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
 				:msg ,(concat "discord - \\(" "Error: Failed to read ws header\\."
-					"\\|Performing soft-reconnect" "\\|Remote host is closing websocket connection" "\\)")
+					"\\|Performing soft-reconnect" "\\|Remote host is closing websocket connection" "\\)"))
 			(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
 				:msg ,(concat "oscar - \\("
 					"Error: Disconnected\\."
@@ -517,6 +517,11 @@ Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 	(condition-case-unless-debug ex
 		(-let [(text hook-type) (fg-erc-get-hook-msg text)]
 			;; (message "ERC filter test for: %S" text)
+			;; (message "ERC msg props: %S"
+			;; 	`(:net ,(or (symbol-name (erc-network)) "")
+			;; 		:host ,(or erc-session-server "")
+			;; 		:chan ,(or (erc-default-target) "")
+			;; 		:msg-and-line ,(fg-string-strip-whitespace text)))
 			;; (message "ERC filter test result: %s"
 			;; 	(or
 			;; 		(and (erc-list-match fg-erc-msg-block text) "fg-erc-msg-block")
