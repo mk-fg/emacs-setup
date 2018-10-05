@@ -22,6 +22,7 @@
 
 (require 'emms-player-mpv) ;; in extz
 (setq-default
+	emms-playlist-default-major-mode 'emms-playlist-mode
 	emms-player-list '(emms-player-mpv)
 	emms-player-mpv-environment
 		'("PULSE_PROP_media.role=music")
