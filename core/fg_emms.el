@@ -10,6 +10,7 @@
 
 	emms-source-playlist-default-format 'm3u
 	emms-playlist-mode-center-when-go t
+	emms-playlist-default-major-mode 'emms-playlist-mode
 
 	emms-show-format "NP: %s")
 
@@ -22,7 +23,6 @@
 
 (require 'emms-player-mpv) ;; in extz
 (setq-default
-	emms-playlist-default-major-mode 'emms-playlist-mode
 	emms-player-list '(emms-player-mpv)
 	emms-player-mpv-environment
 		'("PULSE_PROP_media.role=music")
@@ -107,12 +107,20 @@ calling FUNC for every path result."
 
 (defun fg-emms-playlist-cycle ()
 	"Switch to next emms playlist buffer and make it the active one.
-Rotates `emms-playlist-buffers' to cycle them all in order.
+Rotates `emms-playlist-buffers' to cycle them all in order
+and removes any empty buffers there along the way.
 See also `emms-playlist-mode-next' for a more canonical way to do similar thing."
 	(interactive)
-	(let*
-		((buff-list (emms-playlist-buffer-list))
-			(buff (or (cadr buff-list) (car buff-list))))
+	(let ((buff-list (emms-playlist-buffer-list)) buff)
+		;; Skip/remove any empty buffers
+		(while (and buff-list (not buff))
+			(setq buff (cadr buff-list))
+			(if (not buff) (setq buff (car buff-list))
+				(when (= (buffer-size buff) 0)
+					(kill-buffer buff)
+					(setq buff nil
+						buff-list (cons (car buff-list) (cddr buff-list))))))
+		;; Note: altering emms-playlist-buffers directly is unsafe
 		(when buff
 			(emms-playlist-set-playlist-buffer buff)
 			(emms-playlist-mode-go)
