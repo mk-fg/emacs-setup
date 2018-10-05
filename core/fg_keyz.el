@@ -153,6 +153,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "s-:") . emms-stop)
 		(,(key "s-\"") . emms-pause)
 		(,(key "s-.") . emms)
+		(,(key "C-s-.") . fg-emms-playlist-cycle)
+		(,(key "C-M-s-.") . fg-emms-playlist-new)
 		(,(key "s->") . emms-shuffle)
 		(,(key "s-<") . emms-sort)
 		(,(key "M-s-.") . emms-sort)

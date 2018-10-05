@@ -97,6 +97,27 @@ calling FUNC for every path result."
 			emms-source-file-default-directory)))
 	(fg-emms-call-something-on-glob 'emms-add-file pattern))
 
+(defun fg-emms-playlist-new ()
+	"Create new emms playlist buffer, switch to it and make it active."
+	(interactive)
+	(let ((buff (emms-playlist-new)))
+		(emms-playlist-set-playlist-buffer buff)
+		(emms-playlist-mode-go)))
+
+(defun fg-emms-playlist-cycle ()
+	"Switch to next emms playlist buffer and make it the active one.
+Rotates `emms-playlist-buffers' to cycle them all in order.
+See also `emms-playlist-mode-next' for a more canonical way to do similar thing."
+	(interactive)
+	(let*
+		((buff-list (emms-playlist-buffer-list))
+			(buff (or (cadr buff-list) (car buff-list))))
+		(when buff
+			(emms-playlist-set-playlist-buffer buff)
+			(emms-playlist-mode-go)
+			(setq emms-playlist-buffers
+				(append (cdr buff-list) (list (car buff-list)))))))
+
 
 
 ;;;; Track info / description
@@ -293,16 +314,18 @@ and such simple stuff when no other metadata is available."
 ;;  b) emms-playlist-mode-go
 
 (defun emms ()
-	"Switch to/from the current `emms-playlist' buffer or
-invoke `emms-play-directory-tree'."
+	"Switch to/from current `emms-playlist-buffer',
+any live emms playlist bufffer, or invoke `emms-play-directory-tree'."
 	(interactive)
 	(if emms-playlist-buffer-p
 		(emms-playlist-mode-bury-buffer)
+		(unless (buffer-live-p emms-playlist-buffer)
+			(let ((buff-list (emms-playlist-buffer-list)))
+				(when buff-list (emms-playlist-set-playlist-buffer (car buff-list)))))
 		(let
 			((playlist-restore-pos
 				(if
-					(or (null emms-playlist-buffer)
-						(not (buffer-live-p emms-playlist-buffer)))
+					(not (buffer-live-p emms-playlist-buffer))
 					(prog1 nil (call-interactively 'emms-play-directory-tree))
 					(with-current-emms-playlist
 						(-when-let (m emms-playlist-selected-marker) (marker-position m))))))

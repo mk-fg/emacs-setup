@@ -76,8 +76,9 @@
 	(sym
 		'(emms emms-stop emms-pause emms-shuffle
 			emms-next emms-previous
+			fg-emms-playlist-new fg-emms-playlist-cycle
 			fg-emms-add-file-glob fg-emms-add-directory-tree-glob
-			emms-playlist emms-add-playlist emms-playlist-save
+			emms-add-playlist emms-playlist-save
 			emms-playlist-mode-clear fg-emms-notify))
 	(autoload sym "fg_emms" nil t))
 (dolist
