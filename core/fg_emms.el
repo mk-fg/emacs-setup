@@ -1,7 +1,9 @@
 ;; Basic setup
+(require 'emms)
 (require 'emms-source-file)
 (require 'emms-source-playlist)
 (require 'emms-playlist-mode)
+(require 'emms-playlist-limit)
 (require 'emms-playing-time)
 
 (setq-default
