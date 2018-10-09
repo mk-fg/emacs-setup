@@ -672,8 +672,7 @@ Called before `emms-player-mpv-event-functions' and does same thing as these hoo
 (defun emms-player-mpv-cmd (cmd &optional handler)
 	"Send mpv command to process/connection if both are running,
 or otherwise schedule start/connect and set
-`emms-player-mpv-ipc-start-track' for `emms-player-mpv-ipc-sentinel'.
-PROC can be specified to avoid `emms-player-mpv-ipc' call."
+`emms-player-mpv-ipc-start-track' for `emms-player-mpv-ipc-sentinel'."
 	(setq emms-player-mpv-ipc-connect-command nil)
 	(let ((proc (emms-player-mpv-ipc)))
 		(if proc
