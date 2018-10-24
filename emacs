@@ -188,11 +188,6 @@
 	find-file-visit-truename t
 	find-file-existing-other-name t)
 
-;; TLS, used for jabber and erc
-(setq-default
-	starttls-use-gnutls t
-	starttls-extra-arguments '("--insecure") ; for gnutls-cli: skip certificate validation, for gtalk w/ CN:gmail.com
-	password-cache-expiry nil)
 ;; doc-view setup
 (setq-default doc-view-continuous t)
 
@@ -226,10 +221,11 @@
 
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
-;; Simple way to expand this list is "!" on confirm and fishing them from custom
+;; Simple way to expand this list is "!" on confirm and fishing them from customize.el
 (add-to-list 'ignored-local-variables 'test-case-name)
 (add-to-list 'ignored-local-variables 'jinja2)
 (add-to-list 'safe-local-variable-values '(encoding . utf-8))
+(setq-default enable-local-variables :safe) ;; auto-ignore all others
 
 
 ;; Misc hooks
