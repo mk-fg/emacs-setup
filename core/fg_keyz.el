@@ -54,9 +54,12 @@ Not all modes are handled correctly (tested w/ p and r only)."
 ;;;; Actual bindings
 ;; (global-unset-key "\C-?")
 
+(define-key global-map (key "C-c") nil)
+
 (global-set-keys
 	;; Mode setting globals
-	`(("M-/" fg-scite-code)
+	`(("C-c" nil)
+		("M-/" fg-scite-code)
 		("M-?" fg-scite-lisp)
 		("M-'" fg-scite-aux)
 		("M-]" fg-scite-core)
@@ -115,6 +118,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "M-`") . universal-argument)
 		(,(key "<home>") . fg-beginning-of-line)
 		(,(key "<end>") . move-end-of-line) ; vanilla works just fine
+		(,(key "<prior>") . fg-scroll-up) ; pageup
+		(,(key "<next>") . fg-scroll-down) ; pagedown
 
 		;; -- Frame controls --
 		;; Flux-style pane glide
@@ -273,9 +278,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "<return>") . fg-newline)
 		(,(key "<tab>") . fg-tab)
 		(,(key "<backtab>") . fg-untab)
-		(,(key "<prior>") . fg-scroll-up) ; pageup
 		(,(key "C-<prior>") . ,(iwrapm move-to-window-line 0))
-		(,(key "<next>") . fg-scroll-down) ; pagedown
 		(,(key "C-<next>") . ,(iwrapm move-to-window-line -1))
 
 		;; Block-skimming (emacs' re-definition, jic)
@@ -525,7 +528,7 @@ If point is on a group name, this function operates on that group."
 (setq-default wcy-buffer-exclude-regexps '("^ *\\*"))
 
 
-;; -- Jabbra submode --
+;; -- Jabber submode --
 (eval-after-load "jabber-roster" '(progn
 	(define-keys jabber-roster-mode-map
 		'(("v" jabber-vcard-get)
@@ -711,7 +714,8 @@ NO-ALIGN disables `csv-align-fields' call."
 
 (eval-after-load "erc-list" '(progn
 	(define-key erc-list-menu-sort-button-map
-		[header-line mouse-2] 'erc-list-menu-sort-by-column)))
+		[header-line mouse-2] 'erc-list-menu-sort-by-column)
+	(define-key erc-list-menu-mode-map (key "C-c") nil)))
 
 ;; -- KMacro (ex)globals --
 (global-set-keys '(("<f3>" nil) ("<f4>" nil)))
@@ -750,6 +754,7 @@ NO-ALIGN disables `csv-align-fields' call."
 
 ;; Hooks can be added w/o loading var definitions
 (add-hook 'erc-mode-hook 'fg-scite-aux)
+(add-hook 'erc-list-menu-mode-hook 'fg-scite-aux)
 (add-hook 'jabber-chat-mode-hook 'fg-scite-aux)
 (add-hook 'minibuffer-setup-hook 'fg-scite-aux)
 (add-hook 'find-file-hook 'fg-hook-set-mode)
