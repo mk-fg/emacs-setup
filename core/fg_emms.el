@@ -251,6 +251,22 @@ and such simple stuff when no other metadata is available."
 	emms-info-asynchronously nil
 	emms-info-functions '(fg-emms-track-info-fs))
 
+(defun fg-emms-reset-playlist-info ()
+	"Remove all associated info for all file-based tracks in current playlist buffer,
+removing everything but 'type and 'name from there,
+and run `emms-info-initialize-track' on each one of these afterwards."
+	(with-current-emms-playlist (save-excursion
+		(goto-char (point-min))
+		(emms-walk-tracks
+			(let ((track (emms-playlist-track-at (point))))
+				(when (eq (emms-track-get track 'type) 'file)
+					(let ((tail (cddr track)))
+						(when (eq (caar tail) 'name)
+							(setcdr tail nil)
+							(emms-info-initialize-track track)))))))))
+
+;; (fg-emms-reset-playlist-info)
+
 
 
 ;;;; Cache / history / playlists
