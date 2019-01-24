@@ -370,8 +370,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 						"\\|Connected to server, logging in" "\\|Converting stream to TLS"
 						"\\|Server changed session resource string to `Indirect[0-9A-F]+'"
 						"\\|Authentication finished" "\\|Authenticated, requesting buddy list" "\\)" "\\)"))
-			(:chan "^#d-" :net "^BitlBee$" :line ;; discord topic changes
-				"\\*\\*\\* root (root@bitlbee\\.fraggod\\.net) has set the topic for #d-")))
+			(:chan "^#monitor$" :net "^rdircd$" :nick "Dyno"))) ;; discord welcomes
 
 	;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
 	fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
