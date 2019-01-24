@@ -250,7 +250,7 @@ List of plists with any number of following keys (in each):
 and MSG regexp patterns. MSG can have $ at the end."
 	(concat
 		"^\\(?:\\s-*\\[[0-9:]+\\]\\)?\\s-*<" nick
-		">\\(?:\\s-+\\[[0-9:]+\\]\\)?\\s-+" msg))
+		">\\(?:\\s-+\\[[0-9:]+\\]\\)?\\s-*" msg))
 
 (defun fg-erc-re (string) (concat "^" (regexp-quote string) "$"))
 
