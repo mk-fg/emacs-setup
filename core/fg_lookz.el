@@ -20,6 +20,7 @@
 ;; - https://www.gnu.org/software/emacs/manual/html_node/emacs/Fonts.html
 (defun fg-font-init ()
 	"Set proper font values for current frame."
+	(interactive)
 	(when window-system
 		(set-frame-font "Liberation Sans-9")
 		(set-face-font 'variable-pitch "Liberation Sans-9")
