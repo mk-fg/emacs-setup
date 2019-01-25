@@ -18,34 +18,37 @@
 ;; - "describe-fontset" can be useful, and then overriding ranges from there via "set-fontset-font"
 ;; - use font-ranges-to-elisp.py script for easier copy-pasting from wikipedia
 ;; - https://www.gnu.org/software/emacs/manual/html_node/emacs/Fonts.html
-(when window-system
-	(set-frame-font "Liberation Sans-9")
-	(set-face-font 'variable-pitch "Liberation Sans-9")
-	(set-face-font 'fixed-pitch "Liberation Mono-9")
-	(set-fontset-font t '(?А . ?я) "Liberation Sans-9")
-	;; Emoji ranges from https://en.wikipedia.org/wiki/Emoji
-	(dolist
-		(range-cons
-			'((#x1F300 . #x1F5FF) (#x1F900 . #x1F9FF) (#x1F600 . #x1F64F)
-				(#x1F680 . #x1F6FF) (#x2600 . #x26FF) (#x2700 . #x27BF)))
-		(set-fontset-font t range-cons "Symbola-10"))
-	;; CJK ranges from https://en.wikipedia.org/wiki/CJK_Unified_Ideographs
-	;; Last updated from Unicode 8.0 (2015), with Extension E
-	(dolist
-		(range-cons
-			;; CJK Unified Ideographs
-			'((#x4E00 . #x62FF) (#x6300 . #x77FF) (#x7800 . #x8CFF) (#x8D00 . #x9FFF)
-				;; CJK-UI Ext A
-				(#x3400 . #x4DBF)
-				;; CJK-UI Ext B
-				(#x20000 . #x215FF) (#x21600 . #x230FF) (#x23100 . #x245FF)
-				(#x24600 . #x260FF) (#x26100 . #x275FF) (#x27600 . #x290FF) (#x29100 . #x2A6DF)
-				;; CJK-UI Ext A, C, D, E, Compatibility Ideographs - single range for each
-				(#x3400 . #x4DBF) (#x2A700 . #x2B73F)
-				(#x2B740 . #x2B81F) (#x2B820 . #x2CEAF) (#xF900 . #xFAFF)
-				;; Legacy ranges
-				(#x3300 . #x33FF) (#xFE30 . #xFE4F) (#xF900 . #xFAFF) (#x2F800 . #x2FA1F)))
-		(set-fontset-font t range-cons "IPA-11")))
+(defun fg-font-init ()
+	"Set proper font values for current frame."
+	(when window-system
+		(set-frame-font "Liberation Sans-9")
+		(set-face-font 'variable-pitch "Liberation Sans-9")
+		(set-face-font 'fixed-pitch "Liberation Mono-9")
+		(set-fontset-font t '(?А . ?я) "Liberation Sans-9")
+		;; Emoji ranges from https://en.wikipedia.org/wiki/Emoji
+		(dolist
+			(range-cons
+				'((#x1F300 . #x1F5FF) (#x1F900 . #x1F9FF) (#x1F600 . #x1F64F)
+					(#x1F680 . #x1F6FF) (#x2600 . #x26FF) (#x2700 . #x27BF)))
+			(set-fontset-font t range-cons "Symbola-10"))
+		;; CJK ranges from https://en.wikipedia.org/wiki/CJK_Unified_Ideographs
+		;; Last updated from Unicode 8.0 (2015), with Extension E
+		(dolist
+			(range-cons
+				;; CJK Unified Ideographs
+				'((#x4E00 . #x62FF) (#x6300 . #x77FF) (#x7800 . #x8CFF) (#x8D00 . #x9FFF)
+					;; CJK-UI Ext A
+					(#x3400 . #x4DBF)
+					;; CJK-UI Ext B
+					(#x20000 . #x215FF) (#x21600 . #x230FF) (#x23100 . #x245FF)
+					(#x24600 . #x260FF) (#x26100 . #x275FF) (#x27600 . #x290FF) (#x29100 . #x2A6DF)
+					;; CJK-UI Ext A, C, D, E, Compatibility Ideographs - single range for each
+					(#x3400 . #x4DBF) (#x2A700 . #x2B73F)
+					(#x2B740 . #x2B81F) (#x2B820 . #x2CEAF) (#xF900 . #xFAFF)
+					;; Legacy ranges
+					(#x3300 . #x33FF) (#xFE30 . #xFE4F) (#xF900 . #xFAFF) (#x2F800 . #x2FA1F)))
+			(set-fontset-font t range-cons "IPA-11"))))
+(fg-font-init)
 
 ;; Time is critical
 (setq-default

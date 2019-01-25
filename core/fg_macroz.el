@@ -839,6 +839,7 @@ and return its active (also currently selected) window."
 			(select-window
 				(frame-selected-window (next-frame)))
 			(when frame-init
+				(fg-font-init)
 				(ibuffer nil "*Ibuffer-aux*")
 				(fg-ibuffer-apply-locals "*Ibuffer-aux*")
 				(ibuffer-update nil)
