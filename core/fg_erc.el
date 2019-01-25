@@ -239,6 +239,8 @@ List of plists with any number of following keys (in each):
 ;; These are to allow easy setq for fg-erc-msg-*-plists, without having to merge/dedup these
 (defvar fg-erc-msg-block-local ()
 	"Site-local `fg-erc-msg-block', for easier merging with global list.")
+(defvar fg-erc-msg-block-plists-base ()
+	"Persistent global part of `fg-erc-msg-block-plists' from the repo.")
 (defvar fg-erc-msg-block-plists-local ()
 	"Site-local `fg-erc-msg-block-plists', for easier merging with global list.")
 (defvar fg-erc-msg-modify-plists-local ()
@@ -274,6 +276,55 @@ and MSG regexp patterns. MSG can have $ at the end."
 ;; (add-to-list 'erc-modules 'keep-place)
 
 (erc-update-modules)
+
+
+;; Filtering lists are split from other opts so it'd be easier to modify and re-apply parts
+
+;; net+chan+nick+msg ignore-patterns
+;; See fg-erc-msg-block-pattern for how nick/msg parts are used
+(setq-default fg-erc-msg-block-plists-base
+	`((:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
+			:msg ,(concat "discord - \\(" "Error: Failed to read ws header\\."
+				"\\|Performing soft-reconnect" "\\|Remote host is closing websocket connection" "\\)"))
+		(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
+			:msg ,(concat "oscar - \\("
+				"Error: Disconnected\\."
+				;; "62 seconds" is used to match only first reconnect, making noise on others
+				"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
+				"\\|Logging in: \\(" "Signon: [0-9]+"
+					"\\|Connection established, cookie sent" "\\|Logged in" "\\)"
+				"\\|Login error: SNAC threw error: Not supported by host" "\\)"))
+		(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
+			:msg ,(concat "gtalk - \\("
+				"Error: Error while reading from server"
+				;; "62 seconds" is used to match only first reconnect, making noise on others
+				"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
+				"\\|Logging in: \\(" "Connecting" "\\|Logged in"
+					"\\|Connected to server, logging in" "\\|Converting stream to TLS"
+					"\\|Server changed session resource string to `Indirect[0-9A-F]+'"
+					"\\|Authentication finished" "\\|Authenticated, requesting buddy list" "\\)" "\\)"))))
+
+(setq-default fg-erc-msg-block-plists
+	(append fg-erc-msg-block-plists-local fg-erc-msg-block-plists-base))
+
+;; Ignore-patterns with one nick and message regexps
+;; Same as fg-erc-msg-block-plists with only nick+msg and manual fg-erc-msg-block-pattern
+(setq-default fg-erc-msg-block fg-erc-msg-block-local)
+
+;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
+(setq-default fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
+	;; Filter-out spammy stuff on bitlbee reconnects
+	`((:chan "^#" :net "^BitlBee$"
+		;; (:chan "." :net ".*"
+			:func ,(lambda ()
+				(-let [(line hook-type) (fg-erc-get-hook-msg text)]
+					(when
+						(string-match
+							(concat "^ *\\*\\*\\* \\("
+									"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #"
+									"\\|#\\S-+: topic set by "
+								"\\)") line)
+						(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))))))))
 
 
 (setq-default
@@ -341,120 +392,6 @@ and MSG regexp patterns. MSG can have $ at the end."
 			"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
 			"^irker[[:digit:]]+!~?irker@"
 			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
-
-	;; (setq-default
-	fg-erc-msg-block (append fg-erc-msg-block-local) ;; ignore-patterns with nick and message regexps
-		;; 	(mapcar
-		;; 		(apply-partially 'apply 'fg-erc-msg-block-pattern)
-		;; 			'(("fc[a-f0-9]+" "\\S-+ is over two months out of date. ya feeling ok\\?")))
-
-	;; net+chan+nick+msg ignore-patterns
-	fg-erc-msg-block-plists (append fg-erc-msg-block-plists-local
-		`((:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
-				:msg ,(concat "discord - \\(" "Error: Failed to read ws header\\."
-					"\\|Performing soft-reconnect" "\\|Remote host is closing websocket connection" "\\)"))
-			(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
-				:msg ,(concat "oscar - \\("
-					"Error: Disconnected\\."
-					;; "62 seconds" is used to match only first reconnect, making noise on others
-					"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
-					"\\|Logging in: \\(" "Signon: [0-9]+"
-						"\\|Connection established, cookie sent" "\\|Logged in" "\\)"
-					"\\|Login error: SNAC threw error: Not supported by host" "\\)"))
-			(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
-				:msg ,(concat "gtalk - \\("
-					"Error: Error while reading from server"
-					;; "62 seconds" is used to match only first reconnect, making noise on others
-					"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
-					"\\|Logging in: \\(" "Connecting" "\\|Logged in"
-						"\\|Connected to server, logging in" "\\|Converting stream to TLS"
-						"\\|Server changed session resource string to `Indirect[0-9A-F]+'"
-						"\\|Authentication finished" "\\|Authenticated, requesting buddy list" "\\)" "\\)"))
-			(:chan "^#monitor$" :net "^rdircd$" :nick "Dyno"))) ;; discord welcomes
-
-	;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
-	fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
-
-		;; Filter for hipchat to get actual info like repo-name and commit info from html blob
-		`((:chan "^#datascienceltd-" :net "^BitlBee$" :nick "Bitbucket"
-			:func ,(lambda ()
-				(let*
-					((line-html (buffer-substring-no-properties (point-min) (point-max)))
-						(text-html-pos (s-matched-positions-all
-							(fg-erc-msg-block-pattern ".*?" "\\(.*\\)$") line-html 1))
-						(text-html (when text-html-pos
-							(s-trim (substring line-html (caar text-html-pos) (cdar text-html-pos)))))
-						(is-html-start (and text-html (string-match "^<img " text-html))))
-					;; Process only messages that start with bitbucket icon, hiding continuations
-					(when text-html
-						;; (message "ERC html text: %S" text-html)
-						(if (not is-html-start)
-							;; If it's a line continuation - just hide it, don't need any of these at all
-							(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer))
-							(let*
-								((msg-push (s-match-strings-all (concat
-										" \\(\\(?:[0-9]+\\|One\\) commits? pushed to\\) .*?"
-										"<a .*?href=\"https://bitbucket\\.org/\\(.+?\\)\"") text-html))
-									(msg-raw (replace-regexp-in-string "<[^<]+>" "" text-html))
-									(msg (or ;; pick best match among ones above
-											(and msg-push (format "%s %s"
-												(cadar msg-push) (caddar msg-push)))
-											msg-raw)))
-								(save-excursion ;; put new (processed) msg right after old one
-									;; (goto-char (+ (point-min) (caar text-html-pos)))
-									(goto-char (point-max))
-									(insert-before-markers (concat msg "\n")))
-								(erc-put-text-property ;; hide old (html) msg
-									(+ (point-min) (caar text-html-pos))
-									(+ (point-min) (cdar text-html-pos) 1)
-									'invisible t (current-buffer))))))))
-
-			;; Filter-out spammy stuff on bitlbee reconnects
-			(:chan "^#" :net "^BitlBee$"
-			;; (:chan "." :net ".*"
-				:func ,(lambda ()
-					(-let [(line hook-type) (fg-erc-get-hook-msg text)]
-						(when
-							(string-match
-								(concat "^ *\\*\\*\\* \\("
-										"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #"
-										"\\|#\\S-+: topic set by "
-									"\\)") line)
-							(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer))))))
-
-			;; Chan with a bot that has !upper and no rules - what can possibly go wrong?
-			(:chan "^#archlinux-offtopic$" :net "^freenode$"
-				:func ,(lambda ()
-					(let*
-						((dc-at-percent 0.8) (dc-at-min 20)
-							(dc-mark-face '(:foreground "green"))
-							(line-a (point-min))
-							(line-b (1- (or (search-forward "\n" nil t) (point-max))))
-							(line (buffer-substring-no-properties line-a line-b)))
-						(multiple-value-bind (c-all c-uc)
-							(cl-reduce
-								#'(lambda (v c)
-									(multiple-value-bind (c-all c-uc) v
-										(when
-											(and (= ?w (char-syntax c))
-												(/= (upcase c) (downcase c)))
-											(setq c-all (1+ c-all)
-												c-uc (+ c-uc (if (/= c (downcase c)) 1 0))))
-										(list c-all c-uc)))
-								line
-								:initial-value '(0 0))
-							;; (message
-							;; 	"--erc-debug dc-mark: %S [%s %s %s%%]"
-							;; 	line c-uc c-all (/ c-uc (float c-all)))
-							(when
-								(and (> c-all c-uc dc-at-min)
-									(> (/ c-uc (float c-all)) dc-at-percent))
-								(downcase-region (point-min) line-b)
-								(goto-char line-b)
-								(insert " [downcased]")
-								(put-text-property line-b (point) 'face dc-mark-face))))))))
-
-	;; )
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
