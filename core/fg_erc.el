@@ -374,8 +374,8 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 	erc-log-insert-log-on-open nil ;; very messy
 	erc-log-channels-directory (concat fg-path "/tmp/erc")
-	erc-max-buffer-size 30000
-	erc-max-buffer-size-to-act 50000 ;; for custom truncation, not used by default ERC
+	erc-max-buffer-size 120000
+	erc-max-buffer-size-to-act 150000 ;; for custom truncation, not used by default ERC
 	erc-fill-column 2048 ;; in case that dumb module gets activated somehow
 
 	erc-track-showcount t
