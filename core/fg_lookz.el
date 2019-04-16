@@ -177,7 +177,7 @@ NAME can also be passed explicitly as an argument."
 (autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
 (autoload 'cmake-mode "cmake-mode" "Major mode for editing CMake source files" t)
 (load-library-safe "haskell-mode-autoloads")
-
+(load-library-safe (expand-file-name "~/.opam/default/share/emacs/site-lisp/tuareg-site-file"))
 
 ;; CSV mode
 (autoload 'csv-mode "csv-mode" "Major mode for editing CSV files." t)
