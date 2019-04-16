@@ -111,6 +111,7 @@
 ;; More distinct char for commas vs periods
 ;; It's best to pick one from default font via gucharmap, to avoid mixing these
 (aset standard-display-table ?, (vconcat "˾"))
+(aset standard-display-table ?. (vconcat "❟"))
 
 ;; git-gutter
 (when
