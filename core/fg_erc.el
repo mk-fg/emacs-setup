@@ -443,7 +443,7 @@ Meant to be used in hooks, like `erc-insert-post-hook'."
 	(interactive)
 	(when (> (buffer-size) erc-max-buffer-size-to-act)
 		(fg-erc-truncate-invisible-lines erc-max-buffer-size)
-		(when (> (buffer-size) erc-max-buffer-size-to-act)
+		(when (> (buffer-size) erc-max-buffer-size)
 			(erc-truncate-buffer-to-size erc-max-buffer-size))))
 
 (defun fg-erc-truncate-invisible-lines (size)
