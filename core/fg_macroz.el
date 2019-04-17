@@ -135,6 +135,9 @@
 ; py: ast.literal_eval('x')
 ; el: (symbol-value (intern "x"))
 
+; py: while True ... break ...
+; el: (cl-block loop (while ... (cl-return-from loop result)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

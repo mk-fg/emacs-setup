@@ -415,6 +415,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 
 ;; Custom timestamping
+
 (make-variable-buffer-local
 	(defvar erc-last-datestamp nil))
 
@@ -429,16 +430,41 @@ Makes ERC buffers a bit more log-friendly."
 
 
 ;; Custom buffer truncation
+;; Idea is to remove invisible lines first and only then start on visible ones
+
 (defun erc-truncate-buffer ()
-	"Truncates the current buffer to `erc-max-buffer-size'.
+	"Truncates current buffer to `erc-max-buffer-size'.
 Not on every new line (as in vanilla version), but only if
 buffer is larger than `erc-max-buffer-size-to-act'.
+Runs `fg-erc-truncate-invisible-lines' first and
+then also `erc-truncate-buffer-to-size' if still necessary.
 Appending to logs is handled in `erc-truncate-buffer-to-size'.
 Meant to be used in hooks, like `erc-insert-post-hook'."
 	(interactive)
-	(let ((buffer (current-buffer)))
-		(when (> (buffer-size buffer) erc-max-buffer-size-to-act)
-			(erc-truncate-buffer-to-size erc-max-buffer-size buffer))))
+	(when (> (buffer-size) erc-max-buffer-size-to-act)
+		(fg-erc-truncate-invisible-lines erc-max-buffer-size)
+		(when (> (buffer-size) erc-max-buffer-size-to-act)
+			(erc-truncate-buffer-to-size erc-max-buffer-size))))
+
+(defun fg-erc-truncate-invisible-lines (size)
+	"Truncates current buffer to SIZE
+by removing invisible lines (if any) from top-down.
+Resulting buffer can be longer than SIZE if there isn't enough such lines."
+	(interactive)
+	(save-restriction
+		(widen)
+		(buffer-disable-undo)
+		(let ((inhibit-read-only t) ls)
+			(goto-char (point-min))
+			(cl-block erc-trunc-loop
+				(while (> (buffer-size) size)
+					(setq ls (point))
+					(forward-line)
+					(if (equal ls (point)) (cl-return-from erc-trunc-loop))
+					(when (erc-string-invisible-p (buffer-substring ls (point)))
+						(delete-region ls (point))))))
+		(buffer-enable-undo)))
+
 
 
 ;; Message content filter
