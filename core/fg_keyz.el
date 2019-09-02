@@ -259,7 +259,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-M-u") . fg-kill-line)
 
 		;; Lookz
-		(,(key "M-w") . toggle-truncate-lines)
+		(,(key "M-w") . toggle-truncate-lines) ;; aka word-wrapping
 
 		;; Metabuffer stuff
 		(,(key "<C-M-return>") . fg-occur)
