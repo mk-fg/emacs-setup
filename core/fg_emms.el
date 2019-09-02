@@ -38,7 +38,7 @@
 ;; (emms-player-mpv-start (emms-playlist-current-selected-track))
 ;; (emms-player-stop)
 ;; (emms-player-mpv-proc-stop)
-;; (emms-player-mpv-ipc-proc-stop)
+;; (emms-player-mpv-ipc-stop)
 ;; (emms-play-url "https://somafm.com/sf1033130.pls")
 
 (defun fg-emms-player-status-string ()
