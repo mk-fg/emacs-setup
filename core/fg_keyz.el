@@ -174,6 +174,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-s-?") . emms-playlist-mode-clear)
 		(,(key "M-s-;") . emms-seek-backward)
 		(,(key "M-s-'") . emms-seek-forward)
+		(,(key "s-L") . fg-emms-mpv-vis-toggle)
+		(,(key "M-s-L") . fg-emms-mpv-vis-toggle-af-wall)
 		(,(key "<XF86AudioPlay>") . emms-pause)
 
 		;; -- Notification controls --

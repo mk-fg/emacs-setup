@@ -363,5 +363,63 @@ any live emms playlist bufffer, or invoke `emms-play-directory-tree'."
 					(goto-char playlist-restore-pos))))))
 
 
+;;;; mpv --lavfi-complex visualization lua script control
+;; Messages de-setup/mpv/fg.lavfi-audio-vis.lua to enable/disable vis,
+;;  along with setting --vo and --force-window for it to display in.
+
+(defvar fg-emms-mpv-vis-state nil
+	"Target state for mpv visualization.")
+
+(defun fg-emms-mpv-vis-lavfi-enable (delays)
+	(emms-player-mpv-cmd
+		'(get_property vo-configured)
+		`(lambda (mpv-data mpv-error)
+			(if (eq mpv-data t)
+				(emms-player-mpv-cmd
+					'(script-message fg.lavfi-audio-vis.on))
+				(run-at-time ,(car delays) nil
+					'fg-emms-mpv-vis-lavfi-enable ',(cdr delays))))))
+
+(defun fg-emms-mpv-vis-state-sync (state-current lavfi-delays)
+	(when (eq fg-emms-mpv-vis-state 'toggle)
+		(setq fg-emms-mpv-vis-state (not state-current)))
+	(unless
+		(eq (null state-current) (null fg-emms-mpv-vis-state))
+		(if fg-emms-mpv-vis-state
+			(progn
+				(emms-player-mpv-cmd '(set_property force-window yes))
+				(emms-player-mpv-cmd '(set_property vo gl))
+				(run-at-time (car lavfi-delays) nil
+					#'fg-emms-mpv-vis-lavfi-enable (cdr lavfi-delays)))
+			(emms-player-mpv-cmd
+				'(script-message fg.lavfi-audio-vis.off))
+			(emms-player-mpv-cmd '(set_property force-window no))
+			(emms-player-mpv-cmd '(set_property vo null)))))
+
+(cl-defun fg-emms-mpv-vis-toggle (&optional (state nil state?))
+	"Check --vo and toggle --vo/--force-window + message
+fg.lavfi-audio-vis.lua to enable/disable audio visualization.
+STATE can be used to specify explicit on/off state for window/vis.
+Should work with video/album-art tracks too, but didn't test lua for it much."
+	(interactive)
+	(setq fg-emms-mpv-vis-state (if state? state 'toggle))
+	(emms-player-mpv-cmd-prog '(get_property vo)
+		(let
+			((state-current
+				(condition-case err
+					(let ((vo (aref mpv-data 0)))
+						(not (or
+							(string= (alist-get 'name vo) "null")
+							(not (alist-get 'enabled vo)))))
+					('error nil)))
+				(lavfi-delays '(0.1 0.1 0.1 0.2 0.2 0.3 0.5 1 3 5)))
+			(fg-emms-mpv-vis-state-sync state-current lavfi-delays))))
+
+(defun fg-emms-mpv-vis-toggle-af-wall ()
+	"Message fg.lavfi-audio-vis.lua to enable/disable 'wall' audio filter."
+	(interactive)
+	(emms-player-mpv-cmd '(script-message fg.lavfi-audio-vis.af.wall)))
+
+
 ;; Create paths
 (make-directory emms-directory t)
