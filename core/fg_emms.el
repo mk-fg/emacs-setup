@@ -15,6 +15,7 @@
 	emms-playlist-default-major-mode 'emms-playlist-mode
 
 	emms-show-format "NP: %s")
+(make-directory emms-directory t)
 
 (emms-playing-time 1)
 (add-hook 'fg-emacs-exit-hook 'emms-stop)
@@ -363,6 +364,7 @@ any live emms playlist bufffer, or invoke `emms-play-directory-tree'."
 					(goto-char playlist-restore-pos))))))
 
 
+
 ;;;; mpv --lavfi-complex visualization lua script control
 ;; Messages de-setup/mpv/fg.lavfi-audio-vis.lua to enable/disable vis,
 ;;  along with setting --vo and --force-window for it to display in.
@@ -419,7 +421,3 @@ Should work with video/album-art tracks too, but didn't test lua for it much."
 	"Message fg.lavfi-audio-vis.lua to enable/disable 'wall' audio filter."
 	(interactive)
 	(emms-player-mpv-cmd '(script-message fg.lavfi-audio-vis.af.wall)))
-
-
-;; Create paths
-(make-directory emms-directory t)
