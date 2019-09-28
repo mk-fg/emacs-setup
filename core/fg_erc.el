@@ -691,7 +691,7 @@ PARAMS should probably be `fg-erc-highlight-name-set-cleanup'."
 	(condition-case-unless-debug ex
 		(save-excursion
 			(goto-char (point-min))
-			(while (re-search-forward "[-[:alnum:]_`^|<>]+" nil t)
+			(while (re-search-forward "[-[:alnum:]_`^|<>.,]+" nil t)
 				(let*
 					((bounds (cons (match-beginning 0) (point)))
 						(nick (buffer-substring-no-properties (car bounds) (cdr bounds)))
