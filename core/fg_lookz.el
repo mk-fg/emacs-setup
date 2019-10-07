@@ -51,6 +51,11 @@
 			(set-fontset-font t range-cons "IPA-11"))))
 (fg-font-init)
 
+(defun fg-char-name ()
+	"Print name of character under cusor to minibuffer."
+	(interactive)
+	(message "%s" (get-char-code-property (following-char) 'name)))
+
 ;; Time is critical
 (setq-default
 	display-time-day-and-date t

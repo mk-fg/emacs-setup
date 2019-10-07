@@ -120,6 +120,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "<end>") . move-end-of-line) ; vanilla works just fine
 		(,(key "<prior>") . fg-scroll-up) ; pageup
 		(,(key "<next>") . fg-scroll-down) ; pagedown
+		(,(key "C-i") . fg-char-name)
 
 		;; -- Frame controls --
 		;; Flux-style pane glide
