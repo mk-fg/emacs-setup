@@ -116,7 +116,10 @@
 (desktop-save-mode)
 
 (setq-default
-	; autosave
+	; annoying .#filename symlinks on file modification
+	create-lockfiles nil
+	; autosave - default-disabled, but configured a bit
+	auto-save-default nil
 	auto-save-list-file-prefix
 		(concat temporary-file-directory "bakz-")
 	auto-save-file-name-transforms
