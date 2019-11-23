@@ -9,8 +9,9 @@
 	((face nil) ;; see hi-lock-faces
 		;; (face 'hi-blue)
 		;; (face 'hi-red-b)
-		(face 'hi-green-b)
+		;; (face 'hi-green-b)
 		;; (face 'hi-black-hb)
+		(face 'fg-hi-red)
 		;; ----
 		;; (type 'highlight-regexp)
 		(type 'highlight-lines-matching-regexp)
@@ -38,8 +39,22 @@
 ;; Useful tricks - https://www.emacswiki.org/emacs/HiLock
 ;; Pattern storage: hi-lock-interactive-patterns
 
+(require 'hl-lock)
+
 (defvar hi-ibuffer-buffer "*Ibuffer*"
 	"Ibuffer buffer to use for marked-buffer (un-)highlighting routines.")
+
+(defmacro fg-hi-faces-init (colors)
+	"Init simple highlighting faces with foreground color matching name.
+Names are templated as fg-hi-<color> from a list of color symbols."
+	`(progn ,@(mapcar (lambda (c)
+		`(defface ,(intern (format "fg-hi-%s" c))
+			'((t :foreground ,(symbol-name c)))
+			,(format "Foreground color highlighting: %s" c)
+			:group 'hi-lock-faces)) colors)))
+;; (pp-macroexpand-expression '(fg-hi-faces-init (red blue yellow)))
+
+(fg-hi-faces-init (red blue green yellow))
 
 (defun hi-ibuffer-pcre (pcre &optional type face)
 	"Highlight PCRE in all buffers marked in `hi-ibuffer-buffer' ibuffer.
@@ -55,9 +70,6 @@ FACE defaults to nil, see `hi-lock-faces' for list of these."
 	(interactive)
 	(with-current-buffer hi-ibuffer-buffer
 		(ibuffer-do-eval '(unhighlight-regexp (or regexp t)))))
-
-;; (hi-ibuffer-drop)
-;; (unhighlight-regexp t) -- for current buffer
 
 
 ;; Encoding
