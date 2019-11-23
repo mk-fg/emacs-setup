@@ -3,15 +3,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; For most stuff, see:
-;;  https://www.gnu.org/software/emacs/manual/html_node/elisp/Control-Structures.html#Control-Structures
+;;  https://www.gnu.org/software/emacs/manual/html_node/elisp/Control-Structures.html
 ;;  https://github.com/magnars/s.el
 ;;  https://github.com/magnars/dash.el
 ;;  https://github.com/Wilfred/ht.el
-;;  https://www.emacswiki.org/emacs/RegularExpression
+;;  https://www.emacswiki.org/emacs/RegularExpression - or use rxt-pcre-to-elisp (see pcre2el)
 
 ;; TODO: dedup old macros with this stuff
 (require 'cl)
 (require 's)
+(require 'pcre2el)
 (require 'dash)
 (require 'dash-functional)
 (require 'ht)

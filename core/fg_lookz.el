@@ -1,3 +1,65 @@
+;; Initial scratch buffer
+;; Useful for common temp snippets to edit/run from there
+
+(defvar fg-scratch
+";;;; See fg_looks.el for initial contents here
+
+;; Use this to apply `face'/`type' pcre highlighting to buffers marked in `hi-ibuffer-buffer'
+(let
+	((face nil) ;; see hi-lock-faces
+		;; (face 'hi-blue)
+		;; (face 'hi-red-b)
+		(face 'hi-green-b)
+		;; (face 'hi-black-hb)
+		;; ----
+		;; (type 'highlight-regexp)
+		(type 'highlight-lines-matching-regexp)
+		;; ----
+		(pcre (concat
+			;; \"(thing1|thing2)\"
+			\"\")))
+
+	(hi-ibuffer-pcre pcre type face))
+
+;; (hi-ibuffer-drop)
+" "Initial contents of scratch buffer for `fg-scratch-init'.")
+
+(defun fg-scratch-init ()
+	"Erase and re-init scratch buffer from `fg-scratch' string."
+	(interactive)
+	(with-current-buffer "*scratch*"
+		(erase-buffer)
+		(insert fg-scratch)))
+
+(fg-scratch-init)
+
+
+;; Highlighting stuff non-interactively (as editing stuff in minibuffer is pain)
+;; Useful tricks - https://www.emacswiki.org/emacs/HiLock
+;; Pattern storage: hi-lock-interactive-patterns
+
+(defvar hi-ibuffer-buffer "*Ibuffer*"
+	"Ibuffer buffer to use for marked-buffer (un-)highlighting routines.")
+
+(defun hi-ibuffer-pcre (pcre &optional type face)
+	"Highlight PCRE in all buffers marked in `hi-ibuffer-buffer' ibuffer.
+TYPE defaults to `highlight-lines-matching-regexp',
+and can be replaced by something like `highlight-regexp' if necessary.
+FACE defaults to nil, see `hi-lock-faces' for list of these."
+	(unless type (setq type 'highlight-lines-matching-regexp))
+	(with-current-buffer hi-ibuffer-buffer
+		(ibuffer-do-eval `(,type (rxt-pcre-to-elisp ,pcre) ',face))))
+
+(defun hi-ibuffer-drop (&optional regexp)
+	"Remove highlighting from all buffers marked in `hi-ibuffer-buffer' ibuffer."
+	(interactive)
+	(with-current-buffer hi-ibuffer-buffer
+		(ibuffer-do-eval '(unhighlight-regexp (or regexp t)))))
+
+;; (hi-ibuffer-drop)
+;; (unhighlight-regexp t) -- for current buffer
+
+
 ;; Encoding
 (set-default-coding-systems 'utf-8)
 (prefer-coding-system 'utf-8)
@@ -10,6 +72,7 @@
 
 (defadvice select-safe-coding-system-interactively
 	(around fg-select-safe-coding-system-interactively activate) 'raw-text)
+
 
 ;; Fonts
 ;; - Always use variable-pitch font for code buffers
@@ -55,6 +118,7 @@
 	"Print name of character under cusor to minibuffer."
 	(interactive)
 	(message "%s" (get-char-code-property (following-char) 'name)))
+
 
 ;; Time is critical
 (setq-default

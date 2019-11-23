@@ -91,12 +91,12 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("C-<return>" fg-stack-buffer)
 
 		;; *Messages* on F5
-		("<f5>" ,(iwrapm fg-find-buffer "*Messages*"))
+		("<f5>" ,(iwrapm fg-find-buffer "*scratch*"))
+		("<S-f5>" ,(iwrapm fg-find-buffer "*Messages*"))
 
 		;; Jump to often-used ERC buffers with the rest of F-keys
 		;; local notification channels
 		("<f6>" ,(iwrapm fg-find-buffer "#bordercamp"))
-		("<S-f6>" ,(iwrapm fg-find-buffer "#snort"))
 		;; news-bots, docs and similar net-info chans
 		("<f7>" ,(iwrapm fg-find-buffer "#blazer"))))
 
@@ -422,6 +422,10 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		("<next>" fg-scroll-down) ; pagedown
 		("C-<next>" ,(iwrapm move-to-window-line -1))))
 
+;; -- hi-lock-mode - regexp highlighting and such --
+
+(eval-after-load "hl-lock"
+	'(define-key hi-lock-map (key "C-x") nil))
 
 
 ;; -- ISearch/replace mangling --
