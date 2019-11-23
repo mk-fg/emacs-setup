@@ -1014,11 +1014,14 @@ start revision."
                (buffer-modified-p)
                (git-gutter:should-update-p))
       (let ((file (file-name-nondirectory it))
+            (root (file-truename (vc-git-root it)))
             (now (make-temp-file "git-gutter-cur"))
             (original (make-temp-file "git-gutter-orig")))
-        (when (git-gutter:write-original-content original file)
+        (when (git-gutter:write-original-content original (file-relative-name it root))
           (git-gutter:write-current-content now)
-          (git-gutter:start-live-update file original now))))))
+          (git-gutter:start-live-update file original now))
+        (delete-file now)
+        (delete-file original)))))
 
 ;; for linum-user
 (when (and global-linum-mode (not (boundp 'git-gutter-fringe)))
