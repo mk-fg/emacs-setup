@@ -194,10 +194,9 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-S-z") . ,(transient-wrap 'redo "p"))
 		(,(key "M-z") . repeat)
 
-		;; -- Invocation --
-		;; Pitiful replacement for xterm but it'll have to do...
-		;; (,(key "C-<return>") . multi-term)
-		(,(key "C-S-<return>") . multi-term))
+		;; -- Metabuffer stuff --
+		;; See fg-scite-aux for more of these on enter key
+		(,(key "<C-S-return>") . fg-xdg-open-this))
 	:group 'fg-scite)
 
 

@@ -850,6 +850,26 @@ and return its active (also currently selected) window."
 				(ibuffer-auto-mode 1)))))
 
 
+(defun fg-xdg-open (url)
+	"Run xdg-open with specified URL synchronously.
+Might need to C-g it if blocks, intended just for sending URLs to browser."
+	(interactive "s")
+	(call-process "xdg-open" nil nil nil url))
+
+(defun fg-xdg-open-this ()
+	"Run `fg-xdg-open' on whatever is selected or under cursor in current buffer.
+Uses `use-region-p' and `thing-at-point' to get the value.
+Doesn't do any validation beyond what (thing-at-point 'url) does."
+	(interactive)
+	(fg-xdg-open
+		(if (use-region-p)
+			(buffer-substring-no-properties (region-beginning) (region-end))
+			(thing-at-point 'url 'no-properties))))
+
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Indentation descrimination (tab-only) stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
