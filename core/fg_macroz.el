@@ -852,19 +852,64 @@ and return its active (also currently selected) window."
 
 (defun fg-xdg-open (url)
 	"Run xdg-open with specified URL synchronously.
-Might need to C-g it if blocks, intended just for sending URLs to browser."
+Might need to C-g it if blocks, intended just for sending URLs to browser.
+URL is stripped via `s-trim', checked to be non-empty, with message issued about it."
 	(interactive "s")
-	(call-process "xdg-open" nil nil nil url))
+	(when url (setq url (s-trim url)))
+	(if (and url (> (length url) 0))
+		(progn
+			(message "xdg-open: %S" url)
+			(call-process "xdg-open" nil nil nil url))
+		(message "xdg-open error - empty URL value: %S" url)))
+
+(defun fg-xdg-open-this-url-at-point ()
+	"Similar to `thing-at-cursor' with 'word, but limits word by whitespaces only.
+Strips common junk around URLs via `fg-xdg-open-this-trim-url'.
+Auto-adds http:// schema if there is none in the URL."
+	(interactive)
+	(let ((url-chars "^[[:space:]\n") url)
+		(save-excursion
+			(skip-chars-backward url-chars)
+			(setq url (point))
+			(skip-chars-forward url-chars)
+			(setq url (buffer-substring-no-properties url (point))))
+		(setq url (fg-xdg-open-this-trim-url url))
+		(if (string-match "^[a-zA-Z0-9]+:" url) url (concat "http://" url))))
+
+(defun fg-xdg-open-this-trim-url (url)
+	"Trims and cleans URL from any common junk around it.
+Example junk is braces/brackets, quotes, commas/periods, etc."
+	(setq url (s-trim url))
+	;; Remove trailing commas/periods first, for matching brace-stripping to work next
+	;; Example: (http://myurl.com/).
+	(when (string-match "[,.]$" url)
+		(let ((c (s-right 1 url)))
+			(unless (s-contains? c (s-left (1- (length url)) url))
+				(setq url (s-trim (s-chop-suffix c url))))))
+	;; Remove matching braces/brackets/quotes around it or just leading ones
+	;; Examples: (http://myurl.com/) "http://myurl.com/
+	(while (string-match "^[({\\[\"'`]" url)
+		(let ((c (s-left 1 url)))
+			(setq url (s-trim (s-chop-suffix c (s-chop-prefix c url))))))
+	;; Remove stuff at the end if they are not opened somewhere in the middle
+	;; Specifically: braces/brackets, quotes, periods/commas
+	;; Example: http://myurl.com/] http://myurl.com/),
+	(when (string-match "[])}\"'`,.]$" url)
+		(let ((c (s-right 1 url)))
+			(unless (s-contains? c (s-left (1- (length url)) url))
+				(setq url (s-trim (s-chop-suffix c url))))))
+	url)
 
 (defun fg-xdg-open-this ()
 	"Run `fg-xdg-open' on whatever is selected or under cursor in current buffer.
-Uses `use-region-p' and `thing-at-point' to get the value.
-Doesn't do any validation beyond what (thing-at-point 'url) does."
+Uses `use-region-p' and `fg-xdg-open-this-url-at-point' to get the value.
+Does not use (thing-at-point 'url) because it grabs braces and junk around URLs anyway."
 	(interactive)
+	;; (message "xdg-open: %S"
 	(fg-xdg-open
 		(if (use-region-p)
 			(buffer-substring-no-properties (region-beginning) (region-end))
-			(thing-at-point 'url 'no-properties))))
+			(fg-xdg-open-this-url-at-point))))
 
 
 
