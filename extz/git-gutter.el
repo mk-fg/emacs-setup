@@ -1000,6 +1000,7 @@ start revision."
                  (git-gutter:update-diffinfo diffinfos)
                  (setq git-gutter:enabled t)))
              (kill-buffer proc-buf)
+             ;; delete-file lines here don't cleanup temp files in at least some cases
              (delete-file original)
              (delete-file now))))))))
 
@@ -1019,9 +1020,7 @@ start revision."
             (original (make-temp-file "git-gutter-orig")))
         (when (git-gutter:write-original-content original (file-relative-name it root))
           (git-gutter:write-current-content now)
-          (git-gutter:start-live-update file original now))
-        (delete-file now)
-        (delete-file original)))))
+          (git-gutter:start-live-update file original now))))))
 
 ;; for linum-user
 (when (and global-linum-mode (not (boundp 'git-gutter-fringe)))
