@@ -39,7 +39,7 @@
 ;; Useful tricks - https://www.emacswiki.org/emacs/HiLock
 ;; Pattern storage: hi-lock-interactive-patterns
 
-(require 'hl-lock)
+(require 'hi-lock)
 
 (defvar hi-ibuffer-buffer "*Ibuffer*"
 	"Ibuffer buffer to use for marked-buffer (un-)highlighting routines.")
