@@ -888,13 +888,13 @@ Example junk is braces/brackets, quotes, commas/periods, etc."
 				(setq url (s-trim (s-chop-suffix c url))))))
 	;; Remove matching braces/brackets/quotes around it or just leading ones
 	;; Examples: (http://myurl.com/) "http://myurl.com/
-	(while (string-match "^[({\\[\"'`]" url)
+	(while (string-match "^[({\\[<\"'`]" url)
 		(let ((c (s-left 1 url)))
 			(setq url (s-trim (s-chop-suffix c (s-chop-prefix c url))))))
 	;; Remove stuff at the end if they are not opened somewhere in the middle
 	;; Specifically: braces/brackets, quotes, periods/commas
 	;; Example: http://myurl.com/] http://myurl.com/),
-	(when (string-match "[])}\"'`,.]$" url)
+	(when (string-match "[])}>\"'`,.]$" url)
 		(let ((c (s-right 1 url)))
 			(unless (s-contains? c (s-left (1- (length url)) url))
 				(setq url (s-trim (s-chop-suffix c url))))))
