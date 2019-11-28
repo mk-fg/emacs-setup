@@ -423,7 +423,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 
 ;; -- hi-lock-mode - regexp highlighting and such --
 
-(eval-after-load "hl-lock"
+(eval-after-load "hi-lock"
 	'(define-key hi-lock-map (key "C-x") nil))
 
 
