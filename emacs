@@ -206,6 +206,7 @@
 			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
 			("\\.coffee$" . coffee-mode) ("\\.scss$" . css-mode) ("\\.jade$" . jade-mode)
 			("\.lua$" . lua-mode) ("\\.go$" . go-mode) ("/*.\.php[345]?$" . php-mode)
+			("\.svg$" . xml-mode)
 			(,(concat
 				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
 					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
