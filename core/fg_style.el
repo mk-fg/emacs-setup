@@ -36,6 +36,10 @@
 (eval-after-load "python" '(progn
 	(defun python-indent-post-self-insert-function () nil)))
 
+;; tuareg-mode hates tabs
+(add-hook 'tuareg-mode-hook
+	#'(lambda () (setq indent-tabs-mode t)))
+
 ;; God I hate php, but sometimes they force me to use it
 ;; TODO: regional action, look at fg-comment
 (defun* fg-php-tag-line (&key force-insert force-strip)
