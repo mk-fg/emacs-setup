@@ -42,11 +42,11 @@
   (kbd "<C-tab>")
   "default key bind for switch buffer.")
 (defvar wcy-switch-buffer-active-buffer-face
-  'highlight
+  'bold
   "default face for active buffer"
   )
 (defvar wcy-switch-buffer-inactive-buffer-face
-  'secondary-selection
+  'default
   "default face for inactive buffer"
   )
 
@@ -75,7 +75,7 @@
 ;;;###autoload
 (defun wcy-display-buffer-list (buffer-list)
   "display a buffer list in the echo area."
-  (let ((other-buffer-name (mapconcat  'buffer-name (cdr buffer-list)  "|"))
+  (let ((other-buffer-name (mapconcat  'buffer-name (cdr buffer-list)  " | "))
         message-log-max) ;; disable *Message* log
     (if (> (length other-buffer-name)  (window-width))
         (let* ((half-length (- (/ (window-width) 2) 3)))
@@ -84,10 +84,10 @@
                         " ... "
                         (substring other-buffer-name
                                    (- (length other-buffer-name) half-length))))))
-    (message "%s"
+    (message ">> %s"
              (concat (propertize (buffer-name (car buffer-list))
                                  'face wcy-switch-buffer-active-buffer-face)
-                     "|"
+                     " << | "
                      (propertize other-buffer-name
                                  'face wcy-switch-buffer-inactive-buffer-face))))
   (switch-to-buffer (car buffer-list) t))
