@@ -97,10 +97,10 @@ FACE defaults to nil, see `hi-lock-faces' for list of these."
 	"Set proper font values for current frame."
 	(interactive)
 	(when window-system
-		(set-frame-font "Liberation Sans-9")
-		(set-face-font 'variable-pitch "Liberation Sans-9")
+		(set-frame-font "Liberation SansX-9")
+		(set-face-font 'variable-pitch "Liberation SansX-9")
 		(set-face-font 'fixed-pitch "Liberation Mono-9")
-		(set-fontset-font t '(?А . ?я) "Liberation Sans-9")
+		(set-fontset-font t '(?А . ?я) "Liberation SansX-9")
 		;; Emoji ranges from https://en.wikipedia.org/wiki/Emoji
 		(dolist
 			(range-cons
@@ -189,10 +189,10 @@ FACE defaults to nil, see `hi-lock-faces' for list of these."
 (aset standard-display-table ?\f (vconcat (make-vector 64 ?-) "^L"))
 ;; Tab indentation guides
 (aset standard-display-table ?\t (vconcat "˙ "))
-;; More distinct char for commas vs periods
+;; More distinct char for commas vs periods - an option for non-special fonts
 ;; It's best to pick one from default font via gucharmap, to avoid mixing these
-(aset standard-display-table ?, (vconcat "˾"))
-(aset standard-display-table ?. (vconcat "❟"))
+; (aset standard-display-table ?, (vconcat "˾"))
+; (aset standard-display-table ?. (vconcat "❟"))
 
 ;; git-gutter
 (when
