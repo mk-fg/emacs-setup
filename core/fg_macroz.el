@@ -886,6 +886,7 @@ Example junk is braces/brackets, quotes, commas/periods, etc."
 		(let ((c (s-right 1 url)))
 			(unless (s-contains? c (s-left (1- (length url)) url))
 				(setq url (s-trim (s-chop-suffix c url))))))
+	(setq url (replace-regexp-in-string "\\(^[|]+\\|[|]+$\\)" "" url t t))
 	;; Remove matching braces/brackets/quotes around it or just leading ones
 	;; Examples: (http://myurl.com/) "http://myurl.com/
 	(while (string-match "^[({\\[<\"'`]" url)
