@@ -18,7 +18,8 @@
 	c-syntactic-indentation nil ; stupid ten-tabs indentation
 	lua-electric-flag nil) ;; disable indents on closing brackets
 
-(c-toggle-comment-style -1) ;; use // instead of /* */ comments in C
+;; Use // instead of /* */ comments in C
+(eval-after-load "cc-mode" '(c-toggle-comment-style -1))
 
 ;; Try to disable as much of "electric" stuff as possible
 (add-hook 'after-change-major-mode-hook
