@@ -48,6 +48,40 @@
 
 
 
+;;;; XXX - temporary hack 2020-01-24
+;; "Error from substring-of-symlink in  emms-source-file-directory-tree-internal" on emms-help
+;; Almost certainly incorrect fix, proper one would probably use (file-truename ...)
+
+(defun emms-source-file-directory-tree-internal (dir regex)
+	"Return a list of all files under DIR that match REGEX.
+This function uses only emacs functions, so it might be a bit slow."
+	(let ((files '())
+		(dirs (list dir)))
+		(while dirs
+			(cond
+				((file-directory-p (car dirs))
+					(if
+						(or (string-match "/\\.\\.?$" (car dirs))
+							(let ((symlink (file-symlink-p (car dirs))))
+								(and symlink
+									(string-equal dir
+										(substring symlink 0
+											(min (string-width dir) (string-width symlink)))))))
+						(setq dirs (cdr dirs))
+						(setq dirs
+							(condition-case nil
+								(append (cdr dirs) (directory-files (car dirs) t nil t))
+								(error (cdr dirs)))))
+					(message "----- symlink worked"))
+				((string-match regex (car dirs))
+					(setq files (cons (car dirs) files)
+					dirs (cdr dirs)))
+				(t
+					(setq dirs (cdr dirs)))))
+		files))
+
+
+
 ;;;; Playlist controls
 
 (defun fg-emms-playlist-mode-kill ()
