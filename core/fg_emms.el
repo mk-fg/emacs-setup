@@ -71,8 +71,7 @@ This function uses only emacs functions, so it might be a bit slow."
 						(setq dirs
 							(condition-case nil
 								(append (cdr dirs) (directory-files (car dirs) t nil t))
-								(error (cdr dirs)))))
-					(message "----- symlink worked"))
+								(error (cdr dirs))))))
 				((string-match regex (car dirs))
 					(setq files (cons (car dirs) files)
 					dirs (cdr dirs)))
