@@ -530,12 +530,16 @@ channel/network parameters."
 			(msg-pat (when (or nick msg-pat-raw)
 				(fg-erc-msg-block-pattern (or nick "[^>]+") (or msg-pat-raw ""))))
 			(msg (fg-string-strip-whitespace msg)))
+		;; (message "--- erc-msg: %S" msg)
 		(and
 			(or (not net) (string-match net (or (symbol-name (erc-network)) "")))
 			(or (not host) (string-match host (or erc-session-server "")))
 			(or (not chan) (string-match chan (or (erc-default-target) "")))
 			(or (not msg-pat) (string-match msg-pat msg))
 			(or (not line) (string-match line msg)))))
+
+;; (with-current-buffer "#somechan"
+;; 	(erc-display-line "-nick- some actual line" (current-buffer)))
 
 ;; (with-current-buffer (erc-get-buffer "#ccnx")
 ;; 	(let
