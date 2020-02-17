@@ -334,7 +334,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	;; erc-nick '("freenode")
 
 	erc-user-full-name "Mike Kazantsev"
-	erc-email-userid "mike_dropthis_kazantsev@andthis.fraggod.net"
+	erc-email-userid "mk.fraggod_at_gmail_com"
 
 	erc-prompt
 		(lambda () (erc-propertize (concat "~erc/"
