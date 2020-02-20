@@ -365,9 +365,11 @@ and MSG regexp patterns. MSG can have $ at the end."
 	erc-datestamp-format " === [%Y-%m-%d %a] ===\n"
 
 	erc-timestamp-only-if-changed-flag nil
-	erc-timestamp-format "[%H:%M:%S]"
-	erc-timestamp-format-left (concat erc-timestamp-format " ")
-	erc-timestamp-format-right erc-timestamp-format
+	erc-timestamp-format "[%H:%M:%S] "
+
+	;; These are only used with erc-insert-timestamp-left-and-right, i.e. not used here
+	erc-timestamp-format-left erc-timestamp-format
+	erc-timestamp-format-right nil
 
 	erc-pcomplete-nick-postfix ","
 	erc-pcomplete-order-nickname-completions t
@@ -655,13 +657,12 @@ TEXT argument is processed by `fg-erc-get-hook-msg'."
 		(downcase nick) min-delta))
 
 (defvar-local fg-erc-highlight-name-set nil
-	"Nicks picked up from channel messages via regexps to be highlighted.
-Only used when `erc-channel-users' is unavailable or bogus (e.g. only has 1 user).")
+	"Nicks picked up from channel messages via regexps to be highlighted.")
 
 (defvar fg-erc-highlight-name-set-cleanup
-	`((min-size . 500)
-		(chance . ,(/ 1.0 200))
-		(timeout . ,(* 10 3600)))
+	`((min-size . 300) ;; trigger cleanup on >N nicks
+		(chance . ,(/ 1.0 300)) ;; trigger cleanup on random 1/N per-line chance
+		(timeout . ,(* 15 3600))) ;; last-talked timeout for nick to be discarded on cleanup
 	"Parameters for cleanup of unused nicks from `fg-erc-highlight-name-set'.")
 
 (defcustom fg-erc-highlight-name-lowercase t
@@ -680,49 +681,51 @@ PARAMS should probably be `fg-erc-highlight-name-set-cleanup'."
 			((cleanup-ts-cutoff) (list (- (float-time) cleanup-timeout))))
 		(when
 			(and
-				(> (ht-size name-set) cleanup-min-size)
-				(< (random-float) cleanup-chance))
+				(and cleanup-min-size (> (ht-size name-set) cleanup-min-size))
+				(and cleanup-chance (< (random-float) cleanup-chance)))
 			(ht-each
 				(lambda (k v)
 					(when (< v cleanup-ts-cutoff) (ht-remove! name-set k)))
 				name-set))))
 
 (defun fg-erc-highlight-nicknames ()
-	"Hook to colorize nicknames in channel messages."
+	"Hook to colorize nicknames in channel messages.
+Uses both `fg-erc-highlight-name-set' and `erc-channel-users'."
 	(unless
 		(condition-case nil (ht? fg-erc-highlight-name-set) (error nil))
 		(setq-local fg-erc-highlight-name-set (ht-create)))
 	(condition-case-unless-debug ex
 		(save-excursion
 			(goto-char (point-min))
-			(while (re-search-forward "[-[:alnum:]_`^|<>.,]+" nil t)
-				(let*
-					((bounds (cons (match-beginning 0) (point)))
-						(nick (buffer-substring-no-properties (car bounds) (cdr bounds)))
-						(nick-self (erc-current-nick)))
-					(when (string-match "^<\\(.*\\)>$" nick)
-						(setq
-							nick (match-string 1 nick)
-							bounds (cons (1+ (car bounds)) (1- (cdr bounds))))
-						;; Special case - 1 user in "erc-channel-users" means that /names doesn't work
-						;; So nicks will be matched from messages in the chan instead, checked below
-						(if (and (ht? erc-channel-users) (> (ht-size erc-channel-users) 1))
-							(ht-clear! fg-erc-highlight-name-set)
+			(let ((match-n 0))
+				(while (re-search-forward "[^\s-]+" nil t) ; nick-like thing within msg line
+					(setq match-n (1+ match-n))
+					(let*
+						((bounds (cons (match-beginning 0) (point)))
+							(nick (buffer-substring-no-properties (car bounds) (cdr bounds)))
+							(nick-self (erc-current-nick)))
+						(when
+							(and
+								(< match-n 4) ;; should be somewhere at the beginning of line
+								(string-match "^<\\(.*\\)>$" nick)) ;; must match regexp above as well
+							(setq
+								nick (match-string 1 nick)
+								bounds (cons (1+ (car bounds)) (1- (cdr bounds))))
 							(ht-set! fg-erc-highlight-name-set (downcase nick) (float-time))
 							(fg-erc-highlight-nicknames-cleanup
-								fg-erc-highlight-name-set fg-erc-highlight-name-set-cleanup)))
-					(when
-						(and
-							(or
-								(and (erc-server-buffer-p) (erc-get-server-user nick))
-								(and erc-channel-users (erc-get-channel-user nick))
-								(ht-contains? fg-erc-highlight-name-set (downcase nick)))
-							(not (string-equal nick nick-self)))
-						(when fg-erc-highlight-name-lowercase
-							(downcase-region (car bounds) (cdr bounds)))
-						(put-text-property
-							(car bounds) (cdr bounds) 'face
-							(cons 'foreground-color (fg-erc-get-color-for-nick nick)))))))
+								fg-erc-highlight-name-set fg-erc-highlight-name-set-cleanup))
+						(when
+							(and
+								(or
+									(and (erc-server-buffer-p) (erc-get-server-user nick))
+									(and erc-channel-users (erc-get-channel-user nick))
+									(ht-contains? fg-erc-highlight-name-set (downcase nick)))
+								(not (string-equal nick nick-self)))
+							(when fg-erc-highlight-name-lowercase
+								(downcase-region (car bounds) (cdr bounds)))
+							(put-text-property
+								(car bounds) (cdr bounds) 'face
+								(cons 'foreground-color (fg-erc-get-color-for-nick nick))))))))
 		(error
 			(message "ERC highlight error: %s" ex)
 			(ding t))))
