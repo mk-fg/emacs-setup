@@ -656,41 +656,52 @@ TEXT argument is processed by `fg-erc-get-hook-msg'."
 		(plist-get (custom-face-attributes-get 'default (selected-frame)) :background)
 		(downcase nick) min-delta))
 
-(defvar-local fg-erc-highlight-name-set nil
-	"Nicks picked up from channel messages via regexps to be highlighted.")
-
-(defvar fg-erc-highlight-name-set-cleanup
-	`((min-size . 300) ;; trigger cleanup on >N nicks
-		(chance . ,(/ 1.0 300)) ;; trigger cleanup on random 1/N per-line chance
-		(timeout . ,(* 15 3600))) ;; last-talked timeout for nick to be discarded on cleanup
-	"Parameters for cleanup of unused nicks from `fg-erc-highlight-name-set'.")
-
 (defcustom fg-erc-highlight-name-lowercase t
 	"Lowercase all highlighted nicks, to make them somewhat easier to read."
 	:group 'erc :type 'boolean)
 
-(defun fg-erc-highlight-nicknames-cleanup (name-set params)
-	"Cleanup NAME-SET according to PARAMS.
-PARAMS should probably be `fg-erc-highlight-name-set-cleanup'."
-	(-let*
-		(((&alist
-					'min-size cleanup-min-size
-					'chance cleanup-chance
-					'timeout cleanup-timeout)
-				params)
-			((cleanup-ts-cutoff) (list (- (float-time) cleanup-timeout))))
+(defvar-local fg-erc-highlight-name-set nil
+	"Nicks picked up from channel messages via regexps to be highlighted.
+Filled by `fg-erc-highlight-nicknames', cleaned-up by `fg-erc-highlight-name-set-cleanup'.")
+
+(defvar fg-erc-hlnsc-min-size 100
+	"Min `fg-erc-highlight-name-set' size to trigger cleanup.
+Intervals and chances are not checked if table is under this size.")
+
+(defvar fg-erc-hlnsc-min-interval (* 2 60)
+	"Minimal interval between `fg-erc-highlight-name-set' cleanups.
+Intended to avoid slowing-down any kind of backlog dumps.")
+
+(defvar fg-erc-hlnsc-max-interval (* 3 3600)
+	"Interval after which `fg-erc-highlight-name-set-cleanup' triggers.")
+
+(defvar fg-erc-hlnsc-chance (/ 1.0 300)
+	"Chance for `fg-erc-highlight-name-set-cleanup' to trigger randomly between min/max intervals.")
+
+(defvar fg-erc-hlnsc-nick-timeout (* 15 3600)
+	"Remove nicks older than this on `fg-erc-highlight-name-set' cleanup.")
+
+(defun fg-erc-highlight-nicknames-cleanup (name-set)
+	"Cleanup NAME-SET according to fg-erc-hlnsc-* limits."
+	(let*
+		((ts (float-time))
+			(ts-check-last (ht-get name-set 'last-cleanup ts)))
 		(when
 			(and
-				(and cleanup-min-size (> (ht-size name-set) cleanup-min-size))
-				(and cleanup-chance (< (random-float) cleanup-chance)))
-			(ht-each
-				(lambda (k v)
-					(when (< v cleanup-ts-cutoff) (ht-remove! name-set k)))
-				name-set))))
+				(> (ht-size name-set) fg-erc-hlnsc-min-size)
+				(< ts-check-last (- ts fg-erc-hlnsc-min-interval))
+				(or
+					(< ts-check-last (- ts fg-erc-hlnsc-max-interval))
+					(< (random-float) fg-erc-hlnsc-chance)))
+			(ht-set! name-set 'last-cleanup ts)
+			(let ((ts-nick-min (- ts fg-erc-hlnsc-nick-timeout)))
+				(ht-each (lambda (nick ts-nick)
+					(when (< ts-nick ts-nick-min) (ht-remove! name-set nick))) name-set)))))
 
 (defun fg-erc-highlight-nicknames ()
 	"Hook to colorize nicknames in channel messages.
-Uses both `fg-erc-highlight-name-set' and `erc-channel-users'."
+Uses both `fg-erc-highlight-name-set' and `erc-channel-users'.
+Normalizes case for known nicks as well, if `fg-erc-highlight-name-lowercase' is set."
 	(unless
 		(condition-case nil (ht? fg-erc-highlight-name-set) (error nil))
 		(setq-local fg-erc-highlight-name-set (ht-create)))
@@ -712,8 +723,7 @@ Uses both `fg-erc-highlight-name-set' and `erc-channel-users'."
 								nick (match-string 1 nick)
 								bounds (cons (1+ (car bounds)) (1- (cdr bounds))))
 							(ht-set! fg-erc-highlight-name-set (downcase nick) (float-time))
-							(fg-erc-highlight-nicknames-cleanup
-								fg-erc-highlight-name-set fg-erc-highlight-name-set-cleanup))
+							(fg-erc-highlight-nicknames-cleanup fg-erc-highlight-name-set))
 						(when
 							(and
 								(or
