@@ -263,8 +263,10 @@ and MSG regexp patterns. MSG can have $ at the end."
 			;; These are useless and only hinder ops like copy-paste
 			button
 			;; Disabled by default, but I'd hate to bump into these
-			smiley sound))
-		'(log truncate autoaway dcc keep-place)))
+			;; keep-place sounds nice, but puts first-line-to-read
+			;;   at the bottom of the buffer, maybe should be fixed.
+			smiley sound keep-place))
+		'(log truncate autoaway dcc)))
 (erc-update-modules)
 
 
