@@ -123,10 +123,9 @@ and (optionally) cleaned-up from timestamps, text-props, control chars, etc."
 		(list text hook-type)))
 
 
-;; erc-track state preservation feature
+;; --- Local feature: erc-track state preservation feature
 ;; Idea is to have list of unread stuff dumped to some file on timer,
 ;;  so that sudden system crash or emacs kill won't loose any important msgs
-;; TODO: auto-restore this into erc-modified-channels-alist maybe?
 
 (defcustom fg-erc-track-save-path (concat fg-path "/tmp/erc-track-state")
 	"Path to save `erc-modified-channels-alist' state to."
@@ -202,15 +201,14 @@ making sure to preserve a copies from a few last runs."
 	(unless (erc-string-invisible-p (buffer-substring (point-min) (point-max))) ad-do-it))
 
 
-;; Local feature: blocking msgs by a bunch of props
-
-(defcustom fg-erc-msg-block ()
-	"Regexps to match to-be-ignored msgs."
-	:group 'erc :type '(repeat regexp))
+;; --- Local feature: blocking/modifying msgs matched by a bunch of props
 
 (defcustom fg-erc-msg-block-plists ()
 	"Block messages by matching any of
 channel, network, nick or message vs regexp plists.
+
+These offer a subset of `fg-erc-msg-modify-plists' functionality,
+but handled specially, as they can be applied on later hooks.
 
 List of plists with any number of following keys (in each):
 	:net - regexp to match network.
@@ -237,8 +235,6 @@ List of plists with any number of following keys (in each):
 	:group 'erc :type '(repeat sexp))
 
 ;; These are to allow easy setq for fg-erc-msg-*-plists, without having to merge/dedup these
-(defvar fg-erc-msg-block-local ()
-	"Site-local `fg-erc-msg-block', for easier merging with global list.")
 (defvar fg-erc-msg-block-plists-base ()
 	"Persistent global part of `fg-erc-msg-block-plists' from the repo.")
 (defvar fg-erc-msg-block-plists-local ()
@@ -257,7 +253,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 (defun fg-erc-re (string) (concat "^" (regexp-quote string) "$"))
 
 
-;; Modules
+;; --- Modules
 (customize-set-variable 'erc-modules
 	(-union
 		(-difference erc-modules '(
@@ -268,33 +264,16 @@ and MSG regexp patterns. MSG can have $ at the end."
 			button
 			;; Disabled by default, but I'd hate to bump into these
 			smiley sound))
-		'(log truncate autoaway dcc)))
-
-;; TODO: should be configured first
-;; (add-to-list 'erc-modules 'notify)
-;; TODO: check these out
-;; (add-to-list 'erc-modules 'keep-place)
-
+		'(log truncate autoaway dcc keep-place)))
 (erc-update-modules)
 
 
-;; Filtering lists are split from other opts so it'd be easier to modify and re-apply parts
+;; --- Filtering lists are split from other opts here to modify and re-apply parts easier
 
 ;; net+chan+nick+msg ignore-patterns
 ;; See fg-erc-msg-block-pattern for how nick/msg parts are used
 (setq-default fg-erc-msg-block-plists-base
 	`((:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
-			:msg ,(concat "discord - \\(" "Error: Failed to read ws header\\."
-				"\\|Performing soft-reconnect" "\\|Remote host is closing websocket connection" "\\)"))
-		(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
-			:msg ,(concat "oscar - \\("
-				"Error: Disconnected\\."
-				;; "62 seconds" is used to match only first reconnect, making noise on others
-				"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
-				"\\|Logging in: \\(" "Signon: [0-9]+"
-					"\\|Connection established, cookie sent" "\\|Logged in" "\\)"
-				"\\|Login error: SNAC threw error: Not supported by host" "\\)"))
-		(:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
 			:msg ,(concat "gtalk - \\("
 				"Error: Error while reading from server"
 				;; "62 seconds" is used to match only first reconnect, making noise on others
@@ -302,30 +281,31 @@ and MSG regexp patterns. MSG can have $ at the end."
 				"\\|Logging in: \\(" "Connecting" "\\|Logged in"
 					"\\|Connected to server, logging in" "\\|Converting stream to TLS"
 					"\\|Server changed session resource string to `Indirect[0-9A-F]+'"
-					"\\|Authentication finished" "\\|Authenticated, requesting buddy list" "\\)" "\\)"))))
+					"\\|Authentication finished" "\\|Authenticated, requesting buddy list" "\\)" "\\)"))
+		(:chan "^#" :net "^BitlBee$" :msg ,(concat "^ *\\*\\*\\* \\("
+			"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #"
+			"\\|#\\S-+: topic set by " "\\)"))))
 
 (setq-default fg-erc-msg-block-plists
 	(append fg-erc-msg-block-plists-local fg-erc-msg-block-plists-base))
 
-;; Ignore-patterns with one nick and message regexps
-;; Same as fg-erc-msg-block-plists with only nick+msg and manual fg-erc-msg-block-pattern
-(setq-default fg-erc-msg-block fg-erc-msg-block-local)
+;; ;; This is just an example of how to implement modify-func to work for blocking
+;; ;; Use fg-erc-msg-block-plists for this exact thing instead
+;; (setq-default fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
+;; 	;; Filter-out spammy stuff on bitlbee reconnects
+;; 	`((:chan "^#" :net "^BitlBee$" :func ,(lambda ()
+;; 		(-let [(line hook-type) (fg-erc-get-hook-msg text)]
+;; 			(when
+;; 				(string-match
+;; 					(concat "^ *\\*\\*\\* \\("
+;; 							"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #"
+;; 							"\\|#\\S-+: topic set by "
+;; 						"\\)") line)
+;; 				(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))))))))
+(setq-default fg-erc-msg-modify-plists fg-erc-msg-modify-plists-local)
 
-;; XXX: this should be merged into fg-erc-msg-block-plists, being a superset of that
-(setq-default fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
-	;; Filter-out spammy stuff on bitlbee reconnects
-	`((:chan "^#" :net "^BitlBee$"
-		;; (:chan "." :net ".*"
-			:func ,(lambda ()
-				(-let [(line hook-type) (fg-erc-get-hook-msg text)]
-					(when
-						(string-match
-							(concat "^ *\\*\\*\\* \\("
-									"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #"
-									"\\|#\\S-+: topic set by "
-								"\\)") line)
-						(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))))))))
 
+;; ---=== Main configuration ===---
 
 (setq-default
 	erc-server "irc.fraggod.net"
@@ -387,13 +367,13 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 	erc-hide-list '("JOIN" "PART" "MODE" "MODE-nick" "QUIT") ;; careful, these are completely ignored
 
-	erc-ignore-list ;; global ignore-everywhere list
-		'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
-			"^fdo-vcs!~?kgb@\\sw+\\.freedesktop\\.org$"
-			"^KGB[^!]+!~?Debian-kgb@.*\\.kitenet\\.net$"
-			"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
-			"^irker[[:digit:]]+!~?irker@"
-			"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
+	;; erc-ignore-list ;; global ignore-everywhere list - can be useful for common CI irc bots
+	;; 	'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
+	;; 		"^fdo-vcs!~?kgb@\\sw+\\.freedesktop\\.org$"
+	;; 		"^KGB[^!]+!~?Debian-kgb@.*\\.kitenet\\.net$"
+	;; 		"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
+	;; 		"^irker[[:digit:]]+!~?irker@"
+	;; 		"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
@@ -416,7 +396,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 
 
-;; Custom timestamping
+;; --- Custom timestamping
 
 (make-variable-buffer-local
 	(defvar erc-last-datestamp nil))
@@ -431,8 +411,9 @@ Makes ERC buffers a bit more log-friendly."
 			(setq erc-last-datestamp datestamp))))
 
 
-;; Custom buffer truncation
+;; --- Custom buffer truncation
 ;; Idea is to remove invisible lines first and only then start on visible ones
+;; This is useful for discord #monitor channels, where most lines are discarded
 
 (defun erc-truncate-buffer ()
 	"Truncates current buffer to `erc-max-buffer-size'.
@@ -469,11 +450,13 @@ Resulting buffer can be longer than SIZE if there isn't enough such lines."
 
 
 
-;; Message content filter
+;; --- Local filtering framework implementation
+;; See fg-erc-msg-block-plists and fg-erc-msg-modify-plists above
+
 (defun fg-erc-msg-content-filter (&optional text)
 	"`erc-insert-modify-hook' or `erc-insert-pre-hook' function
-to match message against `fg-erc-msg-block' and `fg-erc-msg-block-plists'
-rulesets and discard/hide the message if any rule in either matches it.
+to match message against `fg-erc-msg-block-plists' ruleset
+and discard/hide the message if any rule in either matches it.
 
 Depending on whether TEXT is passed (and/or returned from `fg-erc-get-hook-msg'),
 if match is found, either `erc-insert-this' is used to discard ('pre' hook),
@@ -500,15 +483,13 @@ Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 			;; 					(message " - rule result: %s -- %s" rule-res rule))
 			;; 				(when rule-res (return-from nil "fg-erc-msg-modify-plists"))))))
 			(if
-				(or
-					;; check fg-erc-msg-block
-					(erc-list-match fg-erc-msg-block text)
-					;; check fg-erc-msg-block-plists
-					(dolist (rule fg-erc-msg-block-plists)
-						(when (fg-erc-msg-match-rule rule text) (return-from nil t))))
+				;; check fg-erc-msg-block-plists
+				(dolist (rule fg-erc-msg-block-plists)
+					(when (fg-erc-msg-match-rule rule text) (return-from nil t)))
 				(if (eq hook-type 'pre)
 					(set 'erc-insert-this nil)
 					(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))
+
 				(-if-let ;; try to modify msg, if it's not blocked
 					(func (and
 						(eq hook-type 'post)
@@ -540,6 +521,7 @@ channel/network parameters."
 			(or (not msg-pat) (string-match msg-pat msg))
 			(or (not line) (string-match line msg)))))
 
+;;;; This is most useful and simple way to test blocking - just erc-display-line in chan buffer
 ;; (with-current-buffer "#somechan"
 ;; 	(erc-display-line "-nick- some actual line" (current-buffer)))
 
@@ -563,17 +545,7 @@ channel/network parameters."
 ;; (remove-hook 'erc-insert-modify-hook 'fg-erc-msg-content-filter)
 
 
-;; Useful to test new ignore-list masks
-(defun erc-cmd-REIGNORE ()
-	"Drop local changes to ignore-list (or apply global changes)."
-	(erc-display-line
-		(erc-make-notice "Reset ignore-list to a default (global) state")
-		'active)
-	(erc-with-server-buffer (kill-local-variable 'erc-ignore-list))
-	(erc-cmd-IGNORE))
-
-
-;; Clears out annoying erc-track-mode stuff when I don't care
+;; --- Clears out annoying erc-track-mode stuff when I don't care
 (defun fg-erc-track-reset ()
 	(interactive)
 	(setq erc-modified-channels-alist nil)
@@ -581,32 +553,9 @@ channel/network parameters."
 	(force-mode-line-update t))
 
 
-;; Used to get short definition of
-;;  a selected word or phrase and a link to a longer version
-(defun fg-erc-ddg-define (start end)
-	"Send 'define <selection>' to DuckDuckGo bot via jabber."
-	(interactive "r")
-	(let
-		((erc-buff-ddg (erc-get-buffer "ddg_bot"))
-			(query (filter-buffer-substring start end)))
-		(unless erc-buff-ddg
-			(let*
-				((erc-buff-bitlbee
-						(or (erc-get-buffer "&jabber") (erc-get-buffer "&bitlbee")))
-					(erc-buff-bitlbee
-						(and erc-buff-bitlbee
-							(with-current-buffer erc-buff-bitlbee
-								(car
-									(erc-buffer-list-with-nick "ddg_bot" erc-server-process))))))
-				(when erc-buff-bitlbee
-					(with-current-buffer erc-buff-bitlbee
-						(setq erc-buff-ddg (erc-cmd-QUERY "ddg_bot"))))))
-		(when erc-buff-ddg
-			(switch-to-buffer erc-buff-ddg)
-			(erc-send-message (format "define %s" query)))))
+;; --- New message notification hook
+;; There is stock module for this these days, but this works too
 
-
-;; New message notification hook
 (defvar fg-erc-notify-check-inivisible t
 	"Whether to use `erc-string-invisible-p' on messages and skip unes that match.
 Should only work with `erc-insert-post-hook', as that's when
@@ -645,10 +594,11 @@ TEXT argument is processed by `fg-erc-get-hook-msg'."
 							(ding t))))))))
 
 
-;; erc-highlight-nicknames mods
+;; --- Local erc-highlight-nicknames mods
 ;; idea: from #erc
 ;; source: http://www.emacswiki.org/emacs/ErcNickColors
 ;; TODO: also check color-diff vs opposite bg, make sure color is visible on both kinds
+
 (require 'color)
 
 (defun* fg-erc-get-color-for-nick (nick &optional (min-delta 40))
@@ -743,7 +693,7 @@ Normalizes case for known nicks as well, if `fg-erc-highlight-name-lowercase' is
 (add-hook 'erc-insert-modify-hook 'fg-erc-highlight-nicknames)
 
 
-;; Putting a mark-lines into the buffers
+;; --- Local feature: putting a mark-lines into the buffers, via some hotkey
 
 (defun fg-erc-mark-put (buffer)
 	(erc-display-line " *** -------------------- ***" buffer))
@@ -757,7 +707,8 @@ Normalizes case for known nicks as well, if `fg-erc-highlight-name-lowercase' is
 	(interactive)
 	(when (eq major-mode 'erc-mode) (fg-erc-mark-put (current-buffer))))
 
-;; Auto mark-lines.
+
+;; --- Auto mark-lines
 ;; source: http://www.emacswiki.org/emacs/ErcBar
 
 (defvar fg-erc-bar-threshold 1
@@ -793,7 +744,6 @@ Should be executed on window change."
 							(current-buffer)))))
 			(delete-overlay fg-erc-bar-overlay))))
 
-;; TODO: make face change for light/dark masq's
 (setq fg-erc-bar-overlay (make-overlay 0 0))
 (overlay-put fg-erc-bar-overlay 'face `(:underline ,fg-erc-bar-overlay-color))
 
@@ -806,7 +756,7 @@ Should be executed on window change."
 (add-hook 'erc-send-completed-hook (lambda (str) (fg-erc-bar-update-overlay)))
 
 
-;; Iterate over all erc channel buffers
+;; --- Local feature: func to iterate over all erc channel buffers, for a hotkey
 
 (defvar fg-erc-cycle-channels-return-buffer nil
 	"Non-erc buffer to return to after going full-cycle over buffers.")
@@ -863,8 +813,9 @@ returning to the original one in the end."
 			(switch-to-buffer (nth pos channel-buffers)))))
 
 
-;; Some quick fail right after connection (like "password incorrect")
-;;  will trigger infinite zero-delay reconnection loop by default.
+;; --- Fix for reconnection loops, not sure if still needed or even works
+;; Quick fail right after connection
+;;   (like "password incorrect") will trigger infinite zero-delay reconnection loop by default.
 ;; This code fixes the problem, raising error for too fast erc-server-reconnect calls
 (defvar fg-erc-reconnect-time 0
 	"Timestamp of the last `erc-server-reconnect' run.
@@ -880,64 +831,3 @@ Prevents idiotic zero-delay reconnect loops from hanging emacs.")
 				(error "erc-server-reconnect loop detected"))
 			(setq fg-erc-reconnect-time time)
 			ad-do-it)))
-
-
-;; Away timer, based on X idle time, not emacs or irc
-;; TODO: finish and test this
-
-(defvar fg-erc-autoaway-idletimer-x nil
-	"X idletimer. Used when `erc-autoaway-idle-method' is set to 'x.")
-;; TODO: there must be some event for "user activity" in emacs to replace this timer
-(defvar fg-erc-autoaway-check-interval 120
-	"Interval to check whether user has become active.")
-
-(defun fg-erc-autoaway-check-away ()
-	"Check if away mode need to be set or reset and
-establish a timer for a next check, if there's any need for it."
-	;; Whole (when ...) wrap is based on the assumption that
-	;; erc-server-buffer's won't spawn w/o resetting (run-with-idle-timer ...) call
-	(when (erc-autoaway-some-server-buffer)
-		(let ((idle-time (/ (fg-idle-time) 1000.0)))
-			(if (and erc-away erc-autoaway-caused-away) ;; check whether away should be set or reset
-				(if (< idle-time erc-autoaway-idle-seconds)
-					(erc-cmd-GAWAY "") ;; erc-autoaway-reset-indicators should be called via erc-server-305-functions
-					(fg-erc-autoaway-x-idletimer :delay fg-erc-autoaway-check-interval))
-				(when erc-autoaway-caused-away
-					(if (>= idle-time erc-autoaway-idle-seconds)
-						(progn
-							(erc-display-message nil 'notice nil
-								(format "Setting automatically away (threshold: %i)" erc-autoaway-idle-seconds))
-							(erc-autoaway-set-away idle-time t) ;; erc-server-buffer presence already checked
-							(fg-erc-autoaway-x-idletimer :delay fg-erc-autoaway-check-interval))
-						(fg-erc-autoaway-x-idletimer :idle-time idle-time)))))))
-
-(defun* fg-erc-autoaway-x-idletimer (&key delay idle-time)
-	"Reestablish the X idletimer."
-	(interactive)
-	(when fg-erc-autoaway-idletimer-x
-		(erc-cancel-timer fg-erc-autoaway-idletimer-x))
-	(unless delay
-		(unless idle-time
-			(setq idle-time (/ (fg-idle-time) 1000.0)))
-		(setq delay (max 1 (+ (- erc-autoaway-idle-seconds idle-time) 10))))
-	(setq fg-erc-autoaway-idletimer-x
-		(run-at-time (format "%i sec" delay) nil 'fg-erc-autoaway-check-away)))
-
-(defun erc-autoaway-reestablish-idletimer ()
-	"Reestablish the Emacs idletimer (which also triggers X idletimer).
-If `erc-autoaway-idle-method' is 'emacs, you must call this
-function each time you change `erc-autoaway-idle-seconds'."
-	;; Used on assumption that emacs-idle-time is greater or equal to x-idle-time.
-	(interactive)
-	(when erc-autoaway-idletimer
-		(erc-cancel-timer erc-autoaway-idletimer))
-	(setq erc-autoaway-idletimer
-		(if (eq window-system 'x)
-			(run-with-idle-timer erc-autoaway-idle-seconds t
-				'fg-erc-autoaway-x-idletimer :idle-time erc-autoaway-idle-seconds)
-			(run-with-idle-timer erc-autoaway-idle-seconds t
-				'erc-autoaway-set-away erc-autoaway-idle-seconds))))
-
-(when (and erc-auto-set-away (eq erc-autoaway-idle-method 'x))
-	(erc-autoaway-reestablish-idletimer) ;; definition should've been updated
-	(remove-hook 'erc-timer-hook 'erc-autoaway-possibly-set-away)) ;; based on emacs-idle-time, bogus
