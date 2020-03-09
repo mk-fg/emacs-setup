@@ -833,3 +833,63 @@ Prevents idiotic zero-delay reconnect loops from hanging emacs.")
 				(error "erc-server-reconnect loop detected"))
 			(setq fg-erc-reconnect-time time)
 			ad-do-it)))
+
+
+;; --- Local feature: func for fg-erc-msg-modify-plists to garble msgs instead of full muting
+;; see also - Lunicode.js, ttf-zalgo on AUR, MetroWind/1401473 gist, etc
+
+(defvar fg-erc-zalgo-overlay-count '(2 . 4)
+	"Default OVERLAY-COUNT argument for `fg-erc-zalgo', if omitted.")
+;; (setq fg-erc-zalgo-overlay-count '(2 . 4))
+
+(defvar fg-erc-zalgo-overlay-ranges
+	;; Glyphs should be picked from current font and produce roughly same length with overlay
+	'( ; common punctuation and misc marks
+		(#x00A1 . #x00BF) (#x02B9 . #x02FF) (#x2010 . #x2022) #x2026 (#x2032 . #x2034)
+		#x2044 #x221A #x2211 #x2215 #x2229 #x2248 #x2261 (#x2320 . #x2321)
+		(#x2550 . #x256A) #x2591 (#x25CA . #x25CC) (#x25CF . #x25D8) #x25E6
+		#x263C #x2640 #x2642 (#x2669 . #x266B) #x266F #x2E17 (#xA717 . #xA721) (#xA788 . #xA78A)
+		(#x03E2 . #x03EF) ; coptic
+		(#x1F30 . #x1F3F) (#x1FBD . #x1FC1) (#x1FCD . #x1FDF) (#x1FED . #x1FEF) ; greek
+		(#x0591 . #x05F4) (#xFB1D . #xFB4F) ; hebrew
+		; latin
+		(#x0268 . #x026D) (#x0279 . #x02A2) (#x02AD . #x02E4) (#x1D00 . #x1EF9)
+		#x207F (#x2090 . #x2094) #x214E #x2184 (#x2C60 . #x2C77) #xA78B #xA78C)
+	"List of (MIN . MAX) cons cells for ranges to pick overlay chars from.
+Note that range is picked first, then char from it,
+so distribution is not uniform among all source chars.")
+
+(defun fg-erc-zalgo-char (c n)
+	"Compose N random overlays (can be '(MIN . MAX) cons) onto char C."
+	(if (memql (char-syntax c) '(32 ?. ?_)) (format "%c" c) ;; skip spaces/punctuation
+		(when (consp n)
+			(let ((a (car n)) (b (cdr n)))
+				(setq n (+ a (random (- b a -1))))))
+		(let
+			((z (format "%c" c))
+				(iter-n 0) (iter-n-limit 10) ;; in case font checks fail
+				(ascii-font (car (internal-char-font nil ?x)))
+				(rn (length fg-erc-zalgo-overlay-ranges)))
+			(while (not (or (>= (length z) n) (>= iter-n iter-n-limit)))
+				(let ((co (nth (random rn) fg-erc-zalgo-overlay-ranges)))
+					(unless (numberp co)
+						(let ((a (car co)) (b (cdr co)))
+							(setq co (+ a (random (- b a -1))))))
+					;; Note: can also use char-displayable-p here or something
+					(if (eq ascii-font (car (internal-char-font nil co)))
+						(setq z (format "%s%c" z co)) (setq iter-n (1+ iter-n)))))
+			(compose-string z))))
+
+(defun fg-erc-zalgo (text &optional overlay-count)
+	"Return TEXT with random chars composed on top of it.
+OVERLAY-COUNT can be either a number or
+(MIN . MAX) cons to pick random number from range for each char,
+and defaults to `fg-erc-zalgo-overlay-count'.
+Overlay chars are picked from `fg-erc-zalgo-overlay-ranges'."
+	(let ((n (or overlay-count fg-erc-zalgo-overlay-count 0)))
+		(unless (equal 0 n)
+			(cl-flet ((zalgo (c) (fg-erc-zalgo-char c n)))
+				(setq text (apply #'concat (seq-map #'zalgo text))))))
+	text)
+
+;; Simple test: (insert (format "\n%s" (fg-erc-zalgo "zalgo lives" '(1 . 4))))
