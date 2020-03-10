@@ -239,8 +239,6 @@ List of plists with any number of following keys (in each):
 	"Persistent global part of `fg-erc-msg-block-plists' from the repo.")
 (defvar fg-erc-msg-block-plists-local ()
 	"Site-local `fg-erc-msg-block-plists', for easier merging with global list.")
-(defvar fg-erc-msg-modify-plists-local ()
-	"Site-local `fg-erc-msg-modify-plists', for easier merging with global list.")
 
 (defun fg-erc-msg-block-pattern (nick msg)
 	"Build proper pattern for regular channel messages
@@ -304,7 +302,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 ;; 							"\\|#\\S-+: topic set by "
 ;; 						"\\)") line)
 ;; 				(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))))))))
-(setq-default fg-erc-msg-modify-plists fg-erc-msg-modify-plists-local)
+;; (setq-default fg-erc-msg-modify-plists fg-erc-msg-modify-plists-local)
 
 
 ;; ---=== Main configuration ===---
