@@ -273,7 +273,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 ;; net+chan+nick+msg ignore-patterns
 ;; See fg-erc-msg-block-pattern for how nick/msg parts are used
 (setq-default fg-erc-msg-block-plists-base
-	`((:chan "^&bitlbee$" :net "^BitlBee$" :nick "root"
+	`((:net "^BitlBee$" :nick "root"
 			:msg ,(concat "gtalk - \\("
 				"Error: Error while reading from server"
 				;; "62 seconds" is used to match only first reconnect, making noise on others
