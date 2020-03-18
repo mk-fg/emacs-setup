@@ -2,7 +2,6 @@
 (setq-default
 	indent-tabs-mode t
 	tab-width 2
-	default-tab-width 2
 	indent-region-function
 		'fg-indent-command ; default one inserts spaces
 	require-final-newline t
@@ -23,7 +22,7 @@
 
 ;; Try to disable as much of "electric" stuff as possible
 (add-hook 'after-change-major-mode-hook
-	(lambda() (electric-indent-mode -1)))
+	#'(lambda () (electric-indent-mode -1)))
 
 ;; Adjust some develock line lengths
 (eval-after-load "develock"
