@@ -836,23 +836,32 @@ Prevents idiotic zero-delay reconnect loops from hanging emacs.")
 ;; --- Local feature: func for fg-erc-msg-modify-plists to garble msgs instead of full muting
 ;; see also - Lunicode.js, ttf-zalgo on AUR, MetroWind/1401473 gist, etc
 
-(defvar fg-erc-zalgo-overlay-count '(2 . 4)
+(defvar fg-erc-zalgo-overlay-count '(2 . 5)
 	"Default OVERLAY-COUNT argument for `fg-erc-zalgo', if omitted.")
-;; (setq fg-erc-zalgo-overlay-count '(2 . 4))
+;; (setq fg-erc-zalgo-overlay-count '(2 . 5))
 
 (defvar fg-erc-zalgo-overlay-ranges
 	;; Glyphs should be picked from current font and produce roughly same length with overlay
-	'( ; common punctuation and misc marks
+	;; These are all from Liberation Sans
+	'( ;; Picks from "gucharmap - current font - by script" - "by unicode block" is a better idea
+		; common punctuation and misc marks
 		(#x00A1 . #x00BF) (#x02B9 . #x02FF) (#x2010 . #x2022) #x2026 (#x2032 . #x2034)
-		#x2044 #x221A #x2211 #x2215 #x2229 #x2248 #x2261 (#x2320 . #x2321)
+		#x2044 #x2215 #x2229 #x2261 (#x2320 . #x2321)
 		(#x2550 . #x256A) #x2591 (#x25CA . #x25CC) (#x25CF . #x25D8) #x25E6
 		#x263C #x2640 #x2642 (#x2669 . #x266B) #x266F #x2E17 (#xA717 . #xA721) (#xA788 . #xA78A)
 		(#x03E2 . #x03EF) ; coptic
 		(#x1F30 . #x1F3F) (#x1FBD . #x1FC1) (#x1FCD . #x1FDF) (#x1FED . #x1FEF) ; greek
 		(#x0591 . #x05F4) (#xFB1D . #xFB4F) ; hebrew
+		(#x0504 . #x0507) (#x050E . #x0513) (#x0480 . #x0489) (#xFB1D . #xFB4F) ; cyrillic
 		; latin
-		(#x0268 . #x026D) (#x0279 . #x02A2) (#x02AD . #x02E4) (#x1D00 . #x1EF9)
-		#x207F (#x2090 . #x2094) #x214E #x2184 (#x2C60 . #x2C77) #xA78B #xA78C)
+		(#x0268 . #x026D) (#x0279 . #x02A2) (#x02AD . #x02E4)
+		(#x1D00 . #x1DBF) (#x1DC0 . #x1DCA) (#x1DFE . #x1DFF) #x207F
+		(#x2090 . #x2094) #x214E #x2184 (#x2C60 . #x2C77) #xA78B #xA78C
+		;; "by unicode block" picks
+		(#x007B . #x007E) (#x005B . #x0060) (#x0021 . #x002F) (#x00EC . #x00EF)
+		(#x02B0 . #x02FF) #x2113 #x212A (#x2190 . #x2195) (#x219A . #x219B)
+		#x21A8 #x21AE #x2202 #x2206 #x220F (#x2211 . #x2212) (#x2219 . #x221A)
+		#x222B (#x2248 . #x2249) (#x2260 . #x2262) (#x226E . #x2271) #x2302 #x2310)
 	"List of (MIN . MAX) cons cells for ranges to pick overlay chars from.
 Note that range is picked first, then char from it,
 so distribution is not uniform among all source chars.")
@@ -890,4 +899,4 @@ Overlay chars are picked from `fg-erc-zalgo-overlay-ranges'."
 				(setq text (apply #'concat (seq-map #'zalgo text))))))
 	text)
 
-;; Simple test: (insert (format "\n%s" (fg-erc-zalgo "zalgo lives" '(1 . 4))))
+;; Simple test: (insert (format "\n%s" (fg-erc-zalgo "zalgo lives" '(2 . 5))))
