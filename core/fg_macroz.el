@@ -338,6 +338,10 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 	(interactive "p")
 	(fg-del-char (- arg)))
 
+(defun fg-del-line ()
+	"Like `kill-line', but w/o ring-buffer."
+	(interactive)
+	(delete-region (point) (line-end-position)))
 
 (defun fg-del-whole-line ()
 	"Like `kill-whole-line', but w/o ring-buffer."
