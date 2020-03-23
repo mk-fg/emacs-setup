@@ -632,10 +632,6 @@ NO-ALIGN disables `csv-align-fields' call."
 			("<C-M-down>" python-end-of-block)
 			(":" self-insert-command)))))
 
-;; -- PHP mode-specific actions --
-(eval-after-load "php-mode" '(progn
-	(define-key php-mode-map (key "C-'") 'fg-php-tag-line)))
-
 
 ;; -- PgUp/PgDown in docview --
 (eval-after-load "doc-view" '(progn
