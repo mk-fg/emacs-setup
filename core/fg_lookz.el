@@ -333,9 +333,13 @@ NAME can also be passed explicitly as an argument."
 ;; Mask for X (inits are bg-agnostic colors)
 ;; TODO: rewrite it as a single theme,
 ;;  with colors derived from `frame-background-mode'
+;; TODO: also, maybe at least tidy-up here, i.e. register repetitive stuff via macro or such
 ;; See also `frame-set-background-mode'
 
 (defvar fg-color-fg-core)
+(defvar fg-color-fg-fade15)
+(defvar fg-color-fg-fade30)
+(defvar fg-color-fg-fade50)
 (defvar fg-color-bg-core)
 (defvar fg-color-bg-hl)
 (defvar fg-color-bg-hl2)
@@ -352,6 +356,10 @@ NAME can also be passed explicitly as an argument."
 (defvar fg-color-key "MistyRose4")
 (defvar fg-color-var "Coral")
 (defvar fg-color-static "olive drab")
+
+(defface fg-fade15-face () "Default face with 15% faded fg color")
+(defface fg-fade30-face () "Default face with 30% faded fg color")
+(defface fg-fade50-face () "Default face with 50% faded fg color")
 
 ;; (face-all-attributes 'region)
 
@@ -379,14 +387,18 @@ NAME can also be passed explicitly as an argument."
 		`(vline ((t (:background ,fg-color-bg-hl))))
 		`(vline-visual ((t (:background ,fg-color-bg-hl))))
 		;; minimap
-		`(minimap-highlight-line-face ((t (:background ,fg-color-bg-hl :foreground ,fg-color-fg-core))))
+		`(minimap-highlight-line-face
+			((t (:background ,fg-color-bg-hl :foreground ,fg-color-fg-core))))
 		`(minimap-active-region-background ((t (:background ,fg-color-bg-hl2))))
 		;; Jabber
 		`(jabber-title-large ((t (:weight bold :height 1.5))))
 		`(jabber-title-medium ((t (:weight bold :height 1.2))))
-		`(jabber-roster-user-online ((t (:foreground ,fg-color-fg-core :slant normal :weight bold))))
-		`(jabber-roster-user-away ((t (:foreground ,fg-color-irrelevant :slant italic :weight normal))))
-		`(jabber-roster-user-xa ((t (:foreground ,fg-color-irrelevant-xtra :slant italic :weight normal))))
+		`(jabber-roster-user-online
+			((t (:foreground ,fg-color-fg-core :slant normal :weight bold))))
+		`(jabber-roster-user-away
+			((t (:foreground ,fg-color-irrelevant :slant italic :weight normal))))
+		`(jabber-roster-user-xa
+			((t (:foreground ,fg-color-irrelevant-xtra :slant italic :weight normal))))
 		;; ERC
 		`(erc-timestamp-face ((t (:foreground ,fg-color-comment :weight normal))))
 		`(erc-keyword-face ((t (:foreground ,fg-color-kw :weight bold))))
@@ -413,6 +425,10 @@ NAME can also be passed explicitly as an argument."
 			(:inherit font-lock-function-name-face
 				:foreground ,fg-color-func-modeline t))))
 		`(sh-heredoc ((t (:foreground "olive drab"))))
+		;; Fades
+		`(fg-fade15-face ((t (:foreground ,fg-color-fg-fade15))))
+		`(fg-fade30-face ((t (:foreground ,fg-color-fg-fade30))))
+		`(fg-fade50-face ((t (:foreground ,fg-color-fg-fade50))))
 		;; Defaults
 		`(font-lock-comment-face ((t (:foreground ,fg-color-comment))))
 		`(font-lock-function-name-face ((t (:foreground ,fg-color-func))))
@@ -448,6 +464,9 @@ NAME can also be passed explicitly as an argument."
 	(interactive)
 	(let*
 		((fg-color-fg-core "#6ad468")
+			(fg-color-fg-fade15 "#5db85b")
+			(fg-color-fg-fade30 "#4f9d4e")
+			(fg-color-fg-fade50 "#3d783c")
 			(fg-color-bg-core "#101c10")
 			(fg-color-bg-hl "DarkGreen")
 			(fg-color-bg-hl2 "#182403")
@@ -466,6 +485,9 @@ NAME can also be passed explicitly as an argument."
 	(interactive)
 	(let*
 		((fg-color-fg-core "black")
+			(fg-color-fg-fade15 "#222424")
+			(fg-color-fg-fade30 "#434847")
+			(fg-color-fg-fade50 "#707876")
 			(fg-color-bg-core "#e0f0ed")
 			(fg-color-bg-hl "lavender blush")
 			(fg-color-bg-hl2 "#d1e7dd")
