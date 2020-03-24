@@ -333,7 +333,6 @@ NAME can also be passed explicitly as an argument."
 ;; Mask for X (inits are bg-agnostic colors)
 ;; TODO: rewrite it as a single theme,
 ;;  with colors derived from `frame-background-mode'
-;; TODO: also, maybe at least tidy-up here, i.e. register repetitive stuff via macro or such
 ;; See also `frame-set-background-mode'
 
 (defvar fg-color-fg-core)

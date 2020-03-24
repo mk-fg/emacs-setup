@@ -910,7 +910,6 @@ Example junk is braces/brackets, quotes, commas/periods, etc."
 Uses `use-region-p' and `fg-xdg-open-this-url-at-point' to get the value.
 Does not use (thing-at-point 'url) because it grabs braces and junk around URLs anyway."
 	(interactive)
-	;; (message "xdg-open: %S"
 	(fg-xdg-open
 		(if (use-region-p)
 			(buffer-substring-no-properties (region-beginning) (region-end))
