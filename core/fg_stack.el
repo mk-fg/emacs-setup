@@ -22,7 +22,7 @@ preceding to TIME and insert note if it isn't."
 	(interactive)
 	(lexical-let
 		((sleep-match
-			(string-match "\\<sleep\\>"
+			(string-match "^sleep$"
 				(buffer-substring (line-beginning-position) (point)))))
 		(fg-newline)
 		(when sleep-match
