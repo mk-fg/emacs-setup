@@ -318,9 +318,7 @@ NAME can also be passed explicitly as an argument."
 		(mark
 			" " (name 16 -1)
 			" " filename))
-	ibuffer-filter-groups-global ; applied via fg-ibuffer-apply-locals or ibuffer-mode-hook
-		'(("files" (filename . ""))
-			("erc" (mode . erc-mode)))
+	ibuffer-filter-groups-global () ; applied via fg-ibuffer-apply-locals or ibuffer-mode-hook
 	ibuffer-show-empty-filter-groups nil)
 
 (defadvice ibuffer-insert-filter-group
@@ -328,6 +326,26 @@ NAME can also be passed explicitly as an argument."
 	(insert "\n"))
 
 (add-hook 'ibuffer-mode-hook 'fg-ibuffer-apply-locals)
+
+(eval-after-load "erc" '(progn
+	;; Adds ibuffer filter groups for various ERC buffer types
+
+	(define-ibuffer-filter erc-chan
+		"Limit current view to ERC channel buffers."
+		(:description "erc chan buffer" :reader nil)
+		(and
+			(eq 'erc-mode (buffer-local-value 'major-mode buf))
+			(not (erc-server-buffer-p buf))))
+
+	(define-ibuffer-filter erc-server-buffer
+		"Limit current view to ERC server buffers."
+		(:description "erc server buffer" :reader nil)
+		(erc-server-buffer-p buf))
+
+	(setq-default ibuffer-filter-groups-global
+		'(("files" (filename . ""))
+			("erc" (erc-chan))
+			("erc-servers" (erc-server-buffer))))))
 
 
 ;; Mask for X (inits are bg-agnostic colors)
