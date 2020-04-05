@@ -204,7 +204,7 @@ making sure to preserve a copies from a few last runs."
 ;; --- erc-track: remove some common prefixes from channels at the bottom
 
 (defvar fg-erc-track-name-subs
-	'(("^#rdircd\\.monitor\\(\\.\\|$\\)?" "#m.")
+	'(("^#rdircd\\.monitor\\(\\.\\|$\\)" "#m\\1")
 		("^#rdircd\\." "#") ("^#me\\.chat\\." "#me."))
 	"List of (RE SUB) replacement pairs for names in `erc-track'.")
 
@@ -212,7 +212,7 @@ making sure to preserve a copies from a few last runs."
 	"Same as `erc-track-shorten-names', but stripping some channel prefixes."
 	(cl-flet
 		((chan-name-map (chan-names) (mapcar #'(lambda (name)
-			(fg-string-replace-pairs name fg-erc-track-name-subs)) chan-names)))
+			(fg-string-replace-pairs name fg-erc-track-name-subs t)) chan-names)))
 		(let
 			((chans-active (chan-name-map channel-names))
 				(chans-all (chan-name-map (erc-all-buffer-names))))

@@ -1072,11 +1072,12 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 ;; Processing / conversion / string mangling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun fg-string-replace-pairs (string pairs)
+(defun fg-string-replace-pairs (string pairs &optional sub-groups ignore-case)
 	"Replace regex-replacement pairs in string."
 	(mapc
 		(lambda (arg)
-			(setq string (replace-regexp-in-string (car arg) (cadr arg) string t t)))
+			(setq string (replace-regexp-in-string
+				(car arg) (cadr arg) string (not ignore-case) (not sub-groups))))
 		pairs)
 	string)
 
