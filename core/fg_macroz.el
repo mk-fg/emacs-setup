@@ -828,6 +828,21 @@ Resulting color offset should be uniformly distributed between min/max shift lim
 ;; (setq fg-color-tweak-debug t)
 ;; (loop for n from 0 to 10 do (fg-color-tweak "#000" n 80))
 
+(defun fg-ibuffer-reset-filters (&optional name)
+	"Run `fg-ibuffer-apply-locals', reset filters and do an update in named buffer.
+Buffer default to current one, if it's in `ibuffer-mode',
+otherwise to \"*Ibuffer*\", if it exists, otherwise does nothing."
+	(interactive)
+	(unless name
+		(if (eq major-mode 'ibuffer-mode)
+			(setq name (buffer-name))
+			(setq name "*Ibuffer*")
+			(unless (get-buffer name) (setq name nil))))
+	(when name
+		(fg-ibuffer-apply-locals name)
+		(with-current-buffer name
+			(ibuffer-filter-disable) (ibuffer-update nil t))))
+
 (defun fg-ibuffer-apply-locals (&optional name)
 	"Apply new locals in \"*Ibuffer*\" (or NAME, if specified) buffer."
 	(setf

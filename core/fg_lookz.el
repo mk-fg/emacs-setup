@@ -345,7 +345,8 @@ NAME can also be passed explicitly as an argument."
 	(setq-default ibuffer-filter-groups-global
 		'(("files" (filename . ""))
 			("erc" (erc-chan))
-			("erc-servers" (erc-server-buffer))))))
+			("erc-servers" (erc-server-buffer))))
+	(fg-ibuffer-reset-filters)))
 
 
 ;; Mask for X (inits are bg-agnostic colors)

@@ -521,8 +521,7 @@ If point is on a group name, this function operates on that group."
 	`(("+" ,(iwrapm ibuffer-mark-by-file-name-regexp ".*"))
 		("-" ,(iwrapm ibuffer-unmark-all ibuffer-marked-char))
 		("/ \\" ibuffer-clear-filter-groups) ; same as default, here for clarity
-		("/ /" ,(lambda () (interactive) ; to be full counterpart to "/ \" combo
-			(fg-ibuffer-apply-locals) (ibuffer-filter-disable) (ibuffer-update nil t)))
+		("/ /" fg-ibuffer-reset-filters) ; to be full counterpart to "/ \" combo
 		("\\" ibuffer-clear-filter-groups) ; not used otherwise anyway
 		("B" fg-ibuffer-bury-all)
 		("<prior>" fg-scroll-up) ; pageup
