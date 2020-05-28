@@ -467,6 +467,47 @@ announcing register id."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Buffers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar fg-minibuffer-pre-buffer nil
+	"Buffer that was current before the minibuffer became active.")
+
+(defun fg-minibuffer-save-pre-buffer ()
+	"Set `fg-minibuffer-pre-buffer'."
+	(setq fg-minibuffer-pre-buffer (fg-minibuffer-pre-buffer-get)))
+
+(defun fg-minibuffer-pre-buffer-get ()
+	"Return the most recently used non-minibuffer live buffer."
+	(catch 'fg-minibuffer-pre-buffer-found
+		(dolist (buf (buffer-list))
+			(when (and (buffer-live-p buf) (not (minibufferp buf)))
+				(throw 'fg-minibuffer-pre-buffer-found buf)))
+		nil))
+
+(add-hook 'minibuffer-setup-hook 'fg-minibuffer-save-pre-buffer)
+
+(defmacro fg-minibuffer-quit-and-run (&rest body)
+	"Quit minibuffer and run BODY afterwards."
+	`(progn
+			(put 'quit 'error-message "")
+			(run-at-time nil nil (lambda () (put 'quit 'error-message "Quit") ,@body))
+			(minibuffer-keyboard-quit)))
+
+(defun fg-minibuffer-insert-from-point ()
+	"Insert `thing-at-point' symbol from pre-minibuffer buffer into minibuffer."
+	(interactive)
+	(let
+		((sym
+			(when fg-minibuffer-pre-buffer
+				(with-current-buffer fg-minibuffer-pre-buffer
+					;; thing-at-point will be useless with transient-selected region
+					(unless (use-region-p) (thing-at-point 'symbol))))))
+		(when sym (insert sym))))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Misc stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -932,8 +973,6 @@ Does not use (thing-at-point 'url) because it grabs braces and junk around URLs 
 
 
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Indentation descrimination (tab-only) stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -950,7 +989,6 @@ Does not use (thing-at-point 'url) because it grabs braces and junk around URLs 
 		try-complete-lisp-symbol
 		try-expand-line
 		try-expand-list)) ; it is a disaster w/ large lists, hence the place
-
 
 ;; hippie expand for slime
 (defun he-slime-symbol-beg ()
@@ -1082,7 +1120,6 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Processing / conversion / string mangling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1178,6 +1215,7 @@ Returns the resulting string."
 				conds)))
 
 (defun fg-list-set (lst n v) (setcar (nthcdr n lst) v))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -421,10 +421,10 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		("<next>" fg-scroll-down) ; pagedown
 		("C-<next>" ,(iwrapm move-to-window-line -1))))
 
-;; -- hi-lock-mode - regexp highlighting and such --
 
-(eval-after-load "hi-lock"
-	'(define-key hi-lock-map (key "C-x") nil))
+;; -- Minibuffer
+(define-keys minibuffer-local-map
+	`(("C-y" fg-minibuffer-insert-from-point)))
 
 
 ;; -- ISearch/replace mangling --
@@ -531,6 +531,15 @@ If point is on a group name, this function operates on that group."
 		("<insert>" ,(iwrapm fg-ibuffer-mark t))))
 
 
+;; -- Kill-ring mode fixes --
+(eval-after-load "browse-kill-ring-mode" '(progn
+	(defalias 'browse-kill-ring-quit 'quit-window)))
+
+;; -- hi-lock-mode - regexp highlighting and such --
+(eval-after-load "hi-lock"
+	'(define-key hi-lock-map (key "C-x") nil))
+
+
 ;; -- Jabber submode --
 (eval-after-load "jabber-roster" '(progn
 	(define-keys jabber-roster-mode-map
@@ -544,11 +553,6 @@ If point is on a group name, this function operates on that group."
 (eval-after-load "goto-addr" '(progn
 	(define-key goto-address-highlight-keymap (key "C-c RET") nil)
 	(define-key goto-address-highlight-keymap (key "C-c") nil)))
-
-
-;; -- Kill-ring mode fixes --
-(eval-after-load "browse-kill-ring-mode" '(progn
-	(defalias 'browse-kill-ring-quit 'quit-window)))
 
 
 ;; -- CSV mode keys --
