@@ -294,36 +294,20 @@ and MSG regexp patterns. MSG can have $ at the end."
 ;; net+chan+nick+msg ignore-patterns
 ;; See fg-erc-msg-block-pattern for how nick/msg parts are used
 (setq-default fg-erc-msg-block-plists-base
-	`((:net "^BitlBee$" :nick "root"
-			:msg ,(concat "gtalk - \\("
-				"Error: Error while reading from server"
-				;; "62 seconds" is used to match only first reconnect, making noise on others
-				"\\|Signing off\\.\\." "\\|Reconnecting in 62 seconds\\.\\."
-				"\\|Logging in: \\(" "Connecting" "\\|Logged in"
-					"\\|Connected to server, logging in" "\\|Converting stream to TLS"
-					"\\|Server changed session resource string to `Indirect[0-9A-F]+'"
-					"\\|Authentication finished" "\\|Authenticated, requesting buddy list" "\\)" "\\)"))
-		(:chan "^#" :net "^BitlBee$" :msg ,(concat "^ *\\*\\*\\* \\("
-			"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #"
-			"\\|#\\S-+: topic set by " "\\)"))))
+	`((:net "^BitlBee$" :nick "root" :msg ,(concat "slack - \\("
+			"Error: Connection closed"
+			;; "200 seconds" is used to match only first reconnect, making noise on others
+			"\\|Signing off\\.\\." "\\|Reconnecting in 200 seconds\\.\\."
+			"\\|Logging in: \\(" "Looking up team" "\\|Finding user"
+				"\\|Logging in" "\\|Requesting RTM" "\\|Connecting to RTM"
+				"\\|RTM Connected" "\\|Loading Users" "\\|Loading conversations"
+				"\\|Logged in" "\\)" "\\) *$"))
+		(:net "^BitlBee$" :chan "^#bee\\." :msg ,(concat " *\\*\\*\\* \\("
+			"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #bee\\."
+			"\\|#bee\\.\\S-+: topic set by " "\\)"))))
 
 (setq-default fg-erc-msg-block-plists
 	(append fg-erc-msg-block-plists-local fg-erc-msg-block-plists-base))
-
-;; ;; This is just an example of how to implement modify-func to work for blocking
-;; ;; Use fg-erc-msg-block-plists for this exact thing instead
-;; (setq-default fg-erc-msg-modify-plists (append fg-erc-msg-modify-plists-local
-;; 	;; Filter-out spammy stuff on bitlbee reconnects
-;; 	`((:chan "^#" :net "^BitlBee$" :func ,(lambda ()
-;; 		(-let [(line hook-type) (fg-erc-get-hook-msg text)]
-;; 			(when
-;; 				(string-match
-;; 					(concat "^ *\\*\\*\\* \\("
-;; 							"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #"
-;; 							"\\|#\\S-+: topic set by "
-;; 						"\\)") line)
-;; 				(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))))))))
-;; (setq-default fg-erc-msg-modify-plists fg-erc-msg-modify-plists-local)
 
 
 ;; ---=== Main configuration ===---
