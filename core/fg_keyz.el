@@ -172,7 +172,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "s-/") . fg-emms-notify)
 		(,(key "M-s-/") . emms-playlist-save)
 		(,(key "s-?") . emms-playlist-save)
-		(,(key "C-s-?") . emms-playlist-mode-clear)
+		(,(key "C-s-?") . emms-playlist-clear)
 		(,(key "M-s-;") . emms-seek-backward)
 		(,(key "M-s-'") . emms-seek-forward)
 		(,(key "s-L") . fg-emms-mpv-vis-toggle)
