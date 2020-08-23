@@ -905,3 +905,17 @@ Overlay chars are picked from `fg-erc-zalgo-overlay-ranges'."
 	text)
 
 ;; Simple test: (insert (format "\n%s" (fg-erc-zalgo "zalgo lives" '(2 . 5))))
+
+
+;; --- Fix for apparently bogus RPL_TOPICWHOTIME from ZNC
+;; Looks like "error in process filter: erc-server-333: Wrong type argument: stringp, nil"
+;; Time gets passed as nil and string-to-number fails on it, started with emacs-27.1
+
+(define-erc-response-handler (333)
+	"Who set the topic, and when." nil
+	(pcase-let ((`(,channel ,nick ,time) (cdr (erc-response.command-args parsed))))
+		(setq time (format-time-string
+			erc-server-timestamp-format (if time (string-to-number time) 0)))
+		(erc-update-channel-topic channel (format "\C-o (%s, %s)" nick time) 'append)
+		(erc-display-message parsed 'notice
+			(erc-get-buffer channel proc) 's333 ?c channel ?n nick ?t time)))
