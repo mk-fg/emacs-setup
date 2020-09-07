@@ -364,6 +364,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	erc-max-buffer-size 120000
 	erc-max-buffer-size-to-act 150000 ;; for custom truncation, not used by default ERC
 	erc-fill-column 2048 ;; in case that dumb module gets activated somehow
+	erc-split-line-length 4096 ;; murders multibyte lines for no good reason since emacs-27.1
 
 	erc-track-showcount t
 	erc-track-exclude-types ;; join/part/nickserv + all the crap on connect
