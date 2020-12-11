@@ -179,7 +179,7 @@ Obviously dangerous to any possible unsaved changes."
 	"WIthout PATTERN, displays last erc activity in '<n> <chan>' (per line) format.
 Otherwise, same as `fg-remote-buffer', gets specified erc buffer contents,
 picking only from buffers with activity (i.e. the ones that are disaplayed without PATTERN)."
-	(when (boundp 'erc-version-string)
+	(when (boundp 'erc-default-server)
 		(if (not pattern)
 			(when erc-modified-channels-alist
 				(let*
@@ -207,7 +207,7 @@ Unlike `fg-remote-erc', considers all erc buffers, not just ones with activity."
 (defun fg-remote-erc-mark (pattern)
 	"put /mark to a specified erc chan and resets its activity track.
 Unlike `fg-remote-erc', considers all erc buffers, not just ones with activity."
-	(when (boundp 'erc-version-string)
+	(when (boundp 'erc-default-server)
 		(with-current-buffer (fg-get-useful-buffer pattern (erc-buffer-list))
 			(fg-erc-mark)
 			(erc-modified-channels-remove-buffer (current-buffer))
