@@ -7,9 +7,14 @@
 to make sure there are delays between these.
 Used to skip redundant `fg-erc-connect-next' calls in `fg-erc'.")
 
-(defvar fg-erc-connect-lag 10
+(defvar fg-erc-connect-lag 20
 	"Timeout for waiting on irc connection to complete properly.
 Used for misc sloppy time matching purposes as well.")
+
+(defvar fg-erc-connect-delay 3
+	"Delay between initiating erc connections.
+Added because connecting a bunch of things at once times-out for some reason.
+Looks like some kind of emacs socket issue, introduced in 27.")
 
 (defun fg-erc ()
 	"Connect to IRC servers.
@@ -32,7 +37,7 @@ and call `fg-erc-connect-done' after that."
 			(run-with-timer 1 nil 'fg-erc-connect-done))
 		(add-hook 'erc-after-connect 'fg-erc-connect-loop)
 		(run-with-timer (* 1.5 fg-erc-connect-lag) nil 'fg-erc-connect-next t)
-		(run-with-timer 1 nil 'fg-erc-connect-next)))
+		(run-with-timer fg-erc-connect-delay nil 'fg-erc-connect-next)))
 
 (defun fg-erc-connect-next (&optional timeout-hook)
 	"Pulls first tuple from `fg-erc-links' and connects there, if any,
