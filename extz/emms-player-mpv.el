@@ -1,4 +1,4 @@
-;;; emms-player-mpv.el --- mpv support for EMMS
+;;; emms-player-mpv.el --- mpv support for EMMS  -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2018 Free Software Foundation, Inc.
 
@@ -128,7 +128,7 @@ depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	"Update track duration when played by mpv.
 Uses `emms-player-mpv-event-functions' hook."
 	:type 'boolean
-	:set (lambda (sym value)
+	:set (lambda (_sym value)
 		(run-at-time 0.1 nil
 			(lambda (value) (if value
 				(add-hook
@@ -145,7 +145,7 @@ Uses `emms-player-mpv-event-functions' hook."
 This allows to dynamically update stream info from ICY tags, for example.
 Uses `emms-player-mpv-event-connect-hook' and `emms-player-mpv-event-functions' hooks."
 	:type 'boolean
-	:set (lambda (sym value)
+	:set (lambda (_sym value)
 		(run-at-time 0.1 nil
 			(lambda (value) (if value
 				(progn
@@ -302,7 +302,7 @@ Error is signaled if mpv binary fails to run."
 					"000.000.000")
 				((pred (string> "000.006.999")) 'file)
 				((pred (string> "000.016.999")) 'unix-socket)
-				(- 'ipc-server)))))
+				(_ 'ipc-server)))))
 
 
 ;; ----- mpv process
@@ -528,7 +528,7 @@ PROC can be specified to avoid `emms-player-mpv-ipc' call (e.g. from sentinel/fi
 			(setq emms-player-mpv-ipc-req-table (make-hash-table)))
 		(let ((json (concat (json-encode (list :command cmd :request_id req-id)) "\n")))
 			(emms-player-mpv-debug-msg "json >> %s" json)
-			(condition-case err
+			(condition-case _err
 				;; On any disconnect, assume that mpv process is to blame and force restart.
 				(process-send-string req-proc json)
 				(error
@@ -545,7 +545,7 @@ PROC can be specified to avoid `emms-player-mpv-ipc' call (e.g. from sentinel/fi
 			(remhash req-id emms-player-mpv-ipc-req-table)
 			(when handler (funcall handler data err)))))
 
-(defun emms-player-mpv-ipc-req-error-printer (data err)
+(defun emms-player-mpv-ipc-req-error-printer (_data err)
 	"Simple default `emms-player-mpv-ipc-req-send' handler to log errors, if any."
 	(when err (message "emms-player-mpv ipc-error: %s" err)))
 
@@ -700,29 +700,34 @@ or otherwise schedule start/connect and set
 			(setq emms-player-mpv-ipc-connect-command cmd))))
 
 (defmacro emms-player-mpv-cmd-prog (cmd &rest handler-body)
-	"Macro around `emms-player-mpv-cmd' that creates
+	"Obsolete macro around `emms-player-mpv-cmd' that creates
 handler callback (see `emms-player-mpv-ipc-req-send') from HANDLER-BODY forms,
 which have following bindings:
 - mpv-cmd for CMD.
 - mpv-data for response data (decoded json, nil if none).
-- mpv-error for response error (nil if no error, decoded json or 'connection-error)."
+- mpv-error for response error (nil if no error, decoded json or 'connection-error).
+
+Do not use it with new code - it will raise warnings when used with lexical bindings,
+and will be removed in a future EMMS version."
 	`(emms-player-mpv-cmd ,cmd (apply-partially
 		(lambda (mpv-cmd mpv-data mpv-error) ,@handler-body) ,cmd)))
+
+(make-obsolete 'emms-player-mpv-cmd-prog nil "Emms 7")
 
 
 (defun emms-player-mpv-playable-p (track)
 	(memq (emms-track-type track) '(file url streamlist playlist)))
 
-(defun emms-player-mpv-start-error-handler (mpv-cmd mpv-data mpv-error)
+(defun emms-player-mpv-start-error-handler (mpv-cmd _mpv-data mpv-error)
 	"Playback-restart error handler for `emms-player-mpv-cmd',
 to restart/reconnect-to mpv and re-run MPV-CMD,
 if there was any issue when trying to start it initially."
 	(if (eq mpv-error 'connection-error)
 		;; Reconnect and restart playback if current connection fails (e.g. mpv crash)
-		(emms-player-mpv-cmd-prog
-			(emms-player-mpv-cmd mpv-cmd)
-			(emms-player-mpv-cmd `(set pause no)))
-		(emms-player-mpv-cmd `(set pause no))))
+		(emms-player-mpv-cmd mpv-cmd
+			(lambda (_mpv-data _mpv-error)
+				(emms-player-mpv-cmd mpv-cmd)
+				(emms-player-mpv-cmd `(set pause no))))))
 
 (defun emms-player-mpv-start (track)
 	(setq emms-player-mpv-stopped nil)
