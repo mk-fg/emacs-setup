@@ -25,6 +25,7 @@
 (add-to-list 'load-path (concat fg-path "/core"))
 (add-to-list 'load-path (concat fg-path "/extz"))
 (add-to-list 'load-path (concat fg-path "/extz/yasnippet"))
+(add-to-list 'load-path (concat fg-path "/extz/rust"))
 
 
 ;; Basic loading macros

@@ -258,6 +258,7 @@ NAME can also be passed explicitly as an argument."
 (autoload 'php-mode "php-mode.el" "Php mode." t)
 (autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
 (autoload 'cmake-mode "cmake-mode" "Major mode for editing CMake source files" t)
+(autoload 'rust-mode "rust-mode" "Major mode for Rust" t)
 (load-library-safe "haskell-mode-autoloads")
 (load-library-safe (expand-file-name "~/.opam/default/share/emacs/site-lisp/tuareg-site-file"))
 
