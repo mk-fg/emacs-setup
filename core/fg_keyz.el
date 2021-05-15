@@ -96,9 +96,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 		;; Jump to often-used ERC buffers with the rest of F-keys
 		;; local notification channels
-		("<f6>" ,(iwrapm fg-find-buffer "#bordercamp"))
-		;; news-bots, docs and similar net-info chans
-		("<f7>" ,(iwrapm fg-find-buffer "#blazer"))))
+		("<f6>" ,(iwrapm fg-find-buffer "#lot.bordercamp"))))
 
 
 
