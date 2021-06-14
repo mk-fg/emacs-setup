@@ -42,6 +42,12 @@
 ;; (emms-player-mpv-ipc-stop)
 ;; (emms-play-url "https://somafm.com/sf1033130.pls")
 
+;; (dolist (k '(aid track-list audio-params volume ao ao-volume ao-mute mpv-version))
+;; (dolist (k '(path playlist pause core-idle playback-abort playback-time eof-reached metadata))
+;; 	(lexical-let ((k k)) (emms-player-mpv-cmd `(get_property ,k)
+;; 		#'(lambda (mpv-data mpv-error) (message "%s = %S" k (or mpv-error mpv-data))))))
+
+
 (defun fg-emms-player-status-string ()
 	(if emms-player-playing-p
 		(if emms-player-paused-p "paused" "playing") "stopped"))

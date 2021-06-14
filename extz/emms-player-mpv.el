@@ -743,8 +743,11 @@ if there was any issue when trying to start it initially."
 				(emms-player-started emms-player-mpv))
 			(let*
 				((start-cmd (list (if track-is-playlist 'loadlist 'loadfile) track-name 'replace))
-					(start-func `(lambda () (emms-player-mpv-cmd ',start-cmd
-						(apply-partially 'emms-player-mpv-start-error-handler ',start-cmd)))))
+					(start-func
+						`(lambda ()
+							(emms-player-mpv-cmd ',start-cmd
+								(apply-partially 'emms-player-mpv-start-error-handler ',start-cmd))
+							(emms-player-mpv-cmd `(set pause no)))))
 				(if emms-player-mpv-ipc-stop-command
 					(setq emms-player-mpv-ipc-stop-command start-func)
 					(funcall start-func))))))
