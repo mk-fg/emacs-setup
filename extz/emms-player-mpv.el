@@ -1,6 +1,6 @@
 ;;; emms-player-mpv.el --- mpv support for EMMS  -*- lexical-binding: t; -*-
 ;;
-;; Copyright (C) 2018 Free Software Foundation, Inc.
+;; Copyright (C) 2018-2021 Free Software Foundation, Inc.
 
 ;; Authors: Mike Kazantsev <mk.fraggod@gmail.com>
 
@@ -177,7 +177,7 @@ if it refuses to exit cleanly on `emms-player-mpv-proc-stop'.")
 
 
 (defvar emms-player-mpv-ipc-proc nil
-	"Unix socket process that communicates with running `emms-player-mpv-proc' instance.")
+	"Unix socket network process connected to running `emms-player-mpv-proc' instance.")
 
 (defvar emms-player-mpv-ipc-buffer " *emms-player-mpv-ipc*"
 	"Buffer to associate with `emms-player-mpv-ipc-proc' socket/pipe process.")
@@ -519,22 +519,28 @@ HANDLER func will be called with decoded response JSON as (handler data err),
 where ERR will be either nil on \"success\", 'connection-error or whatever is in JSON.
 If HANDLER is nil, default `emms-player-mpv-ipc-req-error-printer'
 will be used to at least log errors.
+Multiple commands can be batched in one list as '(batch (cmd1 . handler1) ...),
+in which case common HANDLER argument is ignored.
 PROC can be specified to avoid `emms-player-mpv-ipc' call (e.g. from sentinel/filter funcs)."
-	(let
-		((req-id (emms-player-mpv-ipc-id-get))
-			(req-proc (or proc (emms-player-mpv-ipc)))
-			(handler (or handler #'emms-player-mpv-ipc-req-error-printer)))
-		(unless emms-player-mpv-ipc-req-table
-			(setq emms-player-mpv-ipc-req-table (make-hash-table)))
-		(let ((json (concat (json-encode (list :command cmd :request_id req-id)) "\n")))
-			(emms-player-mpv-debug-msg "json >> %s" json)
-			(condition-case _err
-				;; On any disconnect, assume that mpv process is to blame and force restart.
-				(process-send-string req-proc json)
-				(error
-					(emms-player-mpv-proc-stop)
-					(funcall handler nil 'connection-error) (setq handler nil))))
-		(when handler (puthash req-id handler emms-player-mpv-ipc-req-table))))
+	(dolist
+		(cmd-and-handler
+			(if (and (listp cmd) (eq (car cmd) 'batch)) (cdr cmd) `((,cmd . ,handler))))
+		(cl-destructuring-bind (cmd . handler) cmd-and-handler
+			(let
+				((req-id (emms-player-mpv-ipc-id-get))
+					(req-proc (or proc (emms-player-mpv-ipc)))
+					(handler (or handler #'emms-player-mpv-ipc-req-error-printer)))
+				(unless emms-player-mpv-ipc-req-table
+					(setq emms-player-mpv-ipc-req-table (make-hash-table)))
+				(let ((json (concat (json-encode (list :command cmd :request_id req-id)) "\n")))
+					(emms-player-mpv-debug-msg "json >> %s" json)
+					(condition-case _err
+						;; On any disconnect, assume that mpv process is to blame and force restart.
+						(process-send-string req-proc json)
+						(error
+							(emms-player-mpv-proc-stop)
+							(funcall handler nil 'connection-error) (setq handler nil))))
+				(when handler (puthash req-id handler emms-player-mpv-ipc-req-table))))))
 
 (defun emms-player-mpv-ipc-req-resolve (req-id data err)
 	"Run handler-func for specified req-id."
@@ -690,7 +696,9 @@ Called before `emms-player-mpv-event-functions' and does same thing as these hoo
 (defun emms-player-mpv-cmd (cmd &optional handler)
 	"Send mpv command to process/connection if both are running,
 or otherwise schedule start/connect and set
-`emms-player-mpv-ipc-start-track' for `emms-player-mpv-ipc-sentinel'."
+`emms-player-mpv-ipc-connect-command' for `emms-player-mpv-ipc-sentinel'.
+Multiple commands can be batched in one list as '(batch (cmd1 . handler1) ...),
+in which case common HANDLER argument is ignored."
 	(setq emms-player-mpv-ipc-connect-command nil)
 	(let ((proc (emms-player-mpv-ipc)))
 		(if proc
@@ -718,17 +726,6 @@ and will be removed in a future EMMS version."
 (defun emms-player-mpv-playable-p (track)
 	(memq (emms-track-type track) '(file url streamlist playlist)))
 
-(defun emms-player-mpv-start-error-handler (mpv-cmd _mpv-data mpv-error)
-	"Playback-restart error handler for `emms-player-mpv-cmd',
-to restart/reconnect-to mpv and re-run MPV-CMD,
-if there was any issue when trying to start it initially."
-	(if (eq mpv-error 'connection-error)
-		;; Reconnect and restart playback if current connection fails (e.g. mpv crash)
-		(emms-player-mpv-cmd mpv-cmd
-			(lambda (_mpv-data _mpv-error)
-				(emms-player-mpv-cmd mpv-cmd)
-				(emms-player-mpv-cmd `(set pause no))))))
-
 (defun emms-player-mpv-start (track)
 	(setq emms-player-mpv-stopped nil)
 	(emms-player-mpv-proc-playing nil)
@@ -742,12 +739,15 @@ if there was any issue when trying to start it initially."
 				(emms-player-mpv-proc-init (if track-is-playlist "--playlist" "--") track-name)
 				(emms-player-started emms-player-mpv))
 			(let*
-				((start-cmd (list (if track-is-playlist 'loadlist 'loadfile) track-name 'replace))
+				((play-cmd
+					`(batch
+						((,(if track-is-playlist 'loadlist 'loadfile) ,track-name replace))
+						((set pause no))))
 					(start-func
-						`(lambda ()
-							(emms-player-mpv-cmd ',start-cmd
-								(apply-partially 'emms-player-mpv-start-error-handler ',start-cmd))
-							(emms-player-mpv-cmd `(set pause no)))))
+						;; Try running play-cmd and retry it on connection failure, e.g. if mpv died
+						(apply-partially 'emms-player-mpv-cmd play-cmd
+							(lambda (_mpv-data mpv-error)
+								(when (eq mpv-error 'connection-error) (emms-player-mpv-cmd play-cmd))))))
 				(if emms-player-mpv-ipc-stop-command
 					(setq emms-player-mpv-ipc-stop-command start-func)
 					(funcall start-func))))))
