@@ -64,22 +64,25 @@
 (require 'cl-lib)
 
 
+(defgroup emms-player-mpv nil
+	"EMMS player for mpv."
+	:group 'emms-player
+	:prefix "emms-player-mpv-")
+
 (defcustom emms-player-mpv
 	(emms-player
 		#'emms-player-mpv-start
 		#'emms-player-mpv-stop
 		#'emms-player-mpv-playable-p)
 	"*Parameters for mpv player."
-	:type '(cons symbol alist)
-	:group 'emms-player-mpv)
+	:type '(cons symbol alist))
 
 (emms-player-set emms-player-mpv 'regex
 	(apply #'emms-player-simple-regexp emms-player-base-format-list))
 
 (defcustom emms-player-mpv-command-name "mpv"
 	"mpv binary to use. Can be absolute path or just binary name."
-	:type 'file
-	:group 'emms-player-mpv)
+	:type 'file)
 
 (defcustom emms-player-mpv-parameters
 	'("--quiet" "--really-quiet" "--no-audio-display")
@@ -90,16 +93,14 @@ are added automatically, depending on mpv version.
 Note that unless --no-config option is specified here,
 mpv will also use options from its configuration files.
 For mpv binary path, see `emms-player-mpv-command-name'."
-	:type '(choice (repeat :tag "List of mpv arguments" string) function)
-	:group 'emms-player-mpv)
+	:type '(choice (repeat :tag "List of mpv arguments" string) function))
 
 (defcustom emms-player-mpv-environment ()
 	"List of extra environment variables (\"VAR=value\" strings) to pass on to mpv process.
 These are added on top of `process-environment' by default.
 Adding nil as an element to this list will discard emacs
 `process-environment' and only pass variables that are specified in the list."
-	:type '(repeat (choice string (const :tag "Start from blank environment" nil)))
-	:group 'emms-player-mpv)
+	:type '(repeat (choice string (const :tag "Start from blank environment" nil))))
 
 (defcustom emms-player-mpv-ipc-method nil
 	"Switch for which IPC method to use with mpv.
@@ -112,15 +113,13 @@ support for various feedback and metadata options from mpv."
 		(const :tag "Auto-detect from mpv --version" nil)
 		(const :tag "Use --input-ipc-server JSON IPC (v0.17.0 2016-04-11)" ipc-server)
 		(const :tag "Use --input-unix-socket JSON IPC (v0.7.0 2014-10-16)" unix-socket)
-		(const :tag "Use --input-file FIFO (any mpv version)" file))
-	:group 'emms-player-mpv)
+		(const :tag "Use --input-file FIFO (any mpv version)" file)))
 
 (defcustom emms-player-mpv-ipc-socket
 	(concat (file-name-as-directory emms-directory) "mpv-ipc.sock")
 	"Unix IPC socket or FIFO to use with mpv --input-* options,
 depending on `emms-player-mpv-ipc-method' value and/or mpv version."
-	:type 'file
-	:group 'emms-player-mpv)
+	:type 'file)
 
 (defvar emms-player-mpv-ipc-proc nil) ; to avoid warnings while keeping useful defs at the top
 
@@ -128,7 +127,8 @@ depending on `emms-player-mpv-ipc-method' value and/or mpv version."
 	"Update track duration when played by mpv.
 Uses `emms-player-mpv-event-functions' hook."
 	:type 'boolean
-	:set (lambda (_sym value)
+	:set (lambda (sym value)
+		(set-default-toplevel-value sym value)
 		(run-at-time 0.1 nil
 			(lambda (value) (if value
 				(add-hook
@@ -137,15 +137,15 @@ Uses `emms-player-mpv-event-functions' hook."
 				(remove-hook
 					'emms-player-mpv-event-functions
 					#'emms-player-mpv-info-duration-event-func)))
-			value))
-	:group 'emms-player-mpv)
+			value)))
 
 (defcustom emms-player-mpv-update-metadata nil
 	"Update track info (artist, album, name, etc) from mpv events, when it is played.
 This allows to dynamically update stream info from ICY tags, for example.
 Uses `emms-player-mpv-event-connect-hook' and `emms-player-mpv-event-functions' hooks."
 	:type 'boolean
-	:set (lambda (_sym value)
+	:set (lambda (sym value)
+		(set-default-toplevel-value sym value)
 		(run-at-time 0.1 nil
 			(lambda (value) (if value
 				(progn
@@ -164,8 +164,7 @@ Uses `emms-player-mpv-event-connect-hook' and `emms-player-mpv-event-functions' 
 					(remove-hook
 						'emms-player-mpv-event-functions
 						#'emms-player-mpv-info-meta-event-func))))
-			value))
-	:group 'emms-player-mpv)
+			value)))
 
 
 (defvar emms-player-mpv-proc nil
@@ -271,7 +270,7 @@ Strips whitespace from start/end of TPL-OR-MSG and strings in TPL-VALUES."
 			(setq tpl-or-msg (replace-regexp-in-string "%" "%%" tpl-or-msg t t)))
 		(let ((ts (float-time)))
 			(unless emms-player-mpv-debug-ts-offset (setq emms-player-mpv-debug-ts-offset ts))
-			(apply 'message
+			(apply #'message
 				(concat "emms-player-mpv %.1f " tpl-or-msg)
 				(- ts emms-player-mpv-debug-ts-offset) tpl-values))))
 

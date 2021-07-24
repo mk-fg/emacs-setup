@@ -31,7 +31,7 @@
 		'("PULSE_PROP_media.role=music")
 	emms-player-mpv-parameters
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null"))
-(custom-set-variables '(emms-player-mpv-update-metadata t t))
+(customize-set-variable 'emms-player-mpv-update-metadata t)
 
 ;; (setq emms-player-mpv-debug t)
 ;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-audio-display"))
