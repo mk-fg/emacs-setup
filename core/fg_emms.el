@@ -30,11 +30,12 @@
 	emms-player-mpv-environment
 		'("PULSE_PROP_media.role=music")
 	emms-player-mpv-parameters
-		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no" "--vo=null"))
+		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no"))
 (customize-set-variable 'emms-player-mpv-update-metadata t)
 
 ;; (setq emms-player-mpv-debug t)
-;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--no-audio-display"))
+;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--force-window=yes"))
+;; (emms-player-mpv-ipc-req-send '(set_property vid 1))
 ;; (setq emms-player-mpv-ipc-method 'file)
 ;; (emms-player-mpv-start (emms-playlist-current-selected-track))
 ;; (emms-player-stop)
