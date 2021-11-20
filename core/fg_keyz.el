@@ -242,6 +242,8 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-x") . fg-kill) ; I hate original binding for this key
 		(,(key "C-S-x") . fg-kill-whole-paragraph)
 		(,(key "C-v") . yank)
+		(,(key "<C-insert>") . yank)
+		(,(key "<C-S-insert>") . yank)
 		(,(key "C-S-v") . yank-pop)
 
 		;; Register set/jump
