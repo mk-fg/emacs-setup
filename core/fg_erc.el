@@ -306,10 +306,10 @@ and MSG regexp patterns. MSG can have $ at the end."
 			"\\|Logging in: \\(" "Looking up team" "\\|Finding user"
 				"\\|Logging in" "\\|Requesting RTM" "\\|Connecting to RTM"
 				"\\|RTM Connected" "\\|Loading Users" "\\|Loading conversations"
-				"\\|Logged in" "\\)" "\\) *$"))
-		(:net "^BitlBee$" :chan "^#bee\\." :msg ,(concat " *\\*\\*\\* \\("
-			"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #bee\\."
-			"\\|#bee\\.\\S-+: topic set by " "\\)"))))
+				"\\|Logged in" "\\|Loading active conversations" "\\)" "\\) *$"))
+		(:net "^BitlBee$" :chan "^#bee\\.slack\\." :msg ,(concat " *\\*\\*\\* \\("
+			"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #bee\\.slack\\."
+			"\\|#bee\\.slack\\.\\S-+: topic set by " "\\)"))))
 
 (setq-default fg-erc-msg-block-plists
 	(append fg-erc-msg-block-plists-local fg-erc-msg-block-plists-base))
