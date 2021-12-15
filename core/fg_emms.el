@@ -314,26 +314,9 @@ and run `emms-info-initialize-track' on each one of these afterwards."
 ;; Note: fg-emms-info-track-description should be defined before these
 ;;  are evaluated, same probably goes for the rest of emms-*-function
 
-(defvar fg-emms-history-autosave-timer nil
-	"Repetitive timer calling `fg-emms-history-autosave'.")
-
-(when (require 'emms-cache nil t) (emms-cache-enable))
-(when (require 'emms-history nil t)
-	(emms-history-load)
-
-	(defvar fg-emms-history-autosave-hash
-		(and emms-playlist-buffer (sha1 emms-playlist-buffer))
-		"Hash of saved contents of emacs playlists, used to check whether save is needed.")
-
-	(defun fg-emms-history-autosave ()
-		(let ((hash (and emms-playlist-buffer (sha1 emms-playlist-buffer))))
-			(unless (string-equal hash fg-emms-history-autosave-hash)
-				(emms-history-save)
-				(setq fg-emms-history-autosave-hash hash))))
-
-	(setq fg-emms-history-autosave-timer
-		(run-at-time t 1200 'fg-emms-history-autosave))) ;; 20 min
-
+;; Emms cache and history is disabled - not needed for my purposes
+;; See old code in git for enabling and auto-save timers for these
+(when (require 'emms-cache nil t) (emms-cache-disable))
 
 (defvar fg-emms-playlist-directory "~/media/playlists"
 	"Default path to save/load emms playlists.")
