@@ -208,9 +208,7 @@ making sure to preserve a copies from a few last runs."
 
 ;; --- erc-track: remove some common prefixes from channels at the bottom
 
-(defvar fg-erc-track-name-subs
-	'(("^#rdircd\\.monitor\\(\\.\\|$\\)" "#m\\1")
-		("^#rdircd\\." "#") ("^#me\\.chat\\." "#me."))
+(defvar fg-erc-track-name-subs ()
 	"List of (RE SUB) replacement pairs for names in `erc-track'.")
 
 (defun fg-erc-track-short-names (channel-names)
