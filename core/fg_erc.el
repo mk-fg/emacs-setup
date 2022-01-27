@@ -11,10 +11,14 @@ Used to skip redundant `fg-erc-connect-next' calls in `fg-erc'.")
 	"Timeout for waiting on irc connection to complete properly.
 Used for misc sloppy time matching purposes as well.")
 
-(defvar fg-erc-connect-delay 3
+(defvar fg-erc-connect-delay 6
 	"Delay between initiating erc connections.
 Added because connecting a bunch of things at once times-out for some reason.
 Looks like some kind of emacs socket issue, introduced in 27.")
+
+(defvar fg-erc-connect-done-delay 40
+	"Delay between starting all erc connections and before enabling notifications,
+to avoid a lot of random junk ones for service notices on connection.")
 
 (defun fg-erc ()
 	"Connect to IRC servers.
@@ -34,7 +38,7 @@ and call `fg-erc-connect-done' after that."
 	(if (not fg-erc-links)
 		(progn
 			(remove-hook 'erc-after-connect 'fg-erc-connect-loop)
-			(run-with-timer 1 nil 'fg-erc-connect-done))
+			(run-with-timer fg-erc-connect-done-delay nil 'fg-erc-connect-done))
 		(add-hook 'erc-after-connect 'fg-erc-connect-loop)
 		(run-with-timer (* 1.5 fg-erc-connect-lag) nil 'fg-erc-connect-next t)
 		(run-with-timer fg-erc-connect-delay nil 'fg-erc-connect-next)))
