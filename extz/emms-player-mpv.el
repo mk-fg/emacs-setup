@@ -109,12 +109,13 @@ Possible symbols: detect, ipc-server, unix-socket, file.
 Defaults to nil value, which will cause `emms-player-mpv-ipc-detect'
 to pick one based on mpv --version output.
 Using JSON-IPC variants (ipc-server and unix-socket) enables
-support for various feedback and metadata options from mpv."
+support for various feedback and metadata options from mpv.
+Use of 'file value here is deprecated and will be removed in the future."
 	:type '(choice
 		(const :tag "Auto-detect from mpv --version" nil)
 		(const :tag "Use --input-ipc-server JSON IPC (v0.17.0 2016-04-11)" ipc-server)
 		(const :tag "Use --input-unix-socket JSON IPC (v0.7.0 2014-10-16)" unix-socket)
-		(const :tag "Use --input-file FIFO (any mpv version)" file)))
+		(const :tag "Use --input-file FIFO (removed in v0.33.0 2020-11-22)" file)))
 
 (defcustom emms-player-mpv-ipc-socket
 	(concat (file-name-as-directory emms-directory) "mpv-ipc.sock")
@@ -166,6 +167,13 @@ Uses `emms-player-mpv-event-connect-hook' and `emms-player-mpv-event-functions' 
 						'emms-player-mpv-event-functions
 						#'emms-player-mpv-info-meta-event-func))))
 			value)))
+
+(defcustom emms-player-mpv-use-playlist-option nil
+	"Use --playlist option and loadlist mpv command for playlist files and URLs.
+Use of this option is explicitly discouraged by mpv documentation for security reasons,
+and should be unnecessary in most common cases with modern mpv.
+Make sure to check mpv manpage for --playlist option before enabling this."
+	:type 'boolean)
 
 
 (defvar emms-player-mpv-proc nil
@@ -668,7 +676,9 @@ Called before `emms-player-mpv-event-functions' and does same thing as these hoo
 						(emms-track-set ,track ',(intern (format "info-%s" k)) value)))))))
 		(unless track (setq track (emms-playlist-current-selected-track)))
 		(set-track-info track
-			title (or (key title) (key icy-title))
+			title (or (key title)
+				(unless (string= "" (key icy-title)) (key icy-title))
+				(key icy-name))
 			artist (or (key artist) (key album_artist) (key icy-name))
 			album (key album)
 			tracknumber (key track)
@@ -733,17 +743,22 @@ and will be removed in a future EMMS version."
 	(emms-player-mpv-proc-playing nil)
 	(let
 		((track-name (emms-track-get track 'name))
-			(track-is-playlist (memq (emms-track-get track 'type) '(streamlist playlist))))
+			(track-playlist-option
+				(and emms-player-mpv-use-playlist-option
+					(memq (emms-track-get track 'type) '(streamlist playlist)))))
 		(if (emms-player-mpv-ipc-fifo-p)
 			(progn
 				;; ipc-stop is to clear any buffered commands
 				(emms-player-mpv-ipc-stop)
-				(emms-player-mpv-proc-init (if track-is-playlist "--playlist" "--") track-name)
+				(apply 'emms-player-mpv-proc-init
+					(if track-playlist-option
+						(list (concat "--playlist=" track-name))
+						(list "--" track-name)))
 				(emms-player-started emms-player-mpv))
 			(let*
 				((play-cmd
 					`(batch
-						((,(if track-is-playlist 'loadlist 'loadfile) ,track-name replace))
+						((,(if track-playlist-option 'loadlist 'loadfile) ,track-name replace))
 						((set pause no))))
 					(start-func
 						;; Try running play-cmd and retry it on connection failure, e.g. if mpv died

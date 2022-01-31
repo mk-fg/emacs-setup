@@ -36,7 +36,6 @@
 ;; (setq emms-player-mpv-debug t)
 ;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--force-window=yes"))
 ;; (emms-player-mpv-ipc-req-send '(set_property vid 1))
-;; (setq emms-player-mpv-ipc-method 'file)
 ;; (emms-player-mpv-start (emms-playlist-current-selected-track))
 ;; (emms-player-stop)
 ;; (emms-player-mpv-proc-stop)
