@@ -329,7 +329,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	erc-email-userid "mk.fraggod_at_gmail_com"
 
 	erc-prompt
-		(lambda () (erc-propertize (concat "~erc/"
+		(lambda () (propertize (concat "~erc/"
 			(if (and (boundp 'erc-default-recipients) (erc-default-target))
 				(erc-default-target) "limbo") "%")
 			'read-only t 'rear-nonsticky t 'front-nonsticky t 'intangible t))
