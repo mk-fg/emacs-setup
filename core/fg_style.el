@@ -17,6 +17,13 @@
 	c-syntactic-indentation nil ; stupid ten-tabs indentation
 	lua-electric-flag nil) ;; disable indents on closing brackets
 
+;; Develock mode long-line highlight overrides
+(let ((develock-mcs develock-max-column-plist))
+	(dolist
+		(mode '(c-mode c++-mode html-mode html-helper-mode))
+		(plist-put develock-mcs mode 99))
+	(customize-set-variable 'develock-max-column-plist develock-mcs))
+
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 ;; Use // instead of /* */ comments in C - doesn't work like this
