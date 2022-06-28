@@ -174,6 +174,22 @@ Obviously dangerous to any possible unsaved changes."
 (defalias 'fg-remote-buff-kill 'fg-remote-buffer-kill)
 (defalias 'fg-remote-bk 'fg-remote-buffer-kill)
 
+(defun fg-remote-buffer-file (&optional pattern)
+	"Depending on whether PATTERN is specified, return
+current active buffer file path, or path of matching `fg-get-useful-buffer'.
+Special pattern \"-\" prints paths of all file buffers from `fg-list-useful-buffer-names'."
+	(if (equal pattern "-")
+		(-non-nil (--map
+			(let* ((buff (get-buffer it)) (fn (and buff (buffer-file-name buff))))
+				(and fn (format "%s :: %s" it fn)))
+			(fg-list-useful-buffer-names)))
+		(with-current-buffer
+			(if (not pattern) (window-buffer) (fg-get-useful-buffer pattern))
+			buffer-file-name)))
+
+(defalias 'fg-remote-buff-file 'fg-remote-buffer-file)
+(defalias 'fg-remote-bf 'fg-remote-buffer-file)
+
 
 (defun fg-remote-erc (&optional pattern)
 	"WIthout PATTERN, displays last erc activity in '<n> <chan>' (per line) format.
