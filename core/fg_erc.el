@@ -80,7 +80,9 @@ in all erc buffers and run `erc-update-mode-line' there."
 				(and (erc-network-name)
 					(not (member (erc-network-name) '("Unknown" "nil"))))
 				(erc-with-server-buffer
-					(setq erc-network (erc-determine-network))))
+					(setq erc-network (erc-determine-network))
+					(when (eq erc-network 'Unknown) (setq erc-network
+						(intern (or erc-server-announced-name erc-session-server))))))
 			(erc-update-mode-line))))
 
 (defun fg-erc-quit (&optional reason)
