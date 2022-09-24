@@ -349,6 +349,14 @@ NAME can also be passed explicitly as an argument."
 			("erc-servers" (erc-server-buffer))))
 	(fg-ibuffer-reset-filters)))
 
+(define-ibuffer-sorter recency
+	"Don't sort the buffers at all, keeping (buffer-list) order.
+This allows to re-order them by b-key easily, burying them to the bottom.
+Used to be default before emacs-28, was changed to use `buffer-display-time' there.
+Shouldn't work with reverse-order (which emacs-28 fix addressed), but I don't use it.
+See also: emacs bug 30129, emacs-mirror/emacs#d3cb07d7."
+	(:description "recency"))
+
 
 ;; Mask for X (inits are bg-agnostic colors)
 ;; TODO: rewrite it as a single theme,
