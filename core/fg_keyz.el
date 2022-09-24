@@ -71,6 +71,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 				(message (format "delete-trailing-whitespace: %s" msg)))))
 		("C-M-S-o" delete-selection-mode)
 		("<insert>" nil) ; very annoying to mistype occasionally and a useless mode
+		("M-d" nil) ; some weird forward-delete thingy?
 
 		;; Lookz switching should work everywhere as well
 		("C-M-/" fg-masq-x-light)
