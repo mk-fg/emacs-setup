@@ -111,10 +111,10 @@ or text contents of a buffer with name matching (via `fg-get-useful-buffer') PAT
 (defalias 'fg-remote-buff 'fg-remote-buffer)
 (defalias 'fg-remote-b 'fg-remote-buffer)
 
-(defun* fg-remote-buffer-names (&optional pattern buffers)
+(defun* fg-remote-buffer-names (&optional pattern)
 	"Same as `fg-remote-buffer', but always returns a list of names,
 optionally filtered by PATTERN. Uses `fg-list-useful-buffer-names' for filtering."
-	(fg-list-useful-buffer-names pattern buffers))
+	(fg-list-useful-buffer-names pattern))
 
 (defalias 'fg-remote-bn 'fg-remote-buffer-names)
 
@@ -189,6 +189,8 @@ Special pattern \"-\" prints paths of all file buffers from `fg-list-useful-buff
 
 (defalias 'fg-remote-buff-file 'fg-remote-buffer-file)
 (defalias 'fg-remote-bf 'fg-remote-buffer-file)
+(defalias 'fg-remote-buff-path 'fg-remote-buffer-file)
+(defalias 'fg-remote-bp 'fg-remote-buffer-file)
 
 
 (defun fg-remote-erc (&optional pattern)
