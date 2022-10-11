@@ -524,8 +524,9 @@ Used by custom `blink-cursor-timer-function'.")
 		(customize-set-variable 'frame-background-mode 'dark)
 		(fg-masq-x))
 	(set-cursor-color "#ff00d5")
-	(setq blink-cursor-colors (s-split " "
-		"#ffffff #ff00d5 #92c48f #1fc0ff #ff3923 #ffe749 #36ff37 #c09dff")))
+	(setq blink-cursor-colors (s-split " " (concat
+		"#ffffff #02ecfe #ffa2cf #cac900 #fca46a #1bd472 #b3beff"
+		" #88ffe1 #c5c48b #ffdc84 #e6afff #4cccbf #f5ff73 #68f032 #94ffaa"))))
 
 (defun fg-masq-x-light ()
 	"Black text on white background."
@@ -544,8 +545,9 @@ Used by custom `blink-cursor-timer-function'.")
 		(customize-set-variable 'frame-background-mode 'light)
 		(fg-masq-x))
 	(set-cursor-color "#890373")
-	(setq blink-cursor-colors (s-split " " (concat "#000000 #890373"
-		" #890310 #897e03 #038906 #03896f #032389 #430389 #890368"))))
+	(setq blink-cursor-colors (s-split " " (concat
+		"#000000 #002b89 #363d00 #b02943 #420033 #603800 #1b6392 #992600"
+		" #3d6913 #6c001b #000039 #5b007b #5854a4 #705c1a #004519 #9f376e"))))
 
 (defun fg-masq-x-pitch ()
 	"Toggle fixed/variable pitch in current buffer."
