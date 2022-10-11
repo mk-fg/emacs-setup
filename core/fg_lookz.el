@@ -482,6 +482,10 @@ See also: emacs bug 30129, emacs-mirror/emacs#d3cb07d7."
 ;;;; Rainbow mode seem to need a kick here, not sure why
 ;; (progn (rainbow-mode t) (rainbow-turn-on))
 
+(setq
+	blink-cursor-interval 0.3
+	blink-cursor-blinks 30)
+
 (defvar blink-cursor-colors '("#ff00d5")
 	"On each blink the cursor will cycle to the next color in this list.
 Used by custom `blink-cursor-timer-function'.")
