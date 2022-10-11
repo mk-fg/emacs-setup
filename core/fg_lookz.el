@@ -248,10 +248,6 @@ NAME can also be passed explicitly as an argument."
 	"yaml-mode" "Mode for editing YAML files" t)
 (autoload 'go-mode
 	"go-mode" "Mode for editing Go sources" t)
-(autoload 'coffee-mode
-	"coffee-mode" "Mode for editing CoffeeScript sources" t)
-(autoload 'jade-mode
-	"jade-mode" "Mode for editing JADE templates" t)
 (autoload 'markdown-mode
 	"markdown-mode" "Major mode for editing Markdown files" t)
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
@@ -486,6 +482,24 @@ See also: emacs bug 30129, emacs-mirror/emacs#d3cb07d7."
 ;;;; Rainbow mode seem to need a kick here, not sure why
 ;; (progn (rainbow-mode t) (rainbow-turn-on))
 
+(defvar blink-cursor-colors '("#ff00d5")
+	"On each blink the cursor will cycle to the next color in this list.
+Used by custom `blink-cursor-timer-function'.")
+
+(defun blink-cursor-timer-function ()
+	"Changes cursor color on each blink, according to `blink-cursor-colors' list."
+	(if (internal-show-cursor-p) (internal-show-cursor nil nil)
+		(let*
+			((color-ns (length blink-cursor-colors))
+				(color-n (and (> color-ns 0)
+					(% (setq blink-cursor-blinks-done (1+ blink-cursor-blinks-done)) color-ns))))
+			(set-cursor-color (nth color-n blink-cursor-colors))
+			(internal-show-cursor nil t))
+		(when (and (> blink-cursor-blinks 0)
+				(> blink-cursor-blinks-done blink-cursor-blinks))
+			(blink-cursor-suspend)
+			(add-hook 'post-command-hook #'blink-cursor-check))))
+
 (defun fg-masq-x-dark ()
 	"Translucent text on dark background."
 	(interactive)
@@ -503,9 +517,11 @@ See also: emacs bug 30129, emacs-mirror/emacs#d3cb07d7."
 			(fg-color-func-modeline "yellow")
 			(fg-color-fg-modeline "tomato")
 			(fg-color-comment "SteelBlue1"))
-		(customize-set-variable
-			'frame-background-mode 'dark)
-		(fg-masq-x)))
+		(customize-set-variable 'frame-background-mode 'dark)
+		(fg-masq-x))
+	(set-cursor-color "#ff00d5")
+	(setq blink-cursor-colors (s-split " "
+		"#ffffff #ff00d5 #92c48f #1fc0ff #ff3923 #ffe749 #36ff37 #c09dff")))
 
 (defun fg-masq-x-light ()
 	"Black text on white background."
@@ -521,9 +537,11 @@ See also: emacs bug 30129, emacs-mirror/emacs#d3cb07d7."
 			(fg-color-func "saddle brown")
 			(fg-color-func-modeline "red4")
 			(fg-color-var "IndianRed4"))
-		(customize-set-variable
-			'frame-background-mode 'light)
-		(fg-masq-x)))
+		(customize-set-variable 'frame-background-mode 'light)
+		(fg-masq-x))
+	(set-cursor-color "#890373")
+	(setq blink-cursor-colors (s-split " " (concat "#000000 #890373"
+		" #890310 #897e03 #038906 #03896f #032389 #430389 #890368"))))
 
 (defun fg-masq-x-pitch ()
 	"Toggle fixed/variable pitch in current buffer."
