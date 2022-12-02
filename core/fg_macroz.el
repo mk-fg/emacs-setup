@@ -24,12 +24,14 @@
 ;   str.rfind(s, sub[, start[, end]])
 ;   str1 in str2
 ;   str1 == str2
+;   str or ...
 ;   bool(str)
 ;   len(str)
 ; el:
 ;   ??? (position SUB S [:start N] [:end N] [:from-end t])
 ;   ??? (member STR1 STR2)
 ;   (string= STR1 STR2)
+;   (fg-string-or STR ...)
 ;   (> (length STR) 0)
 ;   (length STR)
 
@@ -53,10 +55,12 @@
 ;   str.split(s[, sep[, maxsplit]])
 ;   str.rsplit(s[, sep[, maxsplit]])
 ;   str.join(words[, sep])
+;   str.split(s, sep)[0] str.split(s, sep)[-1]
 ; el:
 ;   (fg-string-split S [:sep SEP-RE]
 ;     [:omit-nulls t] [:from WHERE] [:limit MAXSPLIT])
 ;   (fg-string-join SEP WORDS...)
+;   (fg-string-before S SEP NIL-IF-NOT-FOUND RE) (fg-string-after ...)
 
 ; py:
 ;   string.replace(s, old, new[, maxreplace])
@@ -1142,6 +1146,11 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 
 (defun fg-string-reverse (s) (concat (nreverse (string-to-list s))))
 
+(defun fg-string-or (s &rest ss)
+	"Returns first non-empty/nil string among all arguments, or nil otherwise."
+	(if (and s (/= (length s) 0)) s
+		(when (> (length ss) 0) (apply 'fg-string-or ss))))
+
 (defun fg-string-suffix-p (suffix s &optional ignore-case)
 	(string-prefix-p (fg-string-reverse suffix) (fg-string-reverse s) ignore-case))
 
@@ -1171,6 +1180,28 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 					(set 'list (cons (substring string start) list))))
 			(nreverse list))
 		(list string)))
+
+(defun fg-string-pos (string sep &optional re)
+	"Returns position of SEP in STRING, or nil if not found,
+optionally treating SEP as a regexp if RE is non-nil."
+	(let
+		((sep (if re (regexp-quote sep) sep))
+			(case-fold-search (when re case-fold-search)))
+		(string-match sep string)))
+
+(defun fg-string-before (string sep &optional nil-if-not-found re)
+	"Returns part of STRING up to exact SEP, or STRING if it is not found.
+NIL-IF-NOT-FOUND changes that to return nil in the latter case.
+If RE is non-nil, SEP is treated as if it was a regexp.
+Uses `fg-string-pos' internally."
+	(let ((n (fg-string-pos string sep re)))
+		(message "%S" (list n nil-if-not-found re))
+		(if n (substring string 0 n) (unless nil-if-not-found string))))
+
+(defun fg-string-after (string sep &optional nil-if-not-found re)
+	"Same as `fg-string-before' but returns the tail end."
+	(let ((n (fg-string-pos string sep re)))
+		(if n (substring string (+ n (length sep))) (unless nil-if-not-found string))))
 
 (defun fg-string-join (sep &rest strings) (mapconcat 'identity strings sep))
 

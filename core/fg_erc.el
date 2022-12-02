@@ -1,5 +1,5 @@
 (require 'erc)
-(require 'tls)
+(require 'erc-ibuffer)
 
 
 (defvar fg-erc-connect-last 0
