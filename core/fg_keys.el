@@ -1,4 +1,4 @@
-;; TODO: add some-keyz + num for discrete buffer switching (Alt+NUM Alt+B)
+;; TODO: add some-keys + num for discrete buffer switching (Alt+NUM Alt+B)
 
 (defmacro iwrapm (func &rest args)
 	"Return interactive-wrapped FUNC, called w/ ARGS, if specified."
@@ -205,7 +205,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 	:init-value nil
 	:lighter "/t"
 	:keymap `(
-		;; Overrides for stupid emacs keyz
+		;; Overrides for stupid emacs keys
 		(,(key "C-n") . term-send-raw)
 		(,(key "C-c") . term-send-raw)
 		(,(key "C-x") . term-send-raw)

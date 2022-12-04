@@ -74,7 +74,7 @@
 (make-directory w3m-form-textarea-directory t)
 
 
-;; TODO: >> fg_keyz.el
+;; TODO: >> fg_keys.el
 ;; (global-set-key "\C-xm" 'browse-url-at-point)
 ;; (global-set-key (kbd "<f11>") 'w3m-browse-current-buffer)
 

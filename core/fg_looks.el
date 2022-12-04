@@ -307,7 +307,7 @@ NAME can also be passed explicitly as an argument."
 
 ; Extended filename-and-process column to also print ERC topics
 (define-ibuffer-column fg-fn-proc-topic
-	(:name "Filename / Process / Topic")
+	(:name "File / Proc / ERC")
 	(let
 		((proc (get-buffer-process buffer))
 			(fn (ibuffer-make-column-filename buffer mark))
@@ -315,7 +315,6 @@ NAME can also be passed explicitly as an argument."
 				(and (eq major-mode 'erc-mode) erc-channel-topic)
 				(erc-controls-interpret (fg-string-before erc-channel-topic "\C-o")))))
 		(cond
-			((and (not proc) (not topic)) fn)
 			(proc
 				(concat
 					(propertize
@@ -327,7 +326,7 @@ NAME can also be passed explicitly as an argument."
 					((net (erc-network-name))
 						(net (if (member (fg-string-or net "nil") '("nil" "-")) "<erc>" net)))
 					(format "%s :: %s" net (or (fg-string-or topic) ""))))
-			(t (propertize " " 'ibuffer-process t)))))
+			(t fn))))
 
 (setq-default
 	ibuffer-formats
@@ -663,7 +662,7 @@ Used by custom `blink-cursor-timer-function'.")
 (defvar fg-sunset-timer)
 (defvar fg-sunrise-timer)
 
-(defun fg-smart-lookz (&optional frame)
+(defun fg-smart-looks (&optional frame)
 	"Automatically switch to dark background after sunset
 and to light background after sunrise.
 Note that `calendar-latitude' and `calendar-longitude'
@@ -690,14 +689,14 @@ should be set before calling the `solar-sunrise-sunset'."
 ;; Masquerade!
 (if window-system
 	(progn
-		(fg-smart-lookz)
-		(add-to-list 'after-make-frame-functions 'fg-smart-lookz))
+		(fg-smart-looks)
+		(add-to-list 'after-make-frame-functions 'fg-smart-looks))
 	(fg-masq-nox)) ; time-of-the-day independent, since terms should be plain black
 
 
 
-;; Auto lookz switching
-(defun fg-hook-set-lookz ()
+;; Auto looks switching
+(defun fg-hook-set-looks ()
 	"Enable stuff like trailing spacez or fixed-width face."
 	(fg-buffer-bg-tweak-name)
 	(if buffer-file-name ; nil for system buffers and terminals
@@ -708,6 +707,6 @@ should be set before calling the `solar-sunrise-sunset'."
 					gnus-group-mode gnus-summary-mode))
 			(buffer-face-set 'fixed-pitch))))
 
-(add-hook 'find-file-hook 'fg-hook-set-lookz)
-(add-hook 'ibuffer-hook 'fg-hook-set-lookz)
-(add-hook 'after-change-major-mode-hook 'fg-hook-set-lookz)
+(add-hook 'find-file-hook 'fg-hook-set-looks)
+(add-hook 'ibuffer-hook 'fg-hook-set-looks)
+(add-hook 'after-change-major-mode-hook 'fg-hook-set-looks)

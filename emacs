@@ -37,7 +37,7 @@
 (setq-default vc-follow-symlinks t) ;; it's just a noise anyway
 
 
-(load-library "fg_macroz")
+(load-library "fg_macros")
 
 
 ;; Auth data
@@ -61,7 +61,7 @@
 
 
 (load-library "fg_stack")
-(load-library "fg_lookz")
+(load-library "fg_looks")
 (load-library "fg_lisp")
 (load-library "fg_diff")
 (load-library "fg_remote")
@@ -102,7 +102,7 @@
 
 ;; Compositing stuff
 (load-library "fg_style")
-(load-library "fg_keyz") ; must be the last one of fg_* stuff
+(load-library "fg_keys") ; must be the last one of fg_* stuff
 
 ;; ELPA
 (load-library "fg_elpa")
