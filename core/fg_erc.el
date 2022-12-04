@@ -192,7 +192,7 @@ making sure to preserve a copies from a few last runs."
 			(not (string= (first curr-lines) fg-erc-track-save-seed))
 			(let (fns)
 				(dotimes (n (- fg-erc-track-save-copies 1) fns)
-					(multiple-value-bind (src dst)
+					(cl-multiple-value-bind (src dst)
 						(mapcar 'fg-erc-track-save-bak-name
 							(list
 								(- fg-erc-track-save-copies n 1)

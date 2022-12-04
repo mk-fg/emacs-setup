@@ -55,7 +55,7 @@ also force indentation level to be equal to specified number of spaces
 
 FILL is only accepted as t and passed
 as 'fill argument to `lispy-multiline' at the moment."
-	(multiple-value-bind (start end)
+	(cl-multiple-value-bind (start end)
 		(if (use-region-p)
 			(fg-taint :whole-lines-only t)
 			(list (point-min) (point-max)))
@@ -83,14 +83,14 @@ as 'fill argument to `lispy-multiline' at the moment."
 (defun fg-lisp-format-region (func start end)
 	(goto-char start)
 	(let (sexp-start sexp-end-marker sexp-end-last)
-		(loop
+		(cl-loop
 			(forward-sexp 1)
 			(setq sexp-end-marker (point-marker))
 			(forward-sexp -1)
 			(setq sexp-start (point))
 			(when (<= sexp-end-marker (or sexp-end-last sexp-start))
 				(when sexp-end-last (goto-char sexp-end-last))
-				(return))
+				(cl-return))
 			(save-restriction
 				(narrow-to-region sexp-start sexp-end-marker)
 				(goto-char (point-min))

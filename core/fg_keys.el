@@ -28,12 +28,12 @@ Not all modes are handled correctly (tested w/ p and r only)."
 
 (defun define-keys (mode defs)
 	(dolist (def defs)
-		(multiple-value-bind (keydef sym) def
+		(cl-multiple-value-bind (keydef sym) def
 			(define-key mode (key keydef) sym))))
 
 (defun global-set-keys (defs)
 	(dolist (def defs)
-		(multiple-value-bind (keydef sym) def
+		(cl-multiple-value-bind (keydef sym) def
 			(global-set-key (key keydef) sym))))
 
 
@@ -42,7 +42,6 @@ Not all modes are handled correctly (tested w/ p and r only)."
 (require 'redo) ; consistent redo, grabbed from XEmacs
 (autoload 'setnu "setnu" nil t) ; line numbers mode
 (autoload 'browse-kill-ring "browse-kill-ring" nil t)
-(require 'acme-mouse) ; http://acme.cat-v.org/mouse
 (require 'wcy-swbuff) ; buffer cycling thru minibuff
 
 
@@ -64,7 +63,7 @@ Not all modes are handled correctly (tested w/ p and r only)."
 		("M-'" fg-scite-aux)
 		("M-]" fg-scite-core)
 		("C-M-o" (lambda () (interactive)
-			(multiple-value-bind (action msg)
+			(cl-multiple-value-bind (action msg)
 				(if (memq 'delete-trailing-whitespace before-save-hook)
 					'(remove-hook "disabled") '(add-hook "enabled"))
 				(apply action '(before-save-hook delete-trailing-whitespace))

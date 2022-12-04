@@ -210,7 +210,7 @@ Examples:
 							(length emms-source-file-default-directory)))
 					"/" t))
 			(unless (< (length name) 2)
-				(multiple-value-bind
+				(cl-multiple-value-bind
 					(info-title info-tracknumber info-album info-year info-artist)
 					(fg-emms-file-track-wash-name (car (last name)) :strip-ext t)
 					(when info-title
@@ -218,7 +218,7 @@ Examples:
 							"^[^[:alnum:]]*\\([Cc][Dd]\\)?[^[:alnum:]]*[0-9]\\{1,2\\}[^[:alnum:]]*$" it) name))
 						(if (<= (length name) 2)
 							(setq info-artist (car (last name 2)))
-							(multiple-value-setq
+							(cl-multiple-value-setq
 								(info-album info-year)
 								(fg-emms-file-track-wash-name (car (last name 2))))
 							(when

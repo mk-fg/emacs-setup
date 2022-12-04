@@ -207,7 +207,7 @@ regexp-match against NAMES to make sure it's the right key.
 See `epa-select-keys-interactive' for the description of other parameters."
 	(if (or encrypt-to epa-select-keys-inhibit)
 		(or
-			(block :loop
+			(cl-block :loop
 				(when encrypt-to
 					(setq epa-file-encrypt-to encrypt-to))
 				(message "EPA selecting key to: %s" epa-file-encrypt-to)
@@ -233,7 +233,7 @@ See `epa-select-keys-interactive' for the description of other parameters."
 								(message "EPA selected gpg key: %s [%s]" uid-string
 									(substring (epg-sub-key-id
 										(car (epg-key-sub-key-list key))) -8)) ; car here is the primary key
-								(return-from :loop (list key)))))))
+								(cl-return-from :loop (list key)))))))
 			(error
 				(format "Failed to match trusted gpg key against name(s): %s" names)))
 		(epa-select-keys-interactive context prompt names secret)))

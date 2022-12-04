@@ -203,7 +203,7 @@ picking only from buffers with activity (i.e. the ones that are disaplayed witho
 				(let*
 					((digits (-max (-map 'cadr erc-modified-channels-alist)))
 						(fmt (format "%%0%dd %%s" (or
-							(multiple-value-bind
+							(cl-multiple-value-bind
 								(digits overflow) (round* (log digits 10))
 								(if (> overflow 0) (1+ digits) digits)) ""))))
 					(--map
@@ -296,7 +296,7 @@ There's also separate emms-add (ea) command to add stuff to playlist."
 				(if (= 0 (length emms-playing-time-string))
 					"" (format " %s" (s-trim emms-playing-time-string)))
 				(if (not track) "" (format " :: %s" (or (emms-track-description track) "")))))
-		(case (intern action)
+		(cl-case (intern action)
 			((play pause p) (emms-pause))
 			((track-next > +) (emms-next))
 			((track-prev < -) (emms-previous))

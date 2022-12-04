@@ -10,7 +10,7 @@
 ;;  https://www.emacswiki.org/emacs/RegularExpression - or use rxt-pcre-to-elisp (see pcre2el)
 
 ;; TODO: dedup old macros with this stuff
-(require 'cl)
+(require 'cl-lib)
 (require 's)
 (require 'pcre2el)
 (require 'dash)
@@ -106,7 +106,7 @@
 
 ; py: for a in list:
 ; el: (dolist (A LIST [RES]) ...)
-; cl: (loop for A in LIST ...)
+; cl: (cl-loop for A in LIST ...)
 
 ; py: reversed(list)
 ; el: (nreverse LIST)
@@ -438,7 +438,7 @@ Generic way to do this is via `back-to-indentation' or `beginning-of-line',
 but special checks are in place for non-standard buffers like SLIME or ERC,
 which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 	(interactive "^")
-	(case major-mode
+	(cl-case major-mode
 		('slime-repl-mode (slime-repl-bol))
 		('erc-mode (erc-bol))
 		(t (let ((oldpos (point)))
@@ -598,7 +598,7 @@ FORCE option allows to bypass this caching."
 		(string-to-number (shell-command-to-string "exec xprintidle")) 0))
 
 (defun fg-pixmap-path (name)
-	(block :loop
+	(cl-block :loop
 		(dolist
 			(path
 				(list (concat fg-path "/pixmaps/" name)
@@ -608,9 +608,9 @@ FORCE option allows to bypass this caching."
 				name)
 			(progn
 				(when (file-exists-p (concat path ".png"))
-					(return-from :loop (concat path ".png")))
+					(cl-return-from :loop (concat path ".png")))
 				(when (file-exists-p path)
-					(return-from :loop path))))))
+					(cl-return-from :loop path))))))
 
 
 (defvar fg-find-buffer-state nil
@@ -627,7 +627,7 @@ ERROR-IF-NOT-FOUND signals error if named buffer doesn't exist."
 		((buffer-from (current-buffer))
 			(buffer-to (get-buffer name)))
 		(if buffer-to
-			(multiple-value-bind
+			(cl-multiple-value-bind
 				(buffer-x-from buffer-x-to)
 				fg-find-buffer-state
 				(if
@@ -689,7 +689,7 @@ Uses async dbus call and does not return notification id."
 			(add-to-list 'hints
 				(list :dict-entry "urgency"
 					(list :variant :byte
-						(case urgency (low 0) (critical 2) (t 1)))) t))
+						(cl-case urgency (low 0) (critical 2) (t 1)))) t))
 		(when pixmap
 			(add-to-list 'hints (list :dict-entry "image-path"
 				(list :variant :string (concat "file://" (fg-pixmap-path pixmap)))) t))
@@ -797,18 +797,19 @@ Resulting color offset should be uniformly distributed between min/max shift lim
 			color1-srgb-fallback) ; any color1, used as a last resort
 
 		(apply #'color-rgb-to-hex
-			(loop
+			(cl-loop
 				for n from 0 to clamp-rgb-after
 				do
 					(let*
 
 						((color1
-								(block :color-shift
+								(cl-block :color-shift
 									(if (numberp seed)
 										(set 'seed (concat "###" (number-to-string seed)))
-										(when (or (not seed) (equal seed "")) (return-from :color-shift color0)))
+										(when (or (not seed) (equal seed ""))
+											(cl-return-from :color-shift color0)))
 									(set 'seed (md5 seed))
-									(loop
+									(cl-loop
 										for n from 0 to 2
 										collect
 											(let*
@@ -838,9 +839,9 @@ Resulting color offset should be uniformly distributed between min/max shift lim
 														(if (= a b) a (+ c (* rnd k) a))))))))
 							(color1-srgb (apply #'color-lab-to-srgb color1))
 							(color1-srgb-valid
-								(loop
+								(cl-loop
 									for c in color1-srgb
-									do (when (or (> c 1) (< c -0.06)) (return nil))
+									do (when (or (> c 1) (< c -0.06)) (cl-return nil))
 									collect (color-clamp c))))
 
 						(when color1-srgb-valid
@@ -855,7 +856,7 @@ Resulting color offset should be uniformly distributed between min/max shift lim
 								(when fg-color-tweak-debug
 									(message "fg-color-tweak: %s -> %s, n=%d [%.2f]"
 										color (apply #'color-rgb-to-hex color1-srgb) n ciede2k))
-								(return color1-srgb-valid))))
+								(cl-return color1-srgb-valid))))
 
 						(unless color1-srgb-fallback
 							(set 'color1-srgb-fallback color1-srgb)))
@@ -868,10 +869,10 @@ Resulting color offset should be uniformly distributed between min/max shift lim
 						(when fg-color-tweak-debug
 							(message "fg-color-tweak: %s -> %s, n=%d [FALLBACK]"
 								color (apply #'color-rgb-to-hex color1-srgb) n))
-						(return color1-srgb))))))
+						(cl-return color1-srgb))))))
 
 ;; (setq fg-color-tweak-debug t)
-;; (loop for n from 0 to 10 do (fg-color-tweak "#000" n 80))
+;; (cl-loop for n from 0 to 10 do (fg-color-tweak "#000" n 80))
 
 (defun fg-ibuffer-reset-filters (&optional name)
 	"Run `fg-ibuffer-apply-locals', reset filters and do an update in named buffer.
@@ -1162,7 +1163,7 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 			((keep-nulls (not (if sep omit-nulls t)))
 				(rexp (or sep split-string-default-separators))
 				(start 0) notfirst (list nil))
-			(block 'limited
+			(cl-block 'limited
 				(while
 					(and
 						(string-match rexp string
@@ -1174,7 +1175,7 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 						(set 'list (cons (substring string start (match-beginning 0)) list))
 						(when (and limit (<= (set 'limit (1- limit)) 0))
 							(set 'list (cons (substring string (match-end 0)) list))
-							(return-from 'limited)))
+							(cl-return-from 'limited)))
 					(set 'start (match-end 0)))
 				(when (or keep-nulls (< start (length string)))
 					(set 'list (cons (substring string start) list))))

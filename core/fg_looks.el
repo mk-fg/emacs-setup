@@ -644,7 +644,7 @@ Used by custom `blink-cursor-timer-function'.")
 
 (define-minor-mode lisp-ns-mode
 	"Visually shorten namespace prefix in lisp files."
-	nil " LP" nil
+	:lighter " LP"
 	(if (not lisp-ns-mode)
 		(progn ; disable
 			(jit-lock-unregister 'fg-ns-fontify)
