@@ -1217,7 +1217,6 @@ NIL-IF-NOT-FOUND changes that to return nil in the latter case.
 If RE is non-nil, SEP is treated as if it was a regexp.
 Uses `fg-string-pos' internally."
 	(let ((n (fg-string-pos string sep re)))
-		(message "%S" (list n nil-if-not-found re))
 		(if n (substring string 0 n) (unless nil-if-not-found string))))
 
 (defun fg-string-after (string sep &optional nil-if-not-found re)
