@@ -150,6 +150,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;; Debug state changes
+;; (defun debug-watch-log (sym newval op where)
+;; 	(message "Variable update: %s = %S -> %S [%S %S]"
+;; 		sym (symbol-value sym) newval op where)
+;; 	(backtrace))
+;; (add-variable-watcher 'erc-networks--id #'debug-watch-log)
+;; (cancel-debug-on-variable-change 'erc-networks--id)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 

@@ -311,18 +311,13 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 ;; net+chan+nick+msg ignore-patterns
 ;; See fg-erc-msg-block-pattern for how nick/msg parts are used
-(setq-default fg-erc-msg-block-plists-base
-	`((:net "^BitlBee$" :nick "root" :msg ,(concat "slack - \\("
-			"Error: Connection closed"
-			;; "200 seconds" is used to match only first reconnect, making noise on others
-			"\\|Signing off\\.\\." "\\|Reconnecting in 200 seconds\\.\\."
-			"\\|Logging in: \\(" "Looking up team" "\\|Finding user"
-				"\\|Logging in" "\\|Requesting RTM" "\\|Connecting to RTM"
-				"\\|RTM Connected" "\\|Loading Users" "\\|Loading conversations"
-				"\\|Logged in" "\\|Loading active conversations" "\\)" "\\) *$"))
-		(:net "^BitlBee$" :chan "^#bee\\.slack\\." :msg ,(concat " *\\*\\*\\* \\("
-			"\\(You have been kicked off channel\\|Topic for\\|Users on\\) #bee\\.slack\\."
-			"\\|#bee\\.slack\\.\\S-+: topic set by " "\\)"))))
+;; (setq-default fg-erc-msg-block-plists-base
+;;   `((:net "^BitlBee$" :nick "root" :msg ,(concat "slack - \\("
+;;       "Error: Connection closed"
+;;       "\\|Signing off\\.\\." "\\|Reconnecting in 200 seconds\\.\\." ... "\\) *$"))
+;;     (:net "^BitlBee$" :chan "^#bee\\.slack\\." :msg ,(concat " *\\*\\*\\* \\("
+;;       "\\(You have been kicked off channel\\|Topic for\\|Users on\\) #bee\\.slack\\."
+;;       "\\|#bee\\.slack\\.\\S-+: topic set by " "\\)"))))
 
 (setq-default fg-erc-msg-block-plists
 	(append fg-erc-msg-block-plists-local fg-erc-msg-block-plists-base))
