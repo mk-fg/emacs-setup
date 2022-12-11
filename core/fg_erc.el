@@ -22,12 +22,12 @@ to avoid a lot of random junk ones for service notices on connection.")
 
 (defun fg-erc ()
 	"Connect to IRC servers.
-Uses up all the connection commands destructively,
-so can only be called once.
+Uses up all the connection commands destructively, so can only be called once.
 Enables notifications only after connecting to the last server,
-to avoid spamming them with MOTD entries and notices."
+to avoid spamming them with MOTD entries and notices.
+Can be used to also run some hook immediately after all networks are connected."
 	(interactive)
-	(if fg-erc-links (fg-erc-connect-loop) (fg-erc-update-networks)))
+	(if fg-erc-links (fg-erc-connect-loop)))
 
 (defun fg-erc-connect-loop (&rest ignored)
 	"Add itself to `erc-after-connect' hook and schedule
@@ -63,27 +63,36 @@ next call without the need to stampede it here as well."
 (defun fg-erc-connect-done ()
 	"Called after all irc networks are connected or timed-out.
 Maybe multiple times by some laggy timers."
-	(fg-erc-update-networks)
 	(add-hook 'erc-insert-post-hook 'fg-erc-notify)
 	(unless fg-erc-track-save-timer
 		(setq fg-erc-track-save-timer
 			(run-with-timer fg-erc-track-save-interval
 				fg-erc-track-save-interval 'fg-erc-track-save))))
 
-(defun fg-erc-update-networks ()
-	"Update `erc-network' values from `erc-determine-network'
-in all erc buffers and run `erc-update-mode-line' there."
-	(interactive)
-	(dolist (buff (erc-buffer-list))
-		(with-current-buffer buff
-			(unless
-				(and (erc-network-name)
-					(not (member (erc-network-name) '("Unknown" "nil"))))
-				(erc-with-server-buffer
-					(setq erc-network (erc-determine-network))
-					(when (eq erc-network 'Unknown) (setq erc-network
-						(intern (or erc-server-announced-name erc-session-server))))))
-			(erc-update-mode-line))))
+(defun fg-erc-network-name-fallback (&optional name)
+	"Expected to run in erc server buffer,
+to replace missing or 'Unknown name result from `erc-networks--determine',
+with a local fallback, deriving network ID symbol from connected hostname.
+Can be called separately in server buffer to return fallback name-symbol."
+	(if (not (or (not name) (eq name erc-networks--name-missing-sentinel))) name
+		(let
+			((name (or
+				(fg-string-match "^\\(.*\\)\\.irc\\.fraggod\\.net$" erc-session-server)
+				erc-session-server)))
+			(intern (concat "🖧-" (string-replace "." "_" name))))))
+(advice-add 'erc-networks--determine :filter-return #'fg-erc-network-name-fallback)
+
+;; Replaces ensure-announced to avoid needless lookups for local irc-proxy networks
+;; It's normally called before set-name/determine, so produces errors otherwise
+;; Setting erc-server-announced-name in it removes the need for determine advice above
+;; But advice is kept around as well, in case sequence of operations changes in the future
+(defun erc-networks--ensure-announced (proc parsed)
+	"No-op/fallback replacement for `erc-networks--ensure-announced' in erc-networks.el.
+Sets `erc-server-announced-name' from `fg-erc-network-name-fallback' call, if it is missing."
+	(unless erc-server-announced-name
+		(setq erc-server-announced-name
+			(symbol-name (fg-erc-network-name-fallback)))
+	nil))
 
 (defun fg-erc-quit (&optional reason)
 	"Disconnect (/quit) from all connected IRC servers immediately
@@ -491,16 +500,16 @@ Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 			;; 		(and (erc-list-match fg-erc-msg-block text) "fg-erc-msg-block")
 			;; 		(dolist (rule fg-erc-msg-block-plists)
 			;; 			(when (fg-erc-msg-match-rule rule text)
-			;; 				(return-from nil "fg-erc-msg-block-plists")))
+			;; 				(cl-return-from nil "fg-erc-msg-block-plists")))
 			;; 		(dolist (rule fg-erc-msg-modify-plists)
 			;; 			(let ((rule-res (fg-erc-msg-match-rule rule text)))
 			;; 				(when (s-contains? "waka waka" text)
 			;; 					(message " - rule result: %s -- %s" rule-res rule))
-			;; 				(when rule-res (return-from nil "fg-erc-msg-modify-plists"))))))
+			;; 				(when rule-res (cl-return-from nil "fg-erc-msg-modify-plists"))))))
 			(if
 				;; check fg-erc-msg-block-plists
 				(dolist (rule fg-erc-msg-block-plists)
-					(when (fg-erc-msg-match-rule rule text) (return-from nil t)))
+					(when (fg-erc-msg-match-rule rule text) (cl-return-from nil t)))
 				(if (eq hook-type 'pre)
 					(set 'erc-insert-this nil)
 					(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))
@@ -510,7 +519,7 @@ Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 						(eq hook-type 'post)
 						(dolist (rule fg-erc-msg-modify-plists)
 							(when (fg-erc-msg-match-rule rule text)
-								(return-from nil (plist-get rule :func))))))
+								(cl-return-from nil (plist-get rule :func))))))
 					(funcall func))))
 		(t (warn "Error in ERC filter: %s" ex))))
 
@@ -546,7 +555,7 @@ channel/network parameters."
 ;; 			(fg-erc-msg-block-plists
 ;; 				'((:nick "someuser" :net "Hype" :chan "cc"))))
 ;; 		(dolist (rule fg-erc-msg-block-plists)
-;; 			(when (fg-erc-msg-match-rule rule msg) (return-from nil t)))))
+;; 			(when (fg-erc-msg-match-rule rule msg) (cl-return-from nil t)))))
 
 ;; Put the hook *before* erc-add-timestamp by remove/add dance
 ;; This only makes datestamp not be made invisible

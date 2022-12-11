@@ -67,7 +67,11 @@
 ; el:
 ;   (replace-regexp-in-string OLD-RE NEW-RE S t t)
 ;   (fg-string-replace-pairs S (OLD-RE NEW-RE)...)
+;   (s-replace-all '(("lib" . "test") ("file" . "file_test")) "lib/file.js")
 ;   https://www.emacswiki.org/emacs/RegularExpression
+
+; py: re.findall(r'abc(de)fg', s)[0] -> "de"
+; el: (fg-string-match "abc\\(de\\)fg" S [GROUP-OR-1-OR-0])
 
 ; py: str.upper -> el: upcase
 ; py: str.lower -> el: downcase
@@ -1129,8 +1133,16 @@ Used to call indent-according-to-mode, but it fucked up way too often."
 ;; Processing / conversion / string mangling
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun fg-string-match (regexp string &optional group-n start)
+	"Return REGEXP group GROUP-N from `string-match' in STRING or nil.
+GROUP-N defaults to 1 if it is present in REGEXP, otherwise 0 (whole match)."
+	(when (string-match regexp string start)
+		(if group-n (match-string group-n string)
+			(or (match-string 1 string) (match-string 0 string)))))
+
 (defun fg-string-replace-pairs (string pairs &optional sub-groups ignore-case)
-	"Replace regex-replacement pairs in string."
+	"Replace all regex-replacement PAIRS in a STRING.
+Optional arguments are same as in `replace-regexp-in-string'."
 	(mapc
 		(lambda (arg)
 			(setq string (replace-regexp-in-string

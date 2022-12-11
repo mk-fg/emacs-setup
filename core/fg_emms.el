@@ -183,7 +183,7 @@ split numeric prefix (if delimited in a standard fashion), strip file extension.
 					(let ((title-parts (split-string title sep t)))
 						(when (string-match-p "^[0-9]+$" (car title-parts))
 							(setq title (mapconcat 'identity (cdr title-parts) sep))
-							(return (setq trackno (car title-parts)))))
+							(cl-return (setq trackno (car title-parts)))))
 					nil))))
 		(values
 			(fg-string-replace-pairs
