@@ -94,6 +94,14 @@ Sets `erc-server-announced-name' from `fg-erc-network-name-fallback' call, if it
 			(symbol-name (fg-erc-network-name-fallback)))
 	nil))
 
+(defun fg-erc-add-default-channel-matrix2051-fix (old-func channel)
+	"Do not downcase matrix2051 channels, which always have : in their names,
+due to casemapping bug there - https://github.com/progval/matrix2051/issues/41
+`erc-network' and such vars might still be undefined here - :-check is more reliable."
+	(if (not (string-search ":" channel))
+		(funcall old-func channel) (push channel erc-default-recipients)))
+(advice-add 'erc-add-default-channel :around #'fg-erc-add-default-channel-matrix2051-fix)
+
 (defun fg-erc-quit (&optional reason)
 	"Disconnect (/quit) from all connected IRC servers immediately
 and unset `process-query-on-exit-flag' on all `erc-server-process' subprocesses.

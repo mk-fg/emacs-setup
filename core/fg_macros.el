@@ -71,7 +71,7 @@
 ;   https://www.emacswiki.org/emacs/RegularExpression
 
 ; py: re.findall(r'abc(de)fg', s)[0] -> "de"
-; el: (fg-string-match "abc\\(de\\)fg" S [GROUP-OR-1-OR-0])
+; el: (fg-string-match "abc\\(de\\)fg" S [GROUP-OR-1-0])
 
 ; py: str.upper -> el: upcase
 ; py: str.lower -> el: downcase
