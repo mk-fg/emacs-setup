@@ -69,31 +69,6 @@ Maybe multiple times by some laggy timers."
 			(run-with-timer fg-erc-track-save-interval
 				fg-erc-track-save-interval 'fg-erc-track-save))))
 
-(defun fg-erc-network-name-fallback (&optional name)
-	"Expected to run in erc server buffer,
-to replace missing or 'Unknown name result from `erc-networks--determine',
-with a local fallback, deriving network ID symbol from connected hostname.
-Can be called separately in server buffer to return fallback name-symbol."
-	(if (not (or (not name) (eq name erc-networks--name-missing-sentinel))) name
-		(let
-			((name (or
-				(fg-string-match "^\\(.*\\)\\.irc\\.fraggod\\.net$" erc-session-server)
-				erc-session-server)))
-			(intern (concat "🖧-" (string-replace "." "_" name))))))
-(advice-add 'erc-networks--determine :filter-return #'fg-erc-network-name-fallback)
-
-;; Replaces ensure-announced to avoid needless lookups for local irc-proxy networks
-;; It's normally called before set-name/determine, so produces errors otherwise
-;; Setting erc-server-announced-name in it removes the need for determine advice above
-;; But advice is kept around as well, in case sequence of operations changes in the future
-(defun erc-networks--ensure-announced (proc parsed)
-	"No-op/fallback replacement for `erc-networks--ensure-announced' in erc-networks.el.
-Sets `erc-server-announced-name' from `fg-erc-network-name-fallback' call, if it is missing."
-	(unless erc-server-announced-name
-		(setq erc-server-announced-name
-			(symbol-name (fg-erc-network-name-fallback)))
-	nil))
-
 (defun fg-erc-add-default-channel-matrix2051-fix (old-func channel)
 	"Do not downcase matrix2051 channels, which always have : in their names,
 due to casemapping bug there - https://github.com/progval/matrix2051/issues/41
