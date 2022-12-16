@@ -25,7 +25,6 @@
 (add-to-list 'load-path (concat fg-path "/core"))
 (add-to-list 'load-path (concat fg-path "/extz"))
 (add-to-list 'load-path (concat fg-path "/extz/yasnippet"))
-(add-to-list 'load-path (concat fg-path "/extz/rust"))
 
 
 ;; Basic loading macros
@@ -142,20 +141,19 @@
 	recentf-save-file
 		(concat temporary-file-directory "recentf")
 	recentf-arrange-rules
-		`(("py (%d)" ".\\.py\\'")
-			("php (%d)" ".\\.php[0-9]?\\'")
-			("sh (%d)" ".\\.sh\\'")
+		`(("py (%d)" ".\\.py\\'") ("js (%d)" ".\\.js\\'")
+			("sh (%d)" ".\\.sh\\'") ("lua (%d)" ".\\.lua\\'")
+			("go (%d)" ".\\.go\\'") ("rust (%d)" ".\\.\\(rs\\|rlib\\)\\'")
+			("OCAML (%d)" ".\\.mli?\\'") ("C (%d)" ".\\.\\(cc?\\|cxx\\|h\\)\\'")
+			("erlang (%d)" ".\\.\\([eh]rl\\|ex\\)\\'")
+			("perl (%d)" ".\\.pl[0-9]?\\'") ("sql (%d)" ".\\.sql\\'")
+			("web/tpl (%d)" ".\\.\\(html\\|css\\|scss\\|jade\\|htm\\|tpl\\)\\'")
+			("(e)lisp/scheme (%d)" ".\\.\\(el\\|cl\\|lisp\\|scm\\|rkt\\|ss\\|jl\\)\\'")
 			("conf (%d)"
 				,(concat
 					".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol"
 						"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
-					"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'"))
-			("perl (%d)" ".\\.pl[0-9]?\\'")
-			("web/tpl (%d)" ".\\.\\(html\\|css\\|htm\\|js\\|tpl\\)\\'")
-			("sql (%d)" ".\\.sql\\'")
-			("C (%d)" ".\\.\\(c\\|h\\)\\'")
-			("(e)lisp (%d)" ".\\.\\(el\\|cl\\|lisp\\)\\'")
-			("ebuild (%d)" ".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)\\'"))
+					"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'")))
 	; buffer list storage
 	desktop-dirname temporary-file-directory
 	desktop-path (list temporary-file-directory)
@@ -200,14 +198,14 @@
 (delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
 (setq-default auto-mode-alist
 	(-distinct (-concat auto-mode-alist
-		`((".\\.\\(eclass\\|ebuild\\|exlib\\|exheres-0\\)$" . sh-mode) ("/PKGBUILD$" . sh-mode)
+		`(("/\\(PKG\\|APK\\)BUILD$" . sh-mode)
+			("\\.[eh]rl$" . erlang-mode) ("\\.ex$" . elixir-mode)
 			("\\.jl$" . lisp-mode) ("\\.rkt$" . scheme-mode)
 			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
-			("\\.yaml$" . yaml-mode) ("\\.edc$" . edje-mode)
+			("\\.ya?ml$" . yaml-mode) ("\\.edc$" . edje-mode)
 			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
-			("\\.coffee$" . coffee-mode) ("\\.scss$" . css-mode) ("\\.jade$" . jade-mode)
-			("\.lua$" . lua-mode) ("\\.go$" . go-mode) ("/*.\.php[345]?$" . php-mode)
-			("\.svg$" . xml-mode)
+			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode) ("\\.go$" . go-mode)
+			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.svg$" . xml-mode)
 			(,(concat
 				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
 					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"

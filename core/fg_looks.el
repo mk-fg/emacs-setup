@@ -251,12 +251,18 @@ NAME can also be passed explicitly as an argument."
 (autoload 'markdown-mode
 	"markdown-mode" "Major mode for editing Markdown files" t)
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
-(autoload 'php-mode "php-mode.el" "Php mode." t)
 (autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
 (autoload 'cmake-mode "cmake-mode" "Major mode for editing CMake source files" t)
-(autoload 'rust-mode "rust-mode" "Major mode for Rust" t)
 (load-library-safe "haskell-mode-autoloads")
 (load-library-safe (expand-file-name "~/.opam/default/share/emacs/site-lisp/tuareg-site-file"))
+
+(add-to-list 'load-path (concat fg-path "/extz/rust"))
+(autoload 'rust-mode "rust-mode" "Major mode for Rust" t)
+
+(add-to-list 'load-path (concat fg-path "/extz/erlang"))
+(autoload 'erlang-mode "erlang-start" "Major mode for Erlang" t)
+(add-to-list 'load-path (concat fg-path "/extz/emacs-elixir"))
+(autoload 'elixir-mode "elixir-mode" "Major mode for Erlang Elixir" t)
 
 ;; CSV mode
 (autoload 'csv-mode "csv-mode" "Major mode for editing CSV files." t)
