@@ -578,12 +578,7 @@ TEXT argument is processed by `fg-erc-get-hook-msg'."
 				((buffer (current-buffer))
 					(channel
 						(or (erc-default-target) (buffer-name buffer)))
-					(net (erc-network)))
-				(when
-					(and
-						erc-session-server
-						(or (not net) (string= net "") (string= net "Unknown")))
-					(set 'net erc-session-server))
+					(net (erc-networks--id-symbol erc-networks--id)))
 				(when
 					(and (buffer-live-p buffer)
 						(or
