@@ -208,6 +208,21 @@ FACE defaults to nil, see `hi-lock-faces' for list of these."
 		git-gutter:always-show-gutter t
 		git-gutter:diff-option "-w"))
 
+;; doc-view
+(setq-default doc-view-continuous t)
+
+;; find-file tweaks
+(setq-default
+	find-file-run-dired nil
+	find-file-visit-truename t
+	find-file-existing-other-name t)
+
+;; Disable vc-* modes, which slow stuff down pointlessly, esp. on sshfs and such
+(eval-after-load "vc" '(progn
+	(remove-hook 'find-file-hooks 'vc-find-file-hook)
+	(remove-hook 'find-file-hooks 'vc-refresh-state)))
+(setq-default vc-handled-backends ())
+
 
 ;; buffer color depending on filename/buffer-name
 ;; idea: http://deliberate-software.com/emacs-project-tip/
@@ -273,10 +288,52 @@ NAME can also be passed explicitly as an argument."
 	(setq-default csv-align-padding 5)))
 
 
-;; Nice, but crashes current emacs (24.0.50.1)
-;; (autoload 'lambda-mode
-;; 	"lambda-mode" "Minor mode to display 'lambda' as a greek letter" t)
-;; (add-hook 'python-mode-hook #'(lambda () (lambda-mode t)))
+;; recentf mode tweaks
+
+(setq-default
+	recentf-max-saved-items 256
+	recentf-max-menu-items 10
+	recentf-menu-filter 'recentf-arrange-by-rule
+	recentf-save-file
+		(concat temporary-file-directory "recentf")
+	recentf-arrange-rules
+		`(("py (%d)" ".\\.py\\'") ("js (%d)" ".\\.js\\'")
+			("sh (%d)" ".\\.sh\\'") ("lua (%d)" ".\\.lua\\'")
+			("go (%d)" ".\\.go\\'") ("rust (%d)" ".\\.\\(rs\\|rlib\\)\\'")
+			("OCAML (%d)" ".\\.mli?\\'") ("C (%d)" ".\\.\\(cc?\\|cxx\\|h\\)\\'")
+			("erlang (%d)" ".\\.\\([eh]rl\\|ex\\)\\'")
+			("perl (%d)" ".\\.pl[0-9]?\\'") ("sql (%d)" ".\\.sql\\'")
+			("web/tpl (%d)" ".\\.\\(html\\|css\\|scss\\|jade\\|htm\\|tpl\\)\\'")
+			("(e)lisp/scheme (%d)" ".\\.\\(el\\|cl\\|lisp\\|scm\\|rkt\\|ss\\|jl\\)\\'")
+			("conf (%d)"
+				,(concat
+					".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol"
+						"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
+					"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'"))))
+
+
+;; Auto-mode tweaks
+
+(delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
+(setq-default auto-mode-alist
+	(-distinct (-concat auto-mode-alist
+		`(("/\\(PKG\\|APK\\)BUILD$" . sh-mode)
+			("\\.[eh]rl$" . erlang-mode) ("\\.exs?$" . elixir-mode)
+			("\\.jl$" . lisp-mode) ("\\.rkt$" . scheme-mode)
+			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
+			("\\.ya?ml$" . yaml-mode) ("\\.edc$" . edje-mode)
+			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
+			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode) ("\\.go$" . go-mode)
+			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.svg$" . xml-mode)
+			(,(concat
+				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
+					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
+				"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?$") . conf-mode)))))
+
+;; Blacklist modes from auto-mode-alist via earlier overrides
+(setq-default auto-mode-alist
+	;; blacklist sieve-mode - buggy, locks-up too often
+	(delete '("\\.s\\(v\\|iv\\|ieve\\)\\'" . sieve-mode) auto-mode-alist))
 
 
 ;; Crosshair highlighting modes

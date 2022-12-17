@@ -134,26 +134,6 @@
 	save-place t
 	save-place-file
 		(concat temporary-file-directory "placez")
-	; recentf mode
-	recentf-max-saved-items 256
-	recentf-max-menu-items 10
-	recentf-menu-filter 'recentf-arrange-by-rule
-	recentf-save-file
-		(concat temporary-file-directory "recentf")
-	recentf-arrange-rules
-		`(("py (%d)" ".\\.py\\'") ("js (%d)" ".\\.js\\'")
-			("sh (%d)" ".\\.sh\\'") ("lua (%d)" ".\\.lua\\'")
-			("go (%d)" ".\\.go\\'") ("rust (%d)" ".\\.\\(rs\\|rlib\\)\\'")
-			("OCAML (%d)" ".\\.mli?\\'") ("C (%d)" ".\\.\\(cc?\\|cxx\\|h\\)\\'")
-			("erlang (%d)" ".\\.\\([eh]rl\\|ex\\)\\'")
-			("perl (%d)" ".\\.pl[0-9]?\\'") ("sql (%d)" ".\\.sql\\'")
-			("web/tpl (%d)" ".\\.\\(html\\|css\\|scss\\|jade\\|htm\\|tpl\\)\\'")
-			("(e)lisp/scheme (%d)" ".\\.\\(el\\|cl\\|lisp\\|scm\\|rkt\\|ss\\|jl\\)\\'")
-			("conf (%d)"
-				,(concat
-					".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol"
-						"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
-					"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'")))
 	; buffer list storage
 	desktop-dirname temporary-file-directory
 	desktop-path (list temporary-file-directory)
@@ -172,55 +152,18 @@
 (add-hook 'desktop-after-read-hook 'ibuffer)
 
 
-;; Default behavior tweaks / modes
+;; Default behavior tweaks
 (fset 'yes-or-no-p 'y-or-n-p) ; use y or n instead of yes or no
 
 (delete-selection-mode t) ; delete active selection w/ transient-mode
 (mouse-wheel-mode t) ; ...in case I plug the rodent in
-(auto-image-file-mode t)
 (recentf-mode t) ; TODO: bind keys to use it
 
 (setq-default
 	message-log-max 1000 ; *Messages* scrollback
 	next-line-add-newlines nil ; don't move past eof
 	x-select-enable-clipboard t ; shared clipboard should always be enabled
-	compare-windows-sync t ; advance point in both buffers on comparison
-	; find-file tweaks
-	find-file-run-dired nil
-	find-file-visit-truename t
-	find-file-existing-other-name t)
-
-;; doc-view setup
-(setq-default doc-view-continuous t)
-
-
-;; Auto-mode tweaks
-(delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
-(setq-default auto-mode-alist
-	(-distinct (-concat auto-mode-alist
-		`(("/\\(PKG\\|APK\\)BUILD$" . sh-mode)
-			("\\.[eh]rl$" . erlang-mode) ("\\.ex$" . elixir-mode)
-			("\\.jl$" . lisp-mode) ("\\.rkt$" . scheme-mode)
-			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
-			("\\.ya?ml$" . yaml-mode) ("\\.edc$" . edje-mode)
-			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
-			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode) ("\\.go$" . go-mode)
-			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.svg$" . xml-mode)
-			(,(concat
-				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
-					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
-				"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?$") . conf-mode)))))
-
-;; Blacklist modes from auto-mode-alist via earlier overrides
-(setq-default auto-mode-alist
-	;; blacklist sieve-mode - buggy, locks-up too often
-	(delete '("\\.s\\(v\\|iv\\|ieve\\)\\'" . sieve-mode) auto-mode-alist))
-
-;; Disable vc-* modes, which slow stuff down pointlessly, esp. on sshfs and such
-(eval-after-load "vc" '(progn
-	(remove-hook 'find-file-hooks 'vc-find-file-hook)
-	(remove-hook 'find-file-hooks 'vc-refresh-state)))
-(setq-default vc-handled-backends ())
+	compare-windows-sync t) ; advance point in both buffers on comparison
 
 
 ;; Vars not declared "safe" by modes, invoking hack-local-variables-confirm
