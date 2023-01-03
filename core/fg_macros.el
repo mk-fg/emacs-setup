@@ -1271,13 +1271,22 @@ Returns the resulting string."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Numbers and math
+;; Numbers and math and random
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun random-float (&optional max-digits)
+(defun fg-random-float (&optional max-digits)
 	"Returns random `float' in [0, 1] range with MAX-DIGITS decimal digits.
 Not sure if distribution fits whatever advanced purposes (e.g. crypto),
 but should be good enough for simple random checks.
 More info on such naive random: http://mumble.net/~campbell/2014/04/28/uniform-random-float"
 	(let ((random-max (expt 10 (or max-digits 6))))
 		(/ (float (1+ (random random-max))) (- random-max 1))))
+
+(defun fg-random-string (len &optional chars)
+	"Return random string composed of CHARS [a-zA-Z0-9] of length LEN."
+	(let
+		((chars (or chars (concat (number-sequence #x30 #x39)
+			(number-sequence #x41 #x5A) (number-sequence #x61 #x7A)))))
+		(concat (seq-map
+			#'(lambda (n) (seq-elt chars (random (length chars))))
+			(number-sequence 1 len)))))

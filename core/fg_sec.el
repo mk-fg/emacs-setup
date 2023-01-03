@@ -1,4 +1,4 @@
-;;;; GHG transparent encryption
+;;;; GHG transparent encryption - https://github.com/mk-fg/ghg
 ;; Based on jka-compr-install, which has all the same hooks
 
 (defvar ghg-bin "ghg"
@@ -88,7 +88,7 @@ which emacs seem to do with its prefer-* stuff.")
 				(temp-buff (get-buffer-create " *ghg-io-temp*"))
 				(coding-system-for-write 'no-conversion)
 				(coding-system-for-read 'no-conversion))
-			(with-current-buffer temp-buff (widen) (erase-buffer))
+			(with-current-buffer temp-buff (erase-buffer))
 			(unless
 				(= 0 (apply 'call-process-region
 					start end ghg-bin nil (list temp-buff nil) nil args))
@@ -175,94 +175,84 @@ which emacs seem to do with its prefer-* stuff.")
 		(list filename c-size)))
 
 
+;;;; FHD - fido2-hmac-desalinate short-string encryption
+;; https://github.com/mk-fg/fgtk#fido2-hmac-desalinate-c
 
-;;;; Old EPA mode (for gpg), superseded by GHG stuff above
+(defvar fhd-bin "fhd" "fhd binary path/name to use, passed to `make-process'.")
+(defvar fhd-args nil "List of cli arguments to always pass to fhd process.")
+(defvar fhd-proc nil "Running fhd process with pending operation.")
+;; (setq fhd-bin "fhd" fhd-args nil) (setq fhd-bin "echo" fhd-args '("some-output"))
 
-;; use ";; -*- epa-file-encrypt-to: ("mk.fraggod@gmail.com") -*-" in file headers
+(defun fhd-crypt (start end)
+	"Encrypt or decrypt thing at point or a region-selected one (but trimmed of spaces).
+Starts async `fhd-proc', with result signaled in minibuffer and copied into clipboard."
+	;; XXX: replace region when encrypting, enabled via flag or wrapper
+	(interactive "r")
+	;; Get PW secret or token to process
+	(let
+		((pw-chars "^[:space:]\n")
+			(pw (when (use-region-p)
+				(buffer-substring-no-properties (region-beginning) (region-end))))
+			salt data enc)
+		(unless pw
+			(save-excursion
+				(skip-chars-backward pw-chars)
+				(setq pw (point))
+				(skip-chars-forward pw-chars)
+				(setq pw (buffer-substring-no-properties pw (point)))))
+		;; Parse/encode token to SALT and DATA, setting ENC direction-flag
+		(if (< (length pw) 8)
+			(message "FHD-ERR: secret cannot be that short [ %s ]" pw)
+			(if (string-match "^fhd\\.\\([^.]+\\)\\.\\(.*\\)$" pw)
+				(setq salt (match-string 1 pw) data (match-string 2 pw))
+				(setq salt (fg-random-string 4) data
+					(base64-encode-string (fg-string-strip-whitespace pw) t) enc t))
+			(if (process-live-p fhd-proc)
+				(message "FHD-ERR: another process already running")
+				;; Start fhd process
+				(let
+					((stdout (get-buffer-create " fhd-stdout"))
+						(stderr (get-buffer-create " fhd-stderr")))
+					(with-current-buffer stderr (erase-buffer))
+					(setq fhd-proc (make-process
+						:name "fhd" :command (cons fhd-bin fhd-args)
+						:buffer stdout :stderr stderr :noquery t :connection-type 'pipe
+						:coding '(no-conversion . no-conversion) :sentinel #'fhd-proc-sentinel))
+					(process-put fhd-proc 'fhd-salt salt)
+					(process-put fhd-proc 'fhd-enc enc)
+					(let ((stderr-proc (get-buffer-process stderr)))
+						(process-put fhd-proc 'fhd-stderr stderr-proc)
+						(set-process-sentinel stderr-proc #'fhd-proc-sentinel))
+					(process-send-string fhd-proc (format "%s %s" salt data))
+					(process-send-eof fhd-proc))
+				(message "FHD: %scryption process started" (if enc "en" "de"))))))
 
-(require 'epa-file)
+(defun fhd-proc-sentinel (proc ev)
+	"Runs handler when both out/err procs finish.
+`fhd-proc' set to nil disables the handler after first run.
+Order in which out/err processes finish doesn't seem to be defined."
+	(unless
+		(or (not fhd-proc) (process-live-p fhd-proc)
+			(process-live-p (process-get fhd-proc 'fhd-stderr)))
+		(let ((proc fhd-proc))
+			(setq fhd-proc nil)) ; to stop other proc sentinel
+			(let
+				((code (process-exit-status proc))
+					(out (with-current-buffer
+						(process-buffer proc) (prog1 (buffer-string) (kill-buffer))))
+					(err (fg-string-strip-whitespace
+						(with-current-buffer
+							(process-buffer (process-get proc 'fhd-stderr))
+							(prog1 (buffer-string) (kill-buffer)))))
+					(salt (process-get proc 'fhd-salt))
+					(enc (process-get proc 'fhd-enc)))
+				(if (/= code 0)
+					(message (format
+						"FHD-ERR [exit=%d]: %s" code (fg-string-or err "<no-stderr>")))
+					(fg-copy-string (if (not enc) out
+						(format "fhd.%s.%s" salt (base64-encode-string out t))))
+					(message
+						"FHD: %s copied to clipboard"
+						(if enc "ciphertext-token" "plaintext"))))))
 
-(defvar epa-select-keys-default-name "mk.fraggod@gmail.com"
-	"Name to fallback to when selecting keys.")
-
-(defvar epa-select-keys-inhibit t
-	"Do not use interactive prompt for recipient keys,
-using `epa-file-encrypt-to' value instead.")
-
-(setq-default epa-file-encrypt-to epa-select-keys-default-name)
-
-
-;; These will replace epa-select-keys function, leaving the old definition as
-;;  epa-select-keys-interactive, so it can still be used, if necessary
-(fset 'epa-select-keys-interactive (symbol-function 'epa-select-keys))
-
-(defun epa-select-keys (context prompt &optional names secret encrypt-to)
-	"Return all key(s) referenced by name(s) in
-`epa-file-encrypt-to' instead or a popup selection prompt
-if `epa-select-keys-inhibit' is set to nil or ENCRYPT-TO is non-nil.
-
-Only auto-picks keys with ultimate validity and email
-regexp-match against NAMES to make sure it's the right key.
-
-See `epa-select-keys-interactive' for the description of other parameters."
-	(if (or encrypt-to epa-select-keys-inhibit)
-		(or
-			(cl-block :loop
-				(when encrypt-to
-					(setq epa-file-encrypt-to encrypt-to))
-				(message "EPA selecting key to: %s" epa-file-encrypt-to)
-				(dolist
-					(key (epg-list-keys context epa-file-encrypt-to secret))
-					(dolist (uid (epg-key-user-id-list key))
-						(let*
-							;; Match names vs epg-user-id-string
-							((uid-string (epg-user-id-string uid))
-								(uid-names ; nil if no matches
-									(or
-										(not names)
-										(fg-keep-when
-											(lambda (name)
-												(string-match
-													(concat "<" (regexp-quote name) ">\\s-*$")
-													uid-string))
-											names))))
-							;; Check epg-user-id-validity
-							(when
-								(and uid-names
-									(eq (epg-user-id-validity uid) 'ultimate))
-								(message "EPA selected gpg key: %s [%s]" uid-string
-									(substring (epg-sub-key-id
-										(car (epg-key-sub-key-list key))) -8)) ; car here is the primary key
-								(cl-return-from :loop (list key)))))))
-			(error
-				(format "Failed to match trusted gpg key against name(s): %s" names)))
-		(epa-select-keys-interactive context prompt names secret)))
-
-(defun epa-file-select-keys-default ()
-	"Select global-default recipients for encryption.
-Same as `epa-file-select-keys', but always picks key matching `epa-select-keys-default-name'."
-	(interactive)
-	(make-local-variable 'epa-file-encrypt-to)
-	(setq epa-file-encrypt-to
-		(mapcar
-			(lambda (key) (epg-sub-key-id (car (epg-key-sub-key-list key))))
-			(epa-select-keys (epg-make-context) nil nil nil epa-select-keys-default-name))))
-
-
-
-;;;; TRAMP mode
-
-;; (require 'auth-source)
-;; (require 'tramp)
-
-;; (setq-default
-;; 	tramp-default-method "ssh")
-
-;; (add-to-list 'tramp-default-user-alist
-;; 	'("ssh" ".*\\.\\(mplik\\.ru\\|e1\\)\\'" "mkfg"))
-;; (add-to-list 'tramp-default-proxies-alist
-;; 	'(".*.\\(mplik\\.ru\\|e1\\)\\'" "\\`root\\'" "/ssh:mkfg@%h:"))
-
-;; (setq auth-source-debug t)
-;; (password-reset)
-;; (auth-source-user-or-password "password" "db-six.mplik.ru" "sudo" "root")
+;; -----

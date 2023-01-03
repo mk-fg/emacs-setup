@@ -639,7 +639,7 @@ Intended to avoid slowing-down any kind of backlog dumps.")
 				(< ts-check-last (- ts fg-erc-hlnsc-min-interval))
 				(or
 					(< ts-check-last (- ts fg-erc-hlnsc-max-interval))
-					(< (random-float) fg-erc-hlnsc-chance)))
+					(< (fg-random-float) fg-erc-hlnsc-chance)))
 			(ht-set! name-set 'last-cleanup ts)
 			(let ((ts-nick-min (- ts fg-erc-hlnsc-nick-timeout)))
 				(ht-each (lambda (nick ts-nick)
