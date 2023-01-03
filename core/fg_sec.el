@@ -192,7 +192,8 @@ which emacs seem to do with its prefer-* stuff.")
 	"Encrypt or decrypt thing at point or a region-selected one (but trimmed of spaces).
 Starts async `fhd-proc', with result signaled in minibuffer and copied into clipboard.
 Universal argument can be set to replace the thing at point or selected region,
-instead of using `fg-copy-string'."
+instead of using `fg-copy-string'.
+Rejects short at-point strings to avoid handling parts by mistake, use region for those."
 	(interactive "r")
 	;; Get PW secret or token to process
 	(let*
@@ -212,7 +213,7 @@ instead of using `fg-copy-string'."
 				(when replace (setq replace (list replace pw (point))))
 				(setq pw (buffer-substring-no-properties pw (point)))))
 		;; Parse/encode token to SALT and DATA, setting ENC direction-flag
-		(if (< (length pw) 8)
+		(if (and (not (use-region-p)) (< (length pw) 8))
 			(message "FHD-ERR: secret cannot be that short [ %s ]" pw)
 			(if (string-match "^fhd\\.\\([^.]+\\)\\.\\(.*\\)$" pw)
 				(setq salt (match-string 1 pw) data (match-string 2 pw))
