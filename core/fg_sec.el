@@ -196,7 +196,7 @@ instead of using `fg-copy-string'.
 Rejects short at-point strings to avoid handling parts by mistake, use region for those."
 	(interactive)
 	;; Get PW secret or token to process
-	(let*
+	(let
 		((pw-chars "^[:space:]\n")
 			(pw (when (use-region-p)
 				(buffer-substring-no-properties (region-beginning) (region-end))))
@@ -225,6 +225,7 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 				(let
 					((stdout (get-buffer-create " fhd-stdout"))
 						(stderr (get-buffer-create " fhd-stderr")))
+					(with-current-buffer stdout (erase-buffer))
 					(with-current-buffer stderr (erase-buffer))
 					(setq fhd-proc (make-process
 						:name "fhd" :command (cons fhd-bin fhd-args)
@@ -233,51 +234,37 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 					(process-put fhd-proc 'fhd-salt salt)
 					(process-put fhd-proc 'fhd-enc enc)
 					(process-put fhd-proc 'fhd-replace replace)
-					(let ((stderr-proc (get-buffer-process stderr)))
-						(process-put fhd-proc 'fhd-stderr stderr-proc)
-						(set-process-sentinel stderr-proc #'fhd-proc-sentinel))
+					(process-put fhd-proc 'fhd-stderr stderr)
 					(process-send-string fhd-proc (format "%s %s" salt data))
 					(process-send-eof fhd-proc))
 				(message "FHD: %scryption process started" (if enc "en" "de"))))))
 
 (defun fhd-proc-sentinel (proc ev)
-	"Runs `fhd-proc-done' handler when both out/err procs finish.
-`fhd-proc' set to nil disables the handler after first run.
-Order in which out/err processes finish doesn't seem to be defined."
-	(unless
-		(or (not fhd-proc) (process-live-p fhd-proc)
-			(process-live-p (process-get fhd-proc 'fhd-stderr)))
-		(let ((proc fhd-proc))
-			(setq fhd-proc nil) ; to stop other proc sentinel
-			(fhd-proc-done
-				(process-exit-status proc)
-				(with-current-buffer
-					(process-buffer proc) (prog1 (buffer-string) (kill-buffer)))
-				(fg-string-strip-whitespace
-					(with-current-buffer
-						(process-buffer (process-get proc 'fhd-stderr))
-						(prog1 (buffer-string) (kill-buffer))))
-				(process-get proc 'fhd-salt)
-				(process-get proc 'fhd-enc)
-				(process-get proc 'fhd-replace)))))
-
-(defun fhd-proc-done (code out err salt enc replace)
-	"Prints success/error info, either runs `fg-copy-string' on result,
-or replaces original (buffer a b) place if REPLACE is used.
-All other parameters are resulting strings and process properties."
-	(if (= code 0)
+	"Prints success/error info, either running `fg-copy-string' on result,
+or replacing original (buffer a b) place if REPLACE is used."
+	(unless (or (not fhd-proc) (process-live-p fhd-proc))
 		(let
-			((result (if (not enc) out (format
-				"fhd.%s.%s" salt (base64-encode-string out t)))))
-			(if replace
-				(cl-multiple-value-bind (buff a b) replace
-					(with-current-buffer buff (save-excursion
-						(delete-region a b) (goto-char a) (insert result))))
-				(fg-copy-string result))
-			(message "FHD: %s %s" (if enc "ciphertext-token" "plaintext")
-				(if replace (format
-					"replaced in buffer %s" (car replace)) "copied to clipboard")))
-		(message (format
-			"FHD-ERR [exit=%d]: %s" code (fg-string-or err "<no-stderr>")))))
-
-;; -----
+			((code (process-exit-status proc))
+				(out (with-current-buffer
+					(process-buffer proc) (prog1 (buffer-string) (kill-buffer))))
+				(err (fg-string-strip-whitespace
+					(with-current-buffer
+						(process-get proc 'fhd-stderr)
+						(prog1 (buffer-string) (kill-buffer)))))
+				(salt (process-get proc 'fhd-salt))
+				(enc (process-get proc 'fhd-enc))
+				(replace (process-get proc 'fhd-replace)))
+			(if (= code 0)
+				(let
+					((result (if (not enc) out (format
+						"fhd.%s.%s" salt (base64-encode-string out t)))))
+					(if replace
+						(cl-multiple-value-bind (buff a b) replace
+							(with-current-buffer buff (save-excursion
+								(delete-region a b) (goto-char a) (insert result))))
+						(fg-copy-string result))
+					(message "FHD: %s %s" (if enc "ciphertext-token" "plaintext")
+						(if replace (format
+							"replaced in buffer %s" (car replace)) "copied to clipboard")))
+				(message (format
+					"FHD-ERR [exit=%d]: %s" code (fg-string-or err "<no-stderr>")))))))

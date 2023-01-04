@@ -231,12 +231,15 @@ Based on `describe-function-1'."
 	"Supress minibuffer 'Mark set' messages on kill-ring ops."
 	(ad-set-arg 1 t))
 
+(defun fg-copy-string (s &optional before-p)
+	"Same as `copy-region-as-kill' but for copying string into kill-ring/clipboard.
+BEFORE-P is passed as-is to `kill-append', if it ends up being used."
+	(if (eq last-command 'kill-region) (kill-append s before-p) (kill-new s)))
+
 (defun fg-copy-region (start end)
 	"Same as `copy-region-as-kill' but doesn't deactivate the mark."
 	(interactive "r")
-	(if (eq last-command 'kill-region)
-		(kill-append (filter-buffer-substring start end) (< end start))
-		(kill-new (filter-buffer-substring start end))))
+	(fg-copy-string (filter-buffer-substring start end) (< end start)))
 
 (defun* fg-taint (&key call whole-lines-only)
 	"Smart region interpreter.
