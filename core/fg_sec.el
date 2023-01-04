@@ -188,13 +188,13 @@ which emacs seem to do with its prefer-* stuff.")
 (defvar fhd-proc nil "Running fhd process with pending operation.")
 ;; (setq fhd-bin "fhd" fhd-args nil) (setq fhd-bin "echo" fhd-args '("-n" "some-output"))
 
-(defun fhd-crypt (start end)
+(defun fhd-crypt ()
 	"Encrypt or decrypt thing at point or a region-selected one (but trimmed of spaces).
 Starts async `fhd-proc', with result signaled in minibuffer and copied into clipboard.
 Universal argument can be set to replace the thing at point or selected region,
 instead of using `fg-copy-string'.
 Rejects short at-point strings to avoid handling parts by mistake, use region for those."
-	(interactive "r")
+	(interactive)
 	;; Get PW secret or token to process
 	(let*
 		((pw-chars "^[:space:]\n")
