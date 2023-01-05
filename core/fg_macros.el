@@ -692,7 +692,7 @@ If more than one match is returned, error gets signaled."
 	"Never escape html entities in notification functions")
 
 (defun* fg-notify
-	(header message &key pixmap urgency strip dont-escape)
+	(header &optional (message "") &key pixmap urgency strip dont-escape)
 	"Send desktop notification about event.
 PIXMAP specifies an icon to use.
 URGENCY can be set to 'low or 'critical.

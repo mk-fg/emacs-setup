@@ -192,7 +192,7 @@ which emacs seem to do with its prefer-* stuff.")
 	"Encrypt or decrypt thing at point or a region-selected one (but trimmed of spaces).
 Starts async `fhd-proc', with result signaled in minibuffer and copied into clipboard.
 Universal argument can be set to replace the thing at point or selected region,
-instead of using `fg-copy-string'.
+instead of using `fhd-share-secret'.
 Rejects short at-point strings to avoid handling parts by mistake, use region for those."
 	(interactive)
 	;; Get PW secret or token to process
@@ -240,7 +240,7 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 				(message "FHD: %scryption process started" (if enc "en" "de"))))))
 
 (defun fhd-proc-sentinel (proc ev)
-	"Prints success/error info, either running `fg-copy-string' on result,
+	"Prints success/error info, either running `fhd-share-secret' on result,
 or replacing original (buffer a b) place if REPLACE is used."
 	(unless (or (not fhd-proc) (process-live-p fhd-proc))
 		(let
@@ -262,9 +262,20 @@ or replacing original (buffer a b) place if REPLACE is used."
 						(cl-multiple-value-bind (buff a b) replace
 							(with-current-buffer buff (save-excursion
 								(delete-region a b) (goto-char a) (insert result))))
-						(fg-copy-string result))
-					(message "FHD: %s %s" (if enc "ciphertext-token" "plaintext")
-						(if replace (format
-							"replaced in buffer %s" (car replace)) "copied to clipboard")))
+						(fhd-share-secret result enc)))
 				(message (format
 					"FHD-ERR [exit=%d]: %s" code (fg-string-or err "<no-stderr>")))))))
+
+(defun fhd-share-secret (s &optional enc)
+	"Share/copy secret S with other apps on the system, issuing any notifications.
+ENC should be non-nil secret is a result of encryption, as opposed to decryption."
+	;; fg-copy-string is not ideal here, as it puts secrets into emacs kill-ring
+	;; But emacs doesn't paste from its own gui-select-text, hence using "exclip" here
+	;; exclip also allows to time-out the secrets easily, for some additional safety
+	;; (exclip binary is from mk-fg/fgtk repo here - https://github.com/mk-fg/fgtk#exclip)
+	;; gui-select-text adds prefix char to fool emacs into thinking that it's a diff selection
+	(let (select-enable-clipboard (select-enable-primary t)) (gui-select-text (concat "#" s)))
+	(call-process "exclip" nil 0 nil "-xpb" "120") ; -p removes first byte added above
+	(let ((output (if enc "ciphertext" "secret")))
+		(fg-notify (format "fhd: %s copied to buffer" output))
+		(message "FHD: %s copied to clipboard" output)))
