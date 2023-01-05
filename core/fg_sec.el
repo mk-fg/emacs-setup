@@ -184,8 +184,8 @@ which emacs seem to do with its prefer-* stuff.")
 ;; Run (setq fhd-bin "echo" fhd-args '("-n" "some-secret")) and try it out.
 
 (defvar fhd-bin "fhd" "fhd binary path/name to use, passed to `make-process'.")
-(defvar fhd-args nil "List of cli arguments to always pass to fhd process.")
-(defvar fhd-proc nil "Running fhd process with pending operation.")
+(defvar fhd-args nil "List of command-line args to pass to `fhd-bin' process.")
+(defvar fhd-proc nil "Running `fhd-bin' process for some pending operation.")
 ;; (setq fhd-bin "fhd" fhd-args nil) (setq fhd-bin "echo" fhd-args '("-n" "some-output"))
 
 (defun fhd-crypt ()
@@ -195,7 +195,7 @@ Universal argument can be set to replace the thing at point or selected region,
 instead of using `fhd-share-secret'.
 Rejects short at-point strings to avoid handling parts by mistake, use region for those."
 	(interactive)
-	;; Get PW secret or token to process
+	;; Get PW secret or fhd-token to process
 	(let
 		((pw-chars "^[:space:]\n")
 			(pw (when (use-region-p)
@@ -242,15 +242,14 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 (defun fhd-proc-sentinel (proc ev)
 	"Prints success/error info, either running `fhd-share-secret' on result,
 or replacing original (buffer a b) place if REPLACE is used."
-	(unless (or (not fhd-proc) (process-live-p fhd-proc))
+	(unless (process-live-p fhd-proc)
+		(setq fhd-proc nil)
 		(let
 			((code (process-exit-status proc))
 				(out (with-current-buffer
 					(process-buffer proc) (prog1 (buffer-string) (kill-buffer))))
-				(err (fg-string-strip-whitespace
-					(with-current-buffer
-						(process-get proc 'fhd-stderr)
-						(prog1 (buffer-string) (kill-buffer)))))
+				(err (fg-string-strip-whitespace (with-current-buffer
+					(process-get proc 'fhd-stderr) (prog1 (buffer-string) (kill-buffer)))))
 				(salt (process-get proc 'fhd-salt))
 				(enc (process-get proc 'fhd-enc))
 				(replace (process-get proc 'fhd-replace)))
@@ -268,14 +267,14 @@ or replacing original (buffer a b) place if REPLACE is used."
 
 (defun fhd-share-secret (s &optional enc)
 	"Share/copy secret S with other apps on the system, issuing any notifications.
-ENC should be non-nil secret is a result of encryption, as opposed to decryption."
-	;; fg-copy-string is not ideal here, as it puts secrets into emacs kill-ring
-	;; But emacs doesn't paste from its own gui-select-text, hence using "exclip" here
+ENC should be non-nil if secret is a result of encryption, as opposed to decryption."
+	;; Simple fg-copy-string is not ideal here, as it puts secrets into emacs kill-ring
+	;; Emacs doesn't paste from its own gui-select-text, hence using "exclip" here
 	;; exclip also allows to time-out the secrets easily, for some additional safety
 	;; (exclip binary is from mk-fg/fgtk repo here - https://github.com/mk-fg/fgtk#exclip)
 	;; gui-select-text adds prefix char to fool emacs into thinking that it's a diff selection
 	(let (select-enable-clipboard (select-enable-primary t)) (gui-select-text (concat "#" s)))
 	(call-process "exclip" nil 0 nil "-xpb" "120") ; -p removes first byte added above
 	(let ((output (if enc "ciphertext" "secret")))
-		(fg-notify (format "fhd: %s copied to buffer" output))
+		(fg-notify (format "fhd: %s copied to clipboard" output))
 		(message "FHD: %s copied to clipboard" output)))
