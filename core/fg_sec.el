@@ -183,9 +183,14 @@ which emacs seem to do with its prefer-* stuff.")
 ;;  pointed-to secret, or replaces it with encrypted/decrypted version, if M-` is set.
 ;; Run (setq fhd-bin "echo" fhd-args '("-n" "some-secret")) and try it out.
 
-(defvar fhd-bin "fhd" "fhd binary path/name to use, passed to `make-process'.")
-(defvar fhd-args nil "List of command-line args to pass to `fhd-bin' process.")
-(defvar fhd-proc nil "Running `fhd-bin' process for some pending operation.")
+(defvar fhd-bin "fhd"
+	"fido2-hmac-desalinate binary to use, passed to `make-process' in `fhd-crypt'.")
+(defvar fhd-args nil
+	"List of static command-line args to pass to `fhd-bin' process.")
+(defvar fhd-args-dev "/dev/fido2"
+	"Device path to pass to `fhd-bin' as arg, if exists, and `fhd-args' is nil.")
+(defvar fhd-proc nil
+	"Currently running `fhd-bin' process for some pending operation.")
 ;; (setq fhd-bin "fhd" fhd-args nil) (setq fhd-bin "echo" fhd-args '("-n" "some-output"))
 
 (defun fhd-crypt ()
@@ -224,7 +229,9 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 				;; Start fhd process
 				(let
 					((stdout (get-buffer-create " fhd-stdout"))
-						(stderr (get-buffer-create " fhd-stderr")))
+						(stderr (get-buffer-create " fhd-stderr"))
+						(fhd-args (or fhd-args
+							(and (file-exists-p fhd-args-dev) (list fhd-args-dev)))))
 					(with-current-buffer stdout (erase-buffer))
 					(with-current-buffer stderr (erase-buffer))
 					(setq fhd-proc (make-process
