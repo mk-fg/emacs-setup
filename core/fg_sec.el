@@ -193,9 +193,10 @@ which emacs seem to do with its prefer-* stuff.")
 	"Currently running `fhd-bin' process for some pending operation.")
 ;; (setq fhd-bin "fhd" fhd-args nil) (setq fhd-bin "echo" fhd-args '("-n" "some-output"))
 
-(defun fhd-crypt ()
+(defun fhd-crypt (&optional dec-proc)
 	"Encrypt or decrypt thing at point or a region-selected one (but trimmed of spaces).
 Starts async `fhd-proc', with result signaled in minibuffer and copied into clipboard.
+Non-nil DEC-PROC will be passed to `fhd-share-secret' on decryption operation.
 Universal argument can be set to replace the thing at point or selected region,
 instead of using `fhd-share-secret'.
 Rejects short at-point strings to avoid handling parts by mistake, use region for those."
@@ -206,7 +207,7 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 			(pw (when (use-region-p)
 				(buffer-substring-no-properties (region-beginning) (region-end))))
 			(replace (and (listp current-prefix-arg) (car current-prefix-arg) (current-buffer)))
-			salt data enc)
+			salt data dec)
 		(if pw
 			(setq replace
 				(when (and replace (use-region-p))
@@ -217,13 +218,13 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 				(skip-chars-forward pw-chars)
 				(when replace (setq replace (list replace pw (point))))
 				(setq pw (buffer-substring-no-properties pw (point)))))
-		;; Parse/encode token to SALT and DATA, setting ENC direction-flag
+		;; Parse/encode token to SALT and DATA, setting DEC direction-flag
 		(if (and (not (use-region-p)) (< (length pw) 8))
 			(message "FHD-ERR: secret cannot be that short [ %s ]" pw)
 			(if (string-match "^fhd\\.\\([^.]+\\)\\.\\(.*\\)$" pw)
-				(setq salt (match-string 1 pw) data (match-string 2 pw))
+				(setq salt (match-string 1 pw) data (match-string 2 pw) dec t)
 				(setq salt (fg-random-string 4) data
-					(base64-encode-string (fg-string-strip-whitespace pw) t) enc t))
+					(base64-encode-string (fg-string-strip-whitespace pw) t)))
 			(if (process-live-p fhd-proc)
 				(message "FHD-ERR: another process already running")
 				;; Start fhd process
@@ -239,12 +240,12 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 						:buffer stdout :stderr stderr :noquery t :connection-type 'pipe
 						:coding '(no-conversion . no-conversion) :sentinel #'fhd-proc-sentinel))
 					(process-put fhd-proc 'fhd-salt salt)
-					(process-put fhd-proc 'fhd-enc enc)
+					(process-put fhd-proc 'fhd-dec (when dec (or dec-proc t)))
 					(process-put fhd-proc 'fhd-replace replace)
 					(process-put fhd-proc 'fhd-stderr stderr)
 					(process-send-string fhd-proc (format "%s %s" salt data))
 					(process-send-eof fhd-proc))
-				(message "FHD: %scryption process started" (if enc "en" "de"))))))
+				(message "FHD: %scryption process started" (if dec "de" "en"))))))
 
 (defun fhd-proc-sentinel (proc ev)
 	"Prints success/error info, either running `fhd-share-secret' on result,
@@ -258,30 +259,42 @@ or replacing original (buffer a b) place if REPLACE is used."
 				(err (fg-string-strip-whitespace (with-current-buffer
 					(process-get proc 'fhd-stderr) (prog1 (buffer-string) (kill-buffer)))))
 				(salt (process-get proc 'fhd-salt))
-				(enc (process-get proc 'fhd-enc))
+				(dec (process-get proc 'fhd-dec))
 				(replace (process-get proc 'fhd-replace)))
 			(if (= code 0)
 				(let
-					((result (if (not enc) out (format
+					((result (if dec out (format
 						"fhd.%s.%s" salt (base64-encode-string out t)))))
 					(if replace
 						(cl-multiple-value-bind (buff a b) replace
 							(with-current-buffer buff (save-excursion
 								(delete-region a b) (goto-char a) (insert result))))
-						(fhd-share-secret result enc)))
+						(fhd-share-secret result dec)))
 				(message (format
 					"FHD-ERR [exit=%d]: %s" code (fg-string-or err "<no-stderr>")))))))
 
-(defun fhd-share-secret (s &optional enc)
+(defun fhd-share-secret (s &optional dec)
 	"Share/copy secret S with other apps on the system, issuing any notifications.
-ENC should be non-nil if secret is a result of encryption, as opposed to decryption."
+DEC should be non-nil if secret is a result of decryption, as opposed to ciphertext.
+It can be 'totp to process decrypted base32 into one-time-code for TOTP."
 	;; Simple fg-copy-string is not ideal here, as it puts secrets into emacs kill-ring
 	;; Emacs doesn't paste from its own gui-select-text, hence using "exclip" here
 	;; exclip also allows to time-out the secrets easily, for some additional safety
 	;; (exclip binary is from mk-fg/fgtk repo here - https://github.com/mk-fg/fgtk#exclip)
 	;; gui-select-text adds prefix char to fool emacs into thinking that it's a diff selection
-	(let (select-enable-clipboard (select-enable-primary t)) (gui-select-text (concat "#" s)))
-	(call-process "exclip" nil 0 nil "-xpb" "120") ; -p removes first byte added above
-	(let ((output (if enc "ciphertext" "secret")))
-		(fg-notify (format "fhd: %s copied to clipboard" output))
-		(message "FHD: %s copied to clipboard" output)))
+	(let ((out-type (if dec "secret" "ciphertext"))) (or
+		(when (eq dec 'totp) (with-temp-buffer
+			(insert s)
+			(let*
+				((code (call-process-region (point-min) (point-max) "oathtool" t t nil "-b" "--totp" "-"))
+					(out (fg-string-strip-whitespace (buffer-string))))
+				(when (and (= code 0) (not (string-match "^[0-9]+$" out))) ; code + junk output
+					(setq code -1 out "<non-numeric output with success-exit>"))
+				(if (/= code 0)
+					(message "FHD-ERR [oathtool-exit=%d]: %s" code out)
+					(setq s out out-type "totp-code") nil))))
+		(progn
+			(let (select-enable-clipboard (select-enable-primary t)) (gui-select-text (concat "#" s)))
+			(call-process "exclip" nil 0 nil "-xpb" "120") ; -p removes first byte added above
+			(fg-notify (format "fhd: %s copied to clipboard" out-type))
+			(message "FHD: %s copied to clipboard" out-type)))))

@@ -195,6 +195,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		;; -- Metabuffer stuff --
 		;; See fg-scite-aux for more of these on enter key
 		(,(key "C-s-<return>") . fhd-crypt)
+		(,(key "C-M-s-<return>") . ,(iwrapm fhd-crypt 'totp))
 		(,(key "C-S-<return>") . fg-xdg-open-this))
 	:group 'fg-scite)
 
