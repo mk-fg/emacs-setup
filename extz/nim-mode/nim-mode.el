@@ -139,7 +139,10 @@
   ;; (remove-hook 'post-self-insert-hook 'smie-blink-matching-open t)
 
   ;; Always indent with SPACES!
-  (setq-local indent-tabs-mode nil)
+  ;; XXX: local override - Always indent with TABS!
+  ;; XXX: see also - https://github.com/nim-lang/Nim/wiki/Unofficial-FAQ#why-are-tabs-forbidden
+  ;; XXX: requires this in files: #? replace(sub = "\t", by = "  ")
+  (setq-local indent-tabs-mode t)
   (setq-local parse-sexp-lookup-properties t)
   (setq-local parse-sexp-ignore-comments t)
 

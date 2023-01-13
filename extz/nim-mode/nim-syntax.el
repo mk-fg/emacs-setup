@@ -46,7 +46,8 @@
     (,(rx symbol-start (char upper) (* (char alnum "_")) symbol-end) . (0 font-lock-type-face keep))
 
     ;; Warning face for tab characters.
-    ("	+" . (0 font-lock-warning-face))
+    ;; XXX: local change - disable marking tabs as errors
+    ;; ("	+" . (0 font-lock-warning-face))
 
     ;; This only works if it’s one line
     (,(nim-rx (or line-start ";") (* " ")
