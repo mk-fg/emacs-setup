@@ -279,6 +279,9 @@ NAME can also be passed explicitly as an argument."
 (add-to-list 'load-path (concat fg-path "/extz/emacs-elixir"))
 (autoload 'elixir-mode "elixir-mode" "Major mode for Erlang Elixir" t)
 
+(add-to-list 'load-path (concat fg-path "/extz/nim-mode"))
+(autoload 'nim-mode "nim-mode" "Major mode for Nim language" t)
+
 ;; CSV mode
 (autoload 'csv-mode "csv-mode" "Major mode for editing CSV files." t)
 (eval-after-load "csv-mode" '(progn
@@ -299,7 +302,7 @@ NAME can also be passed explicitly as an argument."
 	recentf-arrange-rules
 		`(("py (%d)" ".\\.py\\'") ("js (%d)" ".\\.js\\'")
 			("sh (%d)" ".\\.sh\\'") ("lua (%d)" ".\\.lua\\'")
-			("go (%d)" ".\\.go\\'") ("rust (%d)" ".\\.\\(rs\\|rlib\\)\\'")
+			("go (%d)" ".\\.go\\'") ("rust (%d)" ".\\.\\(rs\\|rlib\\)\\'") ("nim (%d)" ".\\.nim\\'")
 			("OCAML (%d)" ".\\.mli?\\'") ("C (%d)" ".\\.\\(cc?\\|cxx\\|h\\)\\'")
 			("erlang (%d)" ".\\.\\([eh]rl\\|ex\\)\\'")
 			("perl (%d)" ".\\.pl[0-9]?\\'") ("sql (%d)" ".\\.sql\\'")
@@ -323,7 +326,8 @@ NAME can also be passed explicitly as an argument."
 			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
 			("\\.ya?ml$" . yaml-mode) ("\\.edc$" . edje-mode)
 			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
-			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode) ("\\.go$" . go-mode)
+			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode)
+			("\\.go$" . go-mode) ("\\.nim$" . nim-mode)
 			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.svg$" . xml-mode)
 			(,(concat
 				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"

@@ -288,7 +288,7 @@ It can be 'totp to process decrypted base32 into one-time-code for TOTP."
 			(let*
 				((code (call-process-region (point-min) (point-max) "oathtool" t t nil "-b" "--totp" "-"))
 					(out (fg-string-strip-whitespace (buffer-string))))
-				(when (and (= code 0) (not (string-match "^[0-9]+$" out))) ; code + junk output
+				(when (and (= code 0) (not (string-match "^[0-9]+$" out))) ; otp + junk output
 					(setq code -1 out "<non-numeric output with success-exit>"))
 				(if (/= code 0)
 					(message "FHD-ERR [oathtool-exit=%d]: %s" code out)
