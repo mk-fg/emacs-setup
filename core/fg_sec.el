@@ -231,8 +231,8 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 				(let
 					((stdout (get-buffer-create " fhd-stdout"))
 						(stderr (get-buffer-create " fhd-stderr"))
-						(fhd-args (or fhd-args
-							(and (file-exists-p fhd-args-dev) (list fhd-args-dev)))))
+						(fhd-args (or fhd-args (and fhd-args-dev
+							(file-exists-p fhd-args-dev) (list fhd-args-dev)))))
 					(with-current-buffer stdout (erase-buffer))
 					(with-current-buffer stderr (erase-buffer))
 					(setq fhd-proc (make-process
