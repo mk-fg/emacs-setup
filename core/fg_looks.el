@@ -310,7 +310,7 @@ NAME can also be passed explicitly as an argument."
 			("(e)lisp/scheme (%d)" ".\\.\\(el\\|cl\\|lisp\\|scm\\|rkt\\|ss\\|jl\\)\\'")
 			("conf (%d)"
 				,(concat
-					".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol"
+					".\\.\\(c\\(onf\\|fg\\|f\\)\\|\\(ya?ml\\)\\|vol\\|path"
 						"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
 					"\\(\\.\\(sample\\|example\\|dist\\|documented\\|in\\)\\)?\\'"))))
 
@@ -329,6 +329,7 @@ NAME can also be passed explicitly as an argument."
 			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode)
 			("\\.go$" . go-mode) ("\\.nim$" . nim-mode)
 			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.svg$" . xml-mode)
+			("\\.\\(fwd\\|rev4\\|rev6\\)$" . zone-mode)
 			(,(concat
 				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
 					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
