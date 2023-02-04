@@ -267,6 +267,7 @@ NAME can also be passed explicitly as an argument."
 	"markdown-mode" "Major mode for editing Markdown files" t)
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
 (autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
+(autoload 'jinja2-mode "jinja2-mode" "Major mode for Jinja2 templates" t)
 (autoload 'cmake-mode "cmake-mode" "Major mode for editing CMake source files" t)
 (load-library-safe "haskell-mode-autoloads")
 (load-library-safe (expand-file-name "~/.opam/default/share/emacs/site-lisp/tuareg-site-file"))
@@ -328,8 +329,8 @@ NAME can also be passed explicitly as an argument."
 			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
 			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode)
 			("\\.go$" . go-mode) ("\\.nim$" . nim-mode)
-			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.svg$" . xml-mode)
-			("\\.\\(fwd\\|rev4\\|rev6\\)$" . zone-mode)
+			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.j2$" . jinja2-mode)
+			("\\.svg$" . xml-mode) ("\\.\\(fwd\\|rev4\\|rev6\\)$" . zone-mode)
 			(,(concat
 				".\\.\\(c\\(onf\\|fg\\|f\\|nf\\)\\|\\(ya?ml\\)\\|vol"
 					"\\|service\\|target\\|socket\\|mount\\|device\\|swap\\)"
