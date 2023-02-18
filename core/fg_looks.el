@@ -263,8 +263,8 @@ NAME can also be passed explicitly as an argument."
 	"yaml-mode" "Mode for editing YAML files" t)
 (autoload 'go-mode
 	"go-mode" "Mode for editing Go sources" t)
-(autoload 'markdown-mode
-	"markdown-mode" "Major mode for editing Markdown files" t)
+(autoload 'markdown-mode "markdown-mode" "Major mode for editing Markdown files" t)
+(autoload 'gfm-mode "markdown-mode" "Major mode for github-flavored-markdown files" t)
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
 (autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
 (autoload 'jinja2-mode "jinja2-mode" "Major mode for Jinja2 templates" t)
@@ -326,7 +326,7 @@ NAME can also be passed explicitly as an argument."
 			("\\.jl$" . lisp-mode) ("\\.rkt$" . scheme-mode)
 			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
 			("\\.ya?ml$" . yaml-mode) ("\\.edc$" . edje-mode)
-			("\\.\\(text\\|markdown\\|md\\)$" . markdown-mode)
+			("\\.\\(text\\|markdown\\|md\\|mkd\\|mdown\\|mkdn\\|mdwn\\)$" . markdown-mode)
 			("\\.lua$" . lua-mode) ("\\.\\(rs\\|rlib\\)$" . rust-mode)
 			("\\.go$" . go-mode) ("\\.nim$" . nim-mode)
 			("\\.scss$" . css-mode) ("\\.jade$" . jade-mode) ("\\.j2$" . jinja2-mode)
