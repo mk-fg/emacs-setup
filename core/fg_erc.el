@@ -493,11 +493,11 @@ Will also apply `fg-erc-msg-modify-plists' changes if used as non-pre hook."
 					(erc-put-text-property (point-min) (point-max) 'invisible t (current-buffer)))
 
 				(-if-let ;; try to modify msg, if it's not blocked
-					(func (and
+					(func (indirect-function (and
 						(eq hook-type 'post)
 						(dolist (rule fg-erc-msg-modify-plists)
 							(when (fg-erc-msg-match-rule rule text)
-								(cl-return-from nil (plist-get rule :func))))))
+								(cl-return-from nil (plist-get rule :func)))))))
 					(funcall func))))
 		(t (warn "Error in ERC filter: %s" ex))))
 
