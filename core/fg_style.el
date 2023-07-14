@@ -40,7 +40,9 @@
 
 ;; Make absolutely sure python-mode uses tabs
 (add-hook 'python-mode-hook
-	#'(lambda () (setq tab-width 2 indent-tabs-mode t)))
+	#'(lambda ()
+		(setq tab-width 2 indent-tabs-mode t)
+		(defun python--f-string-p (ppss) nil))) ;; f-string parsing is slow and not very useful
 
 ;; Short-circuit stupid indentation hacks in newer python.el
 (eval-after-load "python" '(progn
