@@ -270,7 +270,7 @@ NAME can also be passed explicitly as an argument."
 (autoload 'jinja2-mode "jinja2-mode" "Major mode for Jinja2 templates" t)
 (autoload 'cmake-mode "cmake-mode" "Major mode for editing CMake source files" t)
 (load-library-safe "haskell-mode-autoloads")
-(load-library-safe (expand-file-name "~/.opam/default/share/emacs/site-lisp/tuareg-site-file"))
+(load-library-safe (concat fg-path "/tuareg/tuareg-site-file"))
 
 (add-to-list 'load-path (concat fg-path "/extz/rust"))
 (autoload 'rust-mode "rust-mode" "Major mode for Rust" t)
