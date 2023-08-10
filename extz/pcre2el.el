@@ -660,8 +660,13 @@ Note that this does not apply to backreferences."
   (reb-do-update))
 
 (defun rxt--toggle-flag-minibuffer (char)
-  (setf (buffer-substring (minibuffer-prompt-end) (point-max))
-        (rxt--toggle-flag-string (minibuffer-contents) char))
+  (save-excursion
+    (let
+      ((a (minibuffer-prompt-end)) (b (point-max))
+        (text (rxt--toggle-flag-string (minibuffer-contents) char)))
+      (delete-region a b) (set-marker (point-marker) a) (insert text)))
+  ;; (setf (buffer-substring (minibuffer-prompt-end) (point-max))
+  ;;       (rxt--toggle-flag-string (minibuffer-contents) char))
   (when
       (and (= (point) (minibuffer-prompt-end))
            (looking-at (rx "(?" (group (+ (any ?i ?s ?x))) ")")))

@@ -1,3 +1,10 @@
+;;;; Hack to show lines where Compile-Log warnings happen on emacs startup
+;; (defun dont-delay-compile-warnings (fun type &rest args)
+;; 	(if (eq type 'bytecomp)
+;; 		(let ((after-init-time t)) (apply fun type args))
+;; 		(apply fun type args)))
+;; (advice-add 'display-warning :around #'dont-delay-compile-warnings)
+
 (package-initialize) ; package.el wants this
 
 (defvar fg-path

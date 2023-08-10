@@ -907,10 +907,8 @@ otherwise to \"*Ibuffer*\", if it exists, otherwise does nothing."
 
 (defun fg-ibuffer-apply-locals (&optional name)
 	"Apply new locals in \"*Ibuffer*\" (or NAME, if specified) buffer."
-	(setf
-		(buffer-local-value 'ibuffer-filter-groups
-			(get-buffer (or name "*Ibuffer*")))
-		ibuffer-filter-groups-global))
+	(with-current-buffer (or name "*Ibuffer*")
+		(setq ibuffer-filter-groups ibuffer-filter-groups-global)))
 
 (defun fg-aux-frame ()
 	"Switch to or create aux frame, init it with auto-updating ibuffer
