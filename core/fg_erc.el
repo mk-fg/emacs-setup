@@ -11,7 +11,7 @@ Used to skip redundant `fg-erc-connect-next' calls in `fg-erc'.")
 	"Timeout for waiting on irc connection to complete properly.
 Used for misc sloppy time matching purposes as well.")
 
-(defvar fg-erc-connect-delay 1
+(defvar fg-erc-connect-delay 5
 	"Delay between initiating erc connections.
 Added because connecting a bunch of things at once times-out for some reason.
 Looks like some kind of emacs socket issue, introduced in 27.")
