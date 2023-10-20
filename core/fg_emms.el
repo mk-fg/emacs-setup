@@ -33,6 +33,12 @@
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no"))
 (customize-set-variable 'emms-player-mpv-update-metadata t)
 
+(emms-player-set emms-player-mpv 'regex
+	(apply #'emms-player-simple-regexp (append emms-player-base-format-list
+	;; + all kinds of sequencer/tracker music formats, which mpv seem to support
+	'("xm" "mod" "it" "mid" "v2m" "ym" "s3m" "sid" "ahx" "fc13" "fc14"
+		"sap" "rad" "hsc" "sc68" "d00" "amd" "bp" "spc" "nsf" "mtm" "mo3"))))
+
 ;; (setq emms-player-mpv-debug t)
 ;; (setq emms-player-mpv-parameters '("--quiet" "--really-quiet" "--force-window=yes"))
 ;; (emms-player-mpv-ipc-req-send '(set_property vid 1))
