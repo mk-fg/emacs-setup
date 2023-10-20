@@ -187,7 +187,7 @@ which emacs seem to do with its prefer-* stuff.")
 	"fido2-hmac-desalinate binary to use, passed to `make-process' in `fhd-crypt'.")
 (defvar fhd-args nil
 	"List of static command-line args to pass to `fhd-bin' process.")
-(defvar fhd-args-dev "/dev/fido2"
+(defvar fhd-args-dev "/dev/fido2-fhd"
 	"Device path to pass to `fhd-bin' as arg, if exists, and `fhd-args' is nil.")
 (defvar fhd-proc nil
 	"Currently running `fhd-bin' process for some pending operation.")
