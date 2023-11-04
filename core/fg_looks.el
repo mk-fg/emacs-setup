@@ -392,7 +392,7 @@ NAME can also be passed explicitly as an argument."
 					(if (> (length fn) 0) (format " %s" fn) "")))
 			(topic
 				(let*
-					((net (erc-network-name))
+					((net (symbol-name (erc-networks--id-symbol erc-networks--id)))
 						(net (if (member (fg-string-or net "nil") '("nil" "-")) "<erc>" net)))
 					(format "%s :: %s" net (or (fg-string-or topic) ""))))
 			(t fn))))
