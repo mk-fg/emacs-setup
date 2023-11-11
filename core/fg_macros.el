@@ -455,8 +455,8 @@ but special checks are in place for non-standard buffers like SLIME or ERC,
 which invoke functions like `slime-repl-bol' or `erc-bol' instead."
 	(interactive "^")
 	(cl-case major-mode
-		('slime-repl-mode (slime-repl-bol))
-		('erc-mode (erc-bol))
+		(slime-repl-mode (slime-repl-bol))
+		(erc-mode (erc-bol))
 		(t (let ((oldpos (point)))
 			(back-to-indentation)
 			(when
