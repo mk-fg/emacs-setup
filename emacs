@@ -54,16 +54,16 @@
 		(eval-buffer)
 		(kill-buffer))
 	(file-error))
-(setq-default
-	auth-sources (list (concat fg-path "/authrc.el.ghg")))
+(setq-default auth-sources (list (concat fg-path "/authrc.el.ghg")))
 
 
 ;; Temp/spool path init
-(setq-default
-	temporary-file-directory
-		(concat fg-path "/tmp/"))
-(make-directory temporary-file-directory t)
-(set-file-modes temporary-file-directory #o700)
+(require 'xdg)
+(defvar fg-path-spool (concat fg-path "/tmp/")
+	"dir for various state-files that are persistent across reboots")
+(setq-default temporary-file-directory (concat (xdg-runtime-dir) "/emacs/"))
+(dolist (dir (list fg-path-spool temporary-file-directory))
+	(make-directory dir t) (set-file-modes dir #o700))
 
 
 (load-library "fg_stack")
@@ -127,10 +127,8 @@
 	create-lockfiles nil
 	; autosave - default-disabled, but configured a bit
 	auto-save-default nil
-	auto-save-list-file-prefix
-		(concat temporary-file-directory "bakz-")
-	auto-save-file-name-transforms
-		(list (cons ".*" (list temporary-file-directory t)))
+	auto-save-list-file-prefix (concat fg-path-spool "bakz-")
+	auto-save-file-name-transforms (list (cons ".*" (list fg-path-spool t)))
 	; vc integration - hopefully disabled
 	;vc-handled-backends nil
 	; backups - don't do these
@@ -139,11 +137,10 @@
 	backup-directory-alist nil
 	; save-place-in-file
 	save-place t
-	save-place-file
-		(concat temporary-file-directory "placez")
+	save-place-file (concat fg-path-spool "placez")
 	; buffer list storage
-	desktop-dirname temporary-file-directory
-	desktop-path (list temporary-file-directory)
+	desktop-dirname fg-path-spool
+	desktop-path (list fg-path-spool)
 	desktop-base-file-name "bufferz"
 	desktop-load-locked-desktop t ; bogus check
 	desktop-save t)

@@ -24,7 +24,7 @@ path=$(
 if [[ "${path:0:1}" = '"' && "${path:$((${#path}-1))}" = '"' ]]
 then
 	path="${path:1:-1}"
-	[[ -n "$path" && "$path" =~ ^/tmp/\.ece\. ]]\
+	[[ -n "$path" && "$path" =~ ^/run/user/1000/emacs/\.ece\. ]]\
 		|| { echo >&2 "Invalid path returned: $path"; exit 1; }
 	cat "$path"
 	rm -f "$path"

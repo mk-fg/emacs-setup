@@ -14,7 +14,7 @@
 
 (defun fg-remote (data)
 	"Writes stringified DATA to a /tmp/.ece.remote.XXXX temp-file and returns filename.
-Path and filename prefix are fixed and independent of e.g. `temporary-file-directory'.
+Filename prefix is fixed .ece.remote.* inside `temporary-file-directory'.
 If DATA is a list, it will be considered to be a list of (to-be-stringified) lines.
 Final newline is ensured in DATA after converting it to string.
 If DATA is nil, file won't be created.
@@ -23,12 +23,8 @@ Intended use is to call this wrapper on something that returns string
 from emacsclient, match returned filename, read file contents, remove it."
 	(when data
 		(let*
-			((temporary-file-directory "/tmp/")
-				(tmp (make-temp-file ".ece.remote."))
-				(data
-					(s-join "\n"
-						(--map (format "%s" it)
-							(if (listp data) data (list data))))))
+			((tmp (make-temp-file ".ece.remote."))
+				(data (s-join "\n" (--map (format "%s" it) (if (listp data) data (list data))))))
 			(unless (s-ends-with? "\n" data) (set 'data (concat data "\n")))
 			(write-region data nil tmp)
 			tmp)))

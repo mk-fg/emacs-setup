@@ -19,7 +19,7 @@
 (require 'gnus-start)
 
 (setq ;; setq-default doesn't seem to work for gnus-subscribe stuff
-	user-mail-address "mike_kazantsev@fraggod.net"
+	user-mail-address "mk.fraggod@gmail.com"
 	user-full-name "Mike Kazantsev"
 
 	;; TODO: Is this used at all? Should it be dropped in favor of nnimap?
@@ -74,8 +74,8 @@
 	mail-source-idle-time-delay 5
 	mail-source-report-new-mail 10
 
-	gnus-home-directory (concat fg-path "/tmp/gnus")
-	gnus-directory (concat fg-path "/tmp/gnus")
+	gnus-home-directory (concat fg-path-spool "gnus")
+	gnus-directory (concat fg-path-spool "gnus")
 	gnus-default-directory nil
 	gnus-startup-file (concat gnus-directory "/newsrc")
 	gnus-init-file (concat gnus-directory "/rc")

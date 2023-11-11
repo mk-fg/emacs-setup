@@ -9,7 +9,7 @@
 (setq-default
 	browse-url-browser-function 'w3m-browse-url
 
-	w3m-profile-directory (concat fg-path "/tmp/w3m")
+	w3m-profile-directory (concat fg-path-spool "w3m")
 	w3m-init-file (concat w3m-profile-directory "/init")
 	w3m-default-save-directory w3m-profile-directory
 	w3m-arrived-file (concat w3m-profile-directory "/arrived")

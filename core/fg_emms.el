@@ -7,7 +7,7 @@
 (require 'emms-playing-time)
 
 (setq-default
-	emms-directory (concat fg-path "/tmp/emms")
+	emms-directory (concat fg-path-spool "emms")
 	emms-source-file-default-directory "/mnt/db/mediaCore/sound_music/"
 
 	emms-source-playlist-default-format 'm3u

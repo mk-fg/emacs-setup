@@ -22,7 +22,7 @@
 	newsticker-treeview-listwindow-height 30
 	newsticker-treeview-treewindow-width 40
 
-	newsticker-dir (concat fg-path "/tmp/newsticker"))
+	newsticker-dir (concat fg-path-spool "newsticker"))
 
 	;;;; These are obsoleted by newsticker-dir and should not be used
 	;; newsticker-cache-filename (concat newsticker-dir "/cache")

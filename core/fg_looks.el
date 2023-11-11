@@ -298,8 +298,7 @@ NAME can also be passed explicitly as an argument."
 	recentf-max-saved-items 256
 	recentf-max-menu-items 10
 	recentf-menu-filter 'recentf-arrange-by-rule
-	recentf-save-file
-		(concat temporary-file-directory "recentf")
+	recentf-save-file (concat fg-path-spool "recentf")
 	recentf-arrange-rules
 		`(("py (%d)" ".\\.py\\'") ("js (%d)" ".\\.js\\'")
 			("sh (%d)" ".\\.sh\\'") ("lua (%d)" ".\\.lua\\'")

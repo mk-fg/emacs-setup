@@ -130,7 +130,7 @@ and (optionally) cleaned-up from timestamps, text-props, control chars, etc."
 ;; Idea is to have list of unread stuff dumped to some file on timer,
 ;;  so that sudden system crash or emacs kill won't loose any important msgs
 
-(defcustom fg-erc-track-save-path (concat fg-path "/tmp/erc-track-state")
+(defcustom fg-erc-track-save-path (concat fg-path-spool "erc-track-state")
 	"Path to save `erc-modified-channels-alist' state to."
 	:group 'erc-track :type 'string)
 
@@ -356,7 +356,7 @@ and MSG regexp patterns. MSG can have $ at the end."
 	erc-pcomplete-order-nickname-completions t
 
 	erc-log-insert-log-on-open nil ;; very messy
-	erc-log-channels-directory (concat fg-path "/tmp/erc")
+	erc-log-channels-directory (concat fg-path-spool "erc")
 	erc-max-buffer-size 120000
 	erc-max-buffer-size-to-act 150000 ;; for custom truncation, not used by default ERC
 	erc-fill-column 2048 ;; in case that dumb module gets activated somehow

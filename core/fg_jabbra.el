@@ -7,7 +7,7 @@
 	jabber-auto-reconnect t
 	jabber-autoaway-status "AFK. Later..."
 	jabber-autoaway-timeout 15
-	jabber-avatar-cache-directory (concat fg-path "/tmp/jabbra.avatars")
+	jabber-avatar-cache-directory (concat fg-path-spool "jabbra.avatars")
 	jabber-backlog-days nil
 	jabber-backlog-number 40
 	jabber-browse-buffer-format "*-j-browse:-%n-*"
@@ -17,9 +17,9 @@
 	jabber-chat-time-format "%H:%M:%S"
 	jabber-default-show ""
 	jabber-display-menu nil
-	jabber-global-history-filename (concat fg-path "/tmp/jabbra.log")
+	jabber-global-history-filename (concat fg-path-spool "jabbra.log")
 	jabber-groupchat-buffer-format "*-j-groupchat-%n-*"
-	jabber-history-dir (concat fg-path "/tmp/jabbra")
+	jabber-history-dir (concat fg-path-spool "jabbra")
 	jabber-history-enable-rotation nil
 	jabber-history-enabled t
 	jabber-muc-completion-delimiter ", "
