@@ -48,10 +48,26 @@
 ;; (emms-player-mpv-ipc-stop)
 ;; (emms-play-url "https://somafm.com/sf1033130.pls")
 
+;; cat emms-player-mpv.new.el > emms-player-mpv.el
+;; /usr/bin/emacs -q -batch -l emms-maint.el -f batch-byte-compile emms-player-mpv.el
+
 ;; (dolist (k '(aid track-list audio-params volume ao ao-volume ao-mute mpv-version))
 ;; (dolist (k '(path playlist pause core-idle playback-abort playback-time eof-reached metadata))
 ;; 	(lexical-let ((k k)) (emms-player-mpv-cmd `(get_property ,k)
 ;; 		#'(lambda (mpv-data mpv-error) (message "%s = %S" k (or mpv-error mpv-data))))))
+
+;; --- Debug suggestion:
+;; (emms-stop)
+;; (emms-player-mpv-proc-stop)
+;; (setq emms-player-mpv-debug t)
+;; (emms-pause)
+;; (progn (switch-to-buffer "*Messages*") (end-of-buffer))
+;; --- Description:
+;; - Stop playback, if any (even if not audible).
+;; - Stop background mpv process, if any.
+;; - Enable debug output for emms-player-mpv to *Messages* buffer.
+;; - Try starting emms/mpv playback.
+;; - Go to end of *Messages* buffer, where last debug-output from emms-player-mpv should be.
 
 
 (defun fg-emms-player-status-string ()
