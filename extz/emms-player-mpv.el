@@ -82,8 +82,7 @@
 	'("--quiet" "--really-quiet" "--no-audio-display")
 	"Extra command-line arguments for started mpv process(es).
 Either a list of strings or function returning such list.
-Extra arguments --idle and --input-file/--input-ipc-server
-are added automatically, depending on mpv version.
+Extra --idle and --input-ipc-server arguments are added automatically.
 Note that unless --no-config option is specified here,
 mpv will also use options from its configuration files.
 For mpv binary path, see `emms-player-mpv-command-name'."
@@ -155,7 +154,7 @@ Make sure to check mpv manpage for --playlist option before enabling this."
 
 
 (defvar emms-player-mpv-proc nil
-	"Running mpv process, controlled over --input-ipc-server/--input-file sockets.")
+	"Running mpv process, controlled over --input-ipc-server unix socket.")
 
 (defvar emms-player-mpv-proc-kill-delay 5
 	"Delay until SIGKILL gets sent to `emms-player-mpv-proc',
@@ -471,8 +470,7 @@ PROC can be specified to avoid `emms-player-mpv-ipc' call (e.g. from sentinel/fi
 	(when err (message "emms-player-mpv ipc-error: %s" err)))
 
 (defun emms-player-mpv-ipc-recv (json)
-	"Handler for all JSON lines from mpv process.
-Only used with JSON IPC, never called with --input-file as there's no feedback there."
+	"Handler for all JSON lines from mpv process."
 	(emms-player-mpv-debug-msg "json << %s" json)
 	(let*
 		((json-data (json-read-from-string json))
