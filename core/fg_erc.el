@@ -267,10 +267,10 @@ List of plists with any number of following keys (in each):
 (including ZNC-buffered messages) from specified NICK
 and MSG regexp patterns. MSG can have $ at the end."
 	(concat
-		"^\\(?:\\s-*\\[[0-9:]+\\]\\)?\\s-*[<-]" nick
+		"\\`\\(?:\\s-*\\[[0-9:]+\\]\\)?\\s-*[<-]" nick
 		"[->]\\(?:\\s-+\\[[0-9:]+\\]\\)?\\s-*" msg))
 
-(defun fg-erc-re (string) (concat "^" (regexp-quote string) "$"))
+(defun fg-erc-re (string) (concat "\\`" (regexp-quote string) "\\'"))
 
 
 ;; --- Modules

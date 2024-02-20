@@ -663,7 +663,7 @@ If BUFFERS is passed, only these will be considered."
 	(--filter
 		(and
 			(or (not pattern) (s-contains? pattern it t))
-			(not (s-matches? "^\\s-*\\*" it)))
+			(not (s-matches? "\\`\\s-*\\*" it)))
 		(-map 'buffer-name (or buffers (buffer-list)))))
 
 (defun fg-get-useful-buffer (&optional pattern buffers)
@@ -946,14 +946,14 @@ URL is stripped via `s-trim', checked to be non-empty, with message issued about
 Strips common junk around URLs via `fg-xdg-open-this-trim-url'.
 Auto-adds http:// schema if there is none in the URL."
 	(interactive)
-	(let ((url-chars "^[[:space:]\n") url)
+	(let ((url-chars "\\`[[:space:]\n") url)
 		(save-excursion
 			(skip-chars-backward url-chars)
 			(setq url (point))
 			(skip-chars-forward url-chars)
 			(setq url (buffer-substring-no-properties url (point))))
 		(setq url (fg-xdg-open-this-trim-url url))
-		(if (string-match "^[a-zA-Z0-9]+:" url) url (concat "http://" url))))
+		(if (string-match "\\`[a-zA-Z0-9]+:" url) url (concat "http://" url))))
 
 (defun fg-xdg-open-this-trim-url (url)
 	"Trims and cleans URL from any common junk around it.
@@ -961,20 +961,20 @@ Example junk is braces/brackets, quotes, commas/periods, etc."
 	(setq url (s-trim url))
 	;; Remove trailing commas/periods first, for matching brace-stripping to work next
 	;; Example: (http://myurl.com/).
-	(when (string-match "[,.]$" url)
+	(when (string-match "[,.]\\'" url)
 		(let ((c (s-right 1 url)))
 			(unless (s-contains? c (s-left (1- (length url)) url))
 				(setq url (s-trim (s-chop-suffix c url))))))
-	(setq url (replace-regexp-in-string "\\(^[|]+\\|[|]+$\\)" "" url t t))
+	(setq url (replace-regexp-in-string "\\(\\`[|]+\\|[|]+\\'\\)" "" url t t))
 	;; Remove matching braces/brackets/quotes around it or just leading ones
 	;; Examples: (http://myurl.com/) "http://myurl.com/
-	(while (string-match "^[({\\[<\"'`]" url)
+	(while (string-match "\\`[({\\[<\"'`]" url)
 		(let ((c (s-left 1 url)))
 			(setq url (s-trim (s-chop-suffix c (s-chop-prefix c url))))))
 	;; Remove stuff at the end if they are not opened somewhere in the middle
 	;; Specifically: braces/brackets, quotes, periods/commas
 	;; Example: http://myurl.com/] http://myurl.com/),
-	(when (string-match "[])}>\"'`,.]$" url)
+	(when (string-match "[])}>\"'`,.]\\'" url)
 		(let ((c (s-right 1 url)))
 			(unless (s-contains? c (s-left (1- (length url)) url))
 				(setq url (s-trim (s-chop-suffix c url))))))
@@ -1225,7 +1225,9 @@ Uses `fg-string-pos' internally."
 	(let ((n (fg-string-pos string sep re)))
 		(if n (substring string (+ n (length sep))) (unless nil-if-not-found string))))
 
-(defun fg-string-join (sep &rest strings) (mapconcat 'identity strings sep))
+(defun fg-string-join (sep &rest strings)
+	"Join STRINGS arguments by a SEP string."
+	(mapconcat 'identity strings sep))
 
 (defun* fg-string-strip (string &rest frags &key (from 'both) &allow-other-keys)
 	"Remove substrings (e.g. characters) from STRING margins.
@@ -1236,17 +1238,17 @@ Returns the resulting string."
 				(mapcar 'regexp-quote (fg-keys-from-rest frags))))
 			regexp)
 		(when (memq from '(both r right))
-			(set 'regexp (cons (format "\\(%s\\)+$" frags) regexp)))
+			(set 'regexp (cons (format "\\(%s\\)+\\'" frags) regexp)))
 		(when (memq from '(both l left))
-			(set 'regexp (cons (format "^\\(%s\\)+" frags) regexp)))
+			(set 'regexp (cons (format "\\`\\(%s\\)+" frags) regexp)))
 		(replace-regexp-in-string (apply 'fg-string-join "\\|" regexp) "" string t t)))
 
 (defun* fg-string-strip-chars (string chars &key (from 'both) &allow-other-keys)
 	(apply 'fg-string-strip string :from from (mapcar 'char-to-string chars)))
 
 (defun fg-string-strip-whitespace (string)
-	"Remove whitespace characters from STRING margins, returns the resulting string."
-	(replace-regexp-in-string "\\(^[[:space:]\n]+\\|[[:space:]\n]+$\\)" "" string t t))
+	"Remove whitespace characters from STRING margins, returns resulting string."
+	(replace-regexp-in-string "\\(\\`[[:space:]\n]+\\|[[:space:]\n]+\\'\\)" "" string t t))
 
 (defadvice wildcard-to-regexp (around fg-wildcard-to-regexp activate)
 	"Make `wildcard-to-regexp' not fail if square brackets are present in the filename."
