@@ -175,13 +175,13 @@ which emacs seem to do with its prefer-* stuff.")
 		(list filename c-size)))
 
 
-;;;; FHD - fido2-hmac-desalinate short-string encryption helpers
-;; https://github.com/mk-fg/fgtk#fido2-hmac-desalinate-c
+;;;; FHD - fido2-hmac-desalinate and such short-string encryption helpers
+;; https://github.com/mk-fg/fgtk#hdr-_hsm_fido2_piv_etc_smartcard_stuff
 ;;
 ;; fhd-crypt func here is used for a simple password-manager replacement.
 ;; When called from a hotkey in a buffer, it either decrypts and copies
 ;;  pointed-to secret, or replaces it with encrypted/decrypted version, if M-` is set.
-;; Run (setq fhd-bin "echo" fhd-args '("-n" "some-secret")) and try it out.
+;; (setq fhd-bin "cat" fhd-args '("-n" "some-secret")) can be used for fixed output.
 
 (defvar fhd-bin "fhd"
 	"fido2-hmac-desalinate binary to use, passed to `make-process' in `fhd-crypt'.")
@@ -201,51 +201,58 @@ Universal argument can be set to replace the thing at point or selected region,
 instead of using `fhd-share-secret'.
 Rejects short at-point strings to avoid handling parts by mistake, use region for those."
 	(interactive)
-	;; Get PW secret or fhd-token to process
 	(let
 		((pw-chars "^[:space:]\n")
 			(pw (when (use-region-p)
 				(buffer-substring-no-properties (region-beginning) (region-end))))
 			(replace (and (listp current-prefix-arg) (car current-prefix-arg) (current-buffer)))
-			salt data dec)
-		(if pw
-			(setq replace
-				(when (and replace (use-region-p))
-					(list replace (region-beginning) (region-end))))
+			pw-pos salt data dec fhd-cmd stdout stderr)
+		(if pw ;; Get PW secret or fhd-token to process
+			(setq replace (when (and replace (use-region-p))
+				(list replace (setq pw-pos (region-beginning)) (region-end))))
 			(save-excursion
 				(skip-chars-backward pw-chars)
-				(setq pw (point))
+				(setq pw (setq pw-pos (point)))
 				(skip-chars-forward pw-chars)
 				(when replace (setq replace (list replace pw (point))))
 				(setq pw (buffer-substring-no-properties pw (point)))))
-		;; Parse/encode token to SALT and DATA, setting DEC direction-flag
-		(if (and (not (use-region-p)) (< (length pw) 8))
-			(message "FHD-ERR: secret cannot be that short [ %s ]" pw)
-			(if (string-match "^fhd\\.\\([^.]+\\)\\.\\(.*\\)$" pw)
-				(setq salt (match-string 1 pw) data (match-string 2 pw) dec t)
-				(setq salt (fg-random-string 4) data
-					(base64-encode-string (fg-string-strip-whitespace pw) t)))
-			(if (process-live-p fhd-proc)
-				(message "FHD-ERR: another process already running")
-				;; Start fhd process
-				(let
-					((stdout (get-buffer-create " fhd-stdout"))
-						(stderr (get-buffer-create " fhd-stderr"))
-						(fhd-args (or fhd-args (and fhd-args-dev
-							(file-exists-p fhd-args-dev) (list fhd-args-dev)))))
-					(with-current-buffer stdout (erase-buffer))
-					(with-current-buffer stderr (erase-buffer))
-					(setq fhd-proc (make-process
-						:name "fhd" :command (cons fhd-bin fhd-args)
-						:buffer stdout :stderr stderr :noquery t :connection-type 'pipe
-						:coding '(no-conversion . no-conversion) :sentinel #'fhd-proc-sentinel))
-					(process-put fhd-proc 'fhd-salt salt)
-					(process-put fhd-proc 'fhd-dec (when dec (or dec-proc t)))
-					(process-put fhd-proc 'fhd-replace replace)
-					(process-put fhd-proc 'fhd-stderr stderr)
-					(process-send-string fhd-proc (format "%s %s" salt data))
-					(process-send-eof fhd-proc))
-				(message "FHD: %scryption process started" (if dec "de" "en"))))))
+		(when ;; Run sanity-checks and proceed if fhd-cmd is set from fhd-proc-cmd
+			(setq fhd-cmd (if (and (not (use-region-p)) (< (length pw) 8))
+				(not (message "FHD-ERR: secret cannot be that short [ %s ]" pw))
+				;; Parse/encode token to SALT and DATA, setting DEC direction-flag
+				(if (string-match "^fhd\\.\\([^.]+\\)\\.\\(.*\\)$" pw)
+					(setq salt (match-string 1 pw) data (match-string 2 pw) dec t)
+					(setq salt (fg-random-string 4) data
+						(base64-encode-string (fg-string-strip-whitespace pw) t)))
+				(if (not (process-live-p fhd-proc)) (fhd-proc-cmd pw-pos dec)
+					(not (message "FHD-ERR: another process already running")))))
+			(setq
+				stdout (get-buffer-create " fhd-stdout")
+				stderr (get-buffer-create " fhd-stderr"))
+			(with-current-buffer stdout (erase-buffer))
+			(with-current-buffer stderr (erase-buffer))
+			(setq fhd-proc (make-process
+				:name "fhd" :command fhd-cmd
+				:buffer stdout :stderr stderr :noquery t :connection-type 'pipe
+				:coding '(no-conversion . no-conversion) :sentinel #'fhd-proc-sentinel))
+			(process-put fhd-proc 'fhd-salt salt)
+			(process-put fhd-proc 'fhd-dec (when dec (or dec-proc t)))
+			(process-put fhd-proc 'fhd-replace replace)
+			(process-put fhd-proc 'fhd-stderr stderr)
+			(process-send-string fhd-proc (format "%s %s" salt data))
+			(process-send-eof fhd-proc)
+			(message "FHD: %scryption process started" (if dec "de" "en")))))
+
+(defun fhd-proc-cmd (pw-pos dec)
+	"Returns command-line of `fhd-bin' + `fhd-args' to run with its stdin/stdout semantics.
+I.e. stdin gets \"salt b64-secret\" or \"fhd.salt.b64-ct\" input, opposite part to stdout.
+Can print error message and return nil to prevent the process from running.
+This call is used to add extra wrappers to make backups when encrypting,
+determine which device to use, add other cli arguments, signal errors."
+	(let
+		((fhd-args (or fhd-args (and fhd-args-dev
+			(file-exists-p fhd-args-dev) (list fhd-args-dev)))))
+		(cons fhd-bin fhd-args)))
 
 (defun fhd-proc-sentinel (proc ev)
 	"Prints success/error info, either running `fhd-share-secret' on result,
