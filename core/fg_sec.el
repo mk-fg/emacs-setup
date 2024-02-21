@@ -185,13 +185,25 @@ which emacs seem to do with its prefer-* stuff.")
 
 (defvar fhd-bin "fhd"
 	"fido2-hmac-desalinate binary to use, passed to `make-process' in `fhd-crypt'.")
+(defvar fhd-bak "secret-token-backup"
+	"secret-token-backup script, to use as a wrapper around `fhd-bin' when wrapping
+new secrets, to make sure those can survive `fhd-dev' being broken or missing.")
 (defvar fhd-args nil
 	"List of static command-line args to pass to `fhd-bin' process.")
-(defvar fhd-args-dev "/dev/fido2-fhd"
-	"Device path to pass to `fhd-bin' as arg, if exists, and `fhd-args' is nil.")
 (defvar fhd-proc nil
 	"Currently running `fhd-bin' process for some pending operation.")
+(defvar fhd-dir nil
+	"Working directory for running `fhd-bin' and `fhd-bak' commands under.
+When nil, dir of the `buffer-file-name' where `fhd-crypt' was run will be used, if any.")
 ;; (setq fhd-bin "fhd" fhd-args nil) (setq fhd-bin "echo" fhd-args '("-n" "some-output"))
+
+(defvar fhd-dev "/dev/fido2-fhd"
+	"Device path to pass to `fhd-bin' as arg, if exists, and `fhd-args' is nil.
+Can be used for both wrapping and unwrapping of all \"fhd.<salt>.<ct>\" secrets.")
+(defvar fhd-dev-bak "/dev/fido2-fha"
+	"Device path to check to use `fhd-bak' script for read-only secret retrieval.
+Only checked and used when `fhd-dev' is not available for decryption.
+If neither `fhd-dev' nor this node exist, calls to `fhd-crypt' will always fail.")
 
 (defun fhd-crypt (&optional dec-proc)
 	"Encrypt or decrypt thing at point or a region-selected one (but trimmed of spaces).
@@ -206,6 +218,7 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 			(pw (when (use-region-p)
 				(buffer-substring-no-properties (region-beginning) (region-end))))
 			(replace (and (listp current-prefix-arg) (car current-prefix-arg) (current-buffer)))
+			(fhd-dir (or fhd-dir (let ((p (buffer-file-name))) (and p (file-name-directory p)))))
 			pw-pos salt data dec fhd-cmd stdout stderr)
 		(if pw ;; Get PW secret or fhd-token to process
 			(setq replace (when (and replace (use-region-p))
@@ -224,17 +237,19 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 					(setq salt (match-string 1 pw) data (match-string 2 pw) dec t)
 					(setq salt (fg-random-string 4) data
 						(base64-encode-string (fg-string-strip-whitespace pw) t)))
-				(if (not (process-live-p fhd-proc)) (fhd-proc-cmd pw-pos dec)
+				(if (not (process-live-p fhd-proc))
+					(if fhd-dir (fhd-proc-cmd pw-pos dec)
+						(not (message "FHD-ERR: failed to determine buffer-file-name dir")))
 					(not (message "FHD-ERR: another process already running")))))
 			(setq
 				stdout (get-buffer-create " fhd-stdout")
 				stderr (get-buffer-create " fhd-stderr"))
 			(with-current-buffer stdout (erase-buffer))
 			(with-current-buffer stderr (erase-buffer))
-			(setq fhd-proc (make-process
+			(setq fhd-proc (let ((default-directory fhd-dir)) (make-process
 				:name "fhd" :command fhd-cmd
 				:buffer stdout :stderr stderr :noquery t :connection-type 'pipe
-				:coding '(no-conversion . no-conversion) :sentinel #'fhd-proc-sentinel))
+				:coding '(no-conversion . no-conversion) :sentinel #'fhd-proc-sentinel)))
 			(process-put fhd-proc 'fhd-salt salt)
 			(process-put fhd-proc 'fhd-dec (when dec (or dec-proc t)))
 			(process-put fhd-proc 'fhd-replace replace)
@@ -243,16 +258,41 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 			(process-send-eof fhd-proc)
 			(message "FHD: %scryption process started" (if dec "de" "en")))))
 
+(defun fhd-comment-from-path (pw-pos)
+	"Return a string with prefix before PW-POS
+and preceding indented headers above leading up to it,
+with any fhd-strings scrubbed from it, and newlines/tabs escaped."
+	(let (comment indent)
+		(save-excursion
+			(goto-char pw-pos)
+			(let ((prefix (buffer-substring-no-properties (line-beginning-position) pw-pos)))
+				(setq indent (fg-string-match "^[ \t]+" prefix))
+				(push prefix comment)) ; initial prefix before pw
+			(while (and (> (length indent) 0) (= (forward-line -1) 0)) ; up over indented lines
+				(let*
+					((line (buffer-substring-no-properties (point) (line-end-position)))
+						(line-indent (and (string-match "\\w" line) (fg-string-match "^[ \t]*" line))))
+					(when ; push any non-empty line with smaller indent
+						(and line-indent (< (length line-indent) (length indent)))
+						(setq indent line-indent) (push line comment)))))
+		(fg-string-replace-pairs (mapconcat 'identity comment "\n")
+			'(("\\(\\`[[:space:]\n]+\\|[[:space:]\n]+\\'\\)" "") ("\n" "\\\\n") ("\t" "  ")
+				("\\(^\\|\\s-\\)fhd\\.[a-zA-Z0-9+/=]+\\.[a-zA-Z0-9+/=]+" "\\1fhd.xxx.yyy")) t)))
+
 (defun fhd-proc-cmd (pw-pos dec)
 	"Returns command-line of `fhd-bin' + `fhd-args' to run with its stdin/stdout semantics.
-I.e. stdin gets \"salt b64-secret\" or \"fhd.salt.b64-ct\" input, opposite part to stdout.
-Can print error message and return nil to prevent the process from running.
-This call is used to add extra wrappers to make backups when encrypting,
-determine which device to use, add other cli arguments, signal errors."
-	(let
-		((fhd-args (or fhd-args (and fhd-args-dev
-			(file-exists-p fhd-args-dev) (list fhd-args-dev)))))
-		(cons fhd-bin fhd-args)))
+Checks operation type from DEC and `fhd-dev' or `fhd-dev-bak' paths,
+to run `fhd-bak' as a wrapper or substitute command when appropriate.
+Stdin gets \"salt b64-token\" input, raw opposite for token read from stdout.
+PW-POS is used with `fhd-comment-from-path' for context to stored `fhd-bak' secret.
+Can print error message and return nil to prevent running any process."
+	(if fhd-args (cons fhd-bin fhd-args) ; simple run with fixed arguments
+		(if (and fhd-dev (file-exists-p fhd-dev)) ; always use fhd-dev, if present
+			(if (or dec (not fhd-bak)) (list fhd-bin fhd-dev) ; enc uses fhd-bak, if available
+				(list fhd-bak "wrap" "-c" (fhd-comment-from-path pw-pos) "--" fhd-bin fhd-dev))
+			(if (and dec fhd-bak fhd-dev-bak (file-exists-p fhd-dev-bak))
+				(list fhd-bak "wrap" "-r") ; dec-retrieval using fhd-bak + fhd-dev-bak
+				(not (message "FHD-ERR: no tool/dev for %scryption" (if dec "de" "en")))))))
 
 (defun fhd-proc-sentinel (proc ev)
 	"Prints success/error info, either running `fhd-share-secret' on result,
