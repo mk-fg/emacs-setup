@@ -189,7 +189,8 @@ which emacs seem to do with its prefer-* stuff.")
 	"secret-token-backup script, to use as a wrapper around `fhd-bin' when wrapping
 new secrets, to make sure those can survive `fhd-dev' being broken or missing.")
 (defvar fhd-args nil
-	"List of static command-line args to pass to `fhd-bin' process.")
+	"List of static command-line args to pass to `fhd-bin' process.
+This always runs fhd binary without any wrappers. Set t to run with no args.")
 (defvar fhd-proc nil
 	"Currently running `fhd-bin' process for some pending operation.")
 (defvar fhd-dir nil
@@ -288,7 +289,7 @@ to run `fhd-bak' as a wrapper or substitute command when appropriate.
 Stdin gets \"salt b64-token\" input, raw opposite for token read from stdout.
 PW-POS is used with `fhd-comment-from-path' for context to stored `fhd-bak' secret.
 Can print error message and return nil to prevent running any process."
-	(if fhd-args (cons fhd-bin fhd-args) ; simple run with fixed arguments
+	(if fhd-args (cons fhd-bin (if (eq fhd-args t) nil fhd-args)) ; simple run with fixed arguments
 		(if (and fhd-dev (file-exists-p fhd-dev)) ; always use fhd-dev, if present
 			(if (or dec (not fhd-bak)) (list fhd-bin fhd-dev) ; enc uses fhd-bak, if available
 				(list fhd-bak "wrap" "-c" (fhd-comment-from-path pw-pos) "--" fhd-bin fhd-dev))
