@@ -205,11 +205,12 @@ Can be used for both wrapping and unwrapping of all \"fhd.<salt>.<ct>\" secrets.
 Only checked and used when `fhd-dev' is not available for decryption.
 If neither `fhd-dev' nor this node exist, calls to `fhd-crypt' will always fail.")
 
-(defun fhd-crypt (&optional dec-proc)
+(defun fhd-crypt (&optional dec-proc replace)
 	"Encrypt or decrypt thing at point or a region-selected one (but trimmed of spaces).
 Starts async `fhd-proc', with result signaled in minibuffer and copied into clipboard.
 Non-nil DEC-PROC will be passed to `fhd-share-secret' on decryption operation.
-Universal argument can be set to replace the thing at point or selected region,
+Universal argument or yes/no passed as REPLACE
+can be used to replace the thing at point or selected region,
 instead of using `fhd-share-secret'.
 Rejects short at-point strings to avoid handling parts by mistake, use region for those."
 	(interactive)
@@ -217,7 +218,8 @@ Rejects short at-point strings to avoid handling parts by mistake, use region fo
 		((pw-chars "^[:space:]\n")
 			(pw (when (use-region-p)
 				(buffer-substring-no-properties (region-beginning) (region-end))))
-			(replace (and (listp current-prefix-arg) (car current-prefix-arg) (current-buffer)))
+			(replace (cond ((eq replace 'yes) (current-buffer)) ((eq replace 'no) nil)
+				(t (and (listp current-prefix-arg) (car current-prefix-arg) (current-buffer)))))
 			(fhd-dir (or fhd-dir (let ((p (buffer-file-name))) (and p (file-name-directory p)))))
 			pw-pos salt data dec fhd-cmd stdout stderr)
 		(if pw ;; Get PW secret or fhd-token to process
