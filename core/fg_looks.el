@@ -279,6 +279,9 @@ NAME can also be passed explicitly as an argument."
 (add-to-list 'load-path (concat fg-path "/extz/emacs-elixir"))
 (autoload 'elixir-mode "elixir-mode" "Major mode for Erlang Elixir" t)
 
+(add-to-list 'load-path (concat fg-path "/extz/kotlin-mode"))
+(autoload 'kotlin-mode "kotlin-mode" "Major mode for Kotlin" t)
+
 (add-to-list 'load-path (concat fg-path "/extz/nim-mode"))
 (autoload 'nim-mode "nim-mode" "Major mode for Nim language" t)
 
@@ -303,7 +306,7 @@ NAME can also be passed explicitly as an argument."
 			("sh (%d)" ".\\.sh\\'") ("lua (%d)" ".\\.lua\\'")
 			("go (%d)" ".\\.go\\'") ("rust (%d)" ".\\.\\(rs\\|rlib\\)\\'") ("nim (%d)" ".\\.nim\\'")
 			("OCAML (%d)" ".\\.mli?\\'") ("C (%d)" ".\\.\\(cc?\\|cxx\\|h\\)\\'")
-			("erlang (%d)" ".\\.\\([eh]rl\\|ex\\)\\'")
+			("erlang (%d)" ".\\.\\([eh]rl\\|ex\\)\\'") ("kotlin (%d)" ".\\.\\(kt\\|gradle\\)\\'")
 			("perl (%d)" ".\\.pl[0-9]?\\'") ("sql (%d)" ".\\.sql\\'")
 			("web/tpl (%d)" ".\\.\\(html\\|css\\|scss\\|jade\\|htm\\|tpl\\)\\'")
 			("(e)lisp/scheme (%d)" ".\\.\\(el\\|cl\\|lisp\\|scm\\|rkt\\|ss\\|jl\\)\\'")
@@ -319,7 +322,7 @@ NAME can also be passed explicitly as an argument."
 (delq (assoc-string "\\.inc\\'" auto-mode-alist) auto-mode-alist)
 (setq-default auto-mode-alist
 	(-distinct (-concat auto-mode-alist
-		`(("/\\(PKG\\|APK\\)BUILD$" . sh-mode)
+		`(("/\\(PKG\\|APK\\)BUILD$" . sh-mode) ("\\.\\(kt\\|gradle\\)$" . kotlin-mode)
 			("\\.[eh]rl$" . erlang-mode) ("\\.exs?$" . elixir-mode)
 			("\\.jl$" . lisp-mode) ("\\.rkt$" . scheme-mode)
 			("/polkit\\(-1/rules\\.d\\)?/[^/]+\\.rules$" . js-mode) ("\\.ts$" . js-mode)
