@@ -756,11 +756,13 @@ should be set before calling the `solar-sunrise-sunset'."
 			(setq fg-sunset-timer (run-at-time sunset-string (* 60 60 24) 'fg-masq-x-dark))
 			(setq fg-sunrise-timer (run-at-time sunrise-string (* 60 60 24) 'fg-masq-x-light)))))
 
-;; Masquerade!
+;; Disabled fg-smart-looks here in favor of always-dark-mode
+;; Light more seem to be rarely needed, and more of a nuisance these days
 (if window-system
-	(progn
-		(fg-smart-looks)
-		(add-to-list 'after-make-frame-functions 'fg-smart-looks))
+	(fg-masq-x-dark)
+	;; (progn
+	;; 	(fg-smart-looks)
+	;; 	(add-to-list 'after-make-frame-functions 'fg-smart-looks))
 	(fg-masq-nox)) ; time-of-the-day independent, since terms should be plain black
 
 
