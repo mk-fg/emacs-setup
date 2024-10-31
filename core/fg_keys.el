@@ -257,6 +257,7 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "C-d") . fg-clone)
 		(,(key "C-k") . kill-whole-line)
 		(,(key "C-S-k") . fg-del-whole-line)
+		(,(key "C-M-S-k") . fg-kill-ro-bypass)
 		(,(key "C-w") . fg-del-word-backwards)
 		(,(key "C-u") . fg-kill-line-blank)
 		(,(key "C-S-u") . fg-kill-line-backwards)

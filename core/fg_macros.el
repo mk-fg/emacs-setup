@@ -321,6 +321,15 @@ Doesn't pollute the kill-ring, respects x-clip-buffer."
 				(yank)
 				(setq arg (1- arg))))))
 
+(defun fg-read-only-scrub (begin end)
+	"Remove read-only text-property from the marked region.
+Disabling `read-only-mode' %-sign in mode-line might still be required to kill it."
+	(interactive "r")
+	(let ((modified (buffer-modified-p)) (inhibit-read-only t))
+		(remove-text-properties begin end '(read-only t))
+		(set-buffer-modified-p modified))
+	(setq deactivate-mark nil))
+
 
 
 
@@ -379,6 +388,11 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 			(region-beginning)
 			(region-end))
 		(kill-whole-line)))
+
+(defun fg-kill-ro-bypass ()
+	"Same as `fg-kill', but also inhibits buffer/text read-only attributes."
+	(interactive)
+	(let ((inhibit-read-only t)) (fg-kill)))
 
 (defun fg-kill-line-blank ()
 	"Blank current line, mode-safe."
