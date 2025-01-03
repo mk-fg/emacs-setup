@@ -266,9 +266,10 @@ List of plists with any number of following keys (in each):
 	"Build proper pattern for regular channel messages
 (including ZNC-buffered messages) from specified NICK
 and MSG regexp patterns. MSG can have $ at the end."
-	(concat
-		"\\`\\(?:\\s-*\\[[0-9:]+\\]\\)?\\s-*\\([<-]" nick
-		"[->]\\|\\*\\*\\*\\)\\(?:\\s-+\\[[0-9:]+\\]\\)?\\s-*" msg))
+	(concat "\\`\\(?:\\s-*\\[[0-9:]+\\]\\)?\\s-*"
+		(if nick (concat "[<-]" nick "[->]")
+			"\\([<-][^>]+[->]\\|\\*\\*\\*\\)")
+		"\\(?:\\s-+\\[[0-9:]+\\]\\)?\\s-*" msg))
 
 (defun fg-erc-re (string) (concat "\\`" (regexp-quote string) "\\'"))
 
@@ -513,7 +514,7 @@ channel/network parameters."
 			(msg-pat-raw (plist-get rule :msg))
 			(line (plist-get rule :line))
 			(msg-pat (when (or nick msg-pat-raw)
-				(fg-erc-msg-block-pattern (or nick "[^>]+") (or msg-pat-raw ""))))
+				(fg-erc-msg-block-pattern nick (or msg-pat-raw ""))))
 			(msg (fg-string-strip-whitespace msg)))
 		;; (message "--- erc-msg: %S" msg)
 		(and
