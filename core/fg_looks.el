@@ -268,7 +268,6 @@ NAME can also be passed explicitly as an argument."
 (autoload 'lua-mode "lua-mode" "Lua editing mode." t)
 (autoload 'edje-mode "edje-mode" "Major mode for editing Edje files" t)
 (autoload 'jinja2-mode "jinja2-mode" "Major mode for Jinja2 templates" t)
-(autoload 'cmake-mode "cmake-mode" "Major mode for editing CMake source files" t)
 (load-library-safe (concat fg-path "/tuareg/tuareg-site-file"))
 
 (add-to-list 'load-path (concat fg-path "/extz/rust"))
