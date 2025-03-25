@@ -432,17 +432,19 @@ Safe for read-only buffer parts (like prompts). See also `fg-del-word'."
 ;; Skimming ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defadvice forward-word (around fg-forward-word activate)
-	"Make `forward-word' stop at newlines as well."
-	(if (eolp) ;; already at the EOL
-		ad-do-it
-		(let ((line (line-number-at-pos)))
-			(save-excursion
-				ad-do-it
-				(setq line (= line (line-number-at-pos))))
-			(if line ;; EOL was not crossed
-				ad-do-it
-				(move-end-of-line nil)))))
+(defun fg-forward-word-around (func &optional arg)
+	"Make `forward-word' / `backward-word' stop at newlines as well."
+	(unless (= arg 0)
+		(let
+			((arg (or arg 1)) (check (if (> arg 0) 'eolp 'bolp))
+				(move (if (> arg 0) 'move-end-of-line 'move-beginning-of-line)))
+			(if (funcall check) (funcall func arg) ;; already at BOL/EOL
+			(let ((line (line-number-at-pos)))
+				(save-excursion
+					(funcall func arg)
+					(setq line (= line (line-number-at-pos))))
+				(if line (funcall func arg) (funcall move nil)))))))
+(advice-add 'forward-word :around #'fg-forward-word-around)
 
 (defun fg-scroll-up (arg)
 	"Scroll or move cursor ARG pages up."

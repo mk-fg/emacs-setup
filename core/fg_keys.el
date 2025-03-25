@@ -595,7 +595,7 @@ NO-ALIGN disables `csv-align-fields' call."
 		(unless use-current-line
 			(goto-char (point-min))
 			(while (and (not (eobp)) (csv-not-looking-at-record)) (forward-line)))
-		(apply func '(t))))
+		(funcall func t)))
 (advice-add 'csv-header-line :around #'fg-csv-header-line-around)
 
 (defun fg-csv-align-fields-after (func &rest args)
