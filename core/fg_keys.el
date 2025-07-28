@@ -142,7 +142,6 @@ Keymap of this mode is used as a parent for the rest of fg-scite modes."
 		(,(key "<M-tab>") . ibuffer)
 
 		;; -- File/buffer stuff --
-		(,(key "M-c") . fg-emacs-exit)
 		(,(key "M-b") . switch-to-buffer)
 		(,(key "M-f") . find-file)
 		(,(key "M-F") . fg-recentf-prompt)
