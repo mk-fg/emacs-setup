@@ -6,8 +6,8 @@
 ;; Hacked additionally by:	opensource at hardakers dot net
 ;; Created:			14 Feb 2012
 ;; Updated:			13 December 2015
-;; Version:                     1.11
-;; Url:                         https://github.com/joddie/pcre2el 3a59d13
+;; Version:                     1.12
+;; Url:                         https://github.com/joddie/pcre2el b4d846d
 ;; Package-Requires:            ((emacs "25.1"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -660,13 +660,8 @@ Note that this does not apply to backreferences."
   (reb-do-update))
 
 (defun rxt--toggle-flag-minibuffer (char)
-  (save-excursion
-    (let
-      ((a (minibuffer-prompt-end)) (b (point-max))
-        (text (rxt--toggle-flag-string (minibuffer-contents) char)))
-      (delete-region a b) (set-marker (point-marker) a) (insert text)))
-  ;; (setf (buffer-substring (minibuffer-prompt-end) (point-max))
-  ;;       (rxt--toggle-flag-string (minibuffer-contents) char))
+  (setf (buffer-substring (minibuffer-prompt-end) (point-max))
+        (rxt--toggle-flag-string (minibuffer-contents) char))
   (when
       (and (= (point) (minibuffer-prompt-end))
            (looking-at (rx "(?" (group (+ (any ?i ?s ?x))) ")")))
@@ -3129,7 +3124,11 @@ in character classes as outside them."
   (around rxt () activate compile)
   "This function is hacked for emulated PCRE syntax and regexp conversion."
   (if (eq reb-re-syntax 'pcre)
-      (let ((src (reb-target-binding reb-regexp-src)))
+      (let ((src (cond ((fboundp 'reb-target-value)
+                        (reb-target-value 'reb-regexp-src))
+                       ((fboundp 'reb-target-binding)
+                        (reb-target-binding reb-regexp-src))
+                       ((error "BUG")))))
         (if src
             (insert "\n/" (replace-regexp-in-string "/" "\\/" src t t) "/")
           (insert "\n//")))
