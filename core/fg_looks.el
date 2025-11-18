@@ -520,7 +520,7 @@ See also: emacs bug 30129, emacs-mirror/emacs#d3cb07d7."
 		`(erc-nick-default-face ((t (:weight normal))))
 		`(erc-current-nick-face ((t (:foreground ,fg-color-kw :weight bold))))
 		`(erc-notice-face ((t (:foreground ,fg-color-fg-modeline))))
-		`(erc-prompt-face ((t (:foreground ,fg-color-fg-core :background nil))))
+		`(erc-prompt-face ((t (:foreground ,fg-color-fg-core :background "unspecified"))))
 		;; Newsticker
 		`(newsticker-treeview-face ((t (:foreground ,fg-color-fg-core))))
 		`(newsticker-treeview-immortal-face
