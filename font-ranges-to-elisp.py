@@ -30,7 +30,7 @@ with pathlib.Path(src).open() as src:
 			print(';;', comment.rstrip())
 
 		line = re.sub(r'\s*[-–]\s*', '-', line).replace(',', ' ').split()
-		cons_list, char_re = list(), re.compile(r'^[0-9A-F]+$')
+		cons_list, char_re = list(), re.compile(r'^[0-9A-F]+\Z')
 		for cons in line:
 			a, b = map(str.upper, cons.split('-', 1))
 			assert char_re.search(a) and char_re.search(b)

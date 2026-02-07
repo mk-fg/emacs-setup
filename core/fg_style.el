@@ -30,8 +30,7 @@
 ;; (eval-after-load "cc-mode" '(c-toggle-comment-style -1))
 
 ;; Try to disable as much of "electric" stuff as possible
-(add-hook 'after-change-major-mode-hook
-	#'(lambda () (electric-indent-mode -1)))
+(add-hook 'after-change-major-mode-hook #'(lambda () (electric-indent-mode -1)))
 
 ;; Adjust some develock line lengths
 (eval-after-load "develock"
@@ -48,6 +47,5 @@
 (eval-after-load "python" '(progn
 	(defun python-indent-post-self-insert-function () nil)))
 
-;; tuareg-mode hates tabs
-(add-hook 'tuareg-mode-hook
-	#'(lambda () (setq indent-tabs-mode t)))
+(add-hook 'tuareg-mode-hook #'(lambda () (setq indent-tabs-mode t)))
+(add-hook 'markdown-mode-hook #'(lambda () (setq tab-width 2)))
