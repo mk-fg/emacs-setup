@@ -296,8 +296,7 @@ NAME can also be passed explicitly as an argument."
 ;; recentf mode tweaks
 
 (setq-default
-	recentf-max-saved-items 256
-	recentf-max-menu-items 10
+	recentf-max-saved-items 2000
 	recentf-menu-filter 'recentf-arrange-by-rule
 	recentf-save-file (concat fg-path-spool "recentf")
 	recentf-arrange-rules
