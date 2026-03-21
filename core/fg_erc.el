@@ -401,17 +401,42 @@ and MSG regexp patterns. MSG can have $ at the end."
 
 ;; --- Custom timestamping
 
-(make-variable-buffer-local
-	(defvar erc-last-datestamp nil))
+(make-variable-buffer-local (defvar fg-erc-last-datestamp nil))
 
 (defun fg-erc-timestamp-with-datestamps (string)
 	"Insert date as well as timestamp if it changes between events.
 Makes ERC buffers a bit more log-friendly."
 	(erc-insert-timestamp-left string)
 	(let ((datestamp (erc-format-timestamp (current-time) erc-datestamp-format)))
-		(unless (string= datestamp erc-last-datestamp)
+		(unless (string= datestamp fg-erc-last-datestamp)
 			(erc-insert-timestamp-left datestamp)
-			(setq erc-last-datestamp datestamp))))
+			(setq fg-erc-last-datestamp datestamp))))
+
+
+;; --- Skip massive "*** Users on" unless manual /names command is used
+;; Keeps buff-local time of last /names and ignores RPL_NAMREPLY unless it's recent
+
+(make-variable-buffer-local (defvar fg-erc-cmd-names-time nil))
+
+(defun fg-erc-cmd-NAMES-log-ts (&optional channel)
+	(setq fg-erc-cmd-names-time (float-time (current-time))))
+(advice-add 'erc-cmd-NAMES :after #'fg-erc-cmd-NAMES-log-ts)
+
+(defun fg-erc-hide-current-message-p-no-users-on-join (old-func parsed)
+	"Hide RPL_NAMREPLY 353 command's '*** Users on ...' lines,
+unless manual /names /n command was used there recently."
+	(let (chan-buff)
+		(or
+			(and
+				(string= (erc-response.command parsed) "353")
+				(not (and
+					(setq chan-buff (get-buffer (or
+						(nth 2 (erc-response.command-args parsed)) "-")))
+					(with-current-buffer chan-buff
+						(< (- (float-time (current-time)) (or fg-erc-cmd-names-time 0)) 30)))))
+			(funcall old-func parsed))))
+(advice-add 'erc-hide-current-message-p
+	:around #'fg-erc-hide-current-message-p-no-users-on-join)
 
 
 ;; --- Custom buffer truncation
