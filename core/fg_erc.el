@@ -368,15 +368,8 @@ and MSG regexp patterns. MSG can have $ at the end."
 		'("JOIN" "NICK" "PART" "QUIT" "MODE" "324" "329" "332" "333" "353" "477")
 	erc-track-enable-keybindings nil
 
-	erc-hide-list '("JOIN" "PART" "MODE" "MODE-nick" "QUIT") ;; careful, these are completely ignored
-
-	;; erc-ignore-list ;; global ignore-everywhere list - can be useful for common CI irc bots
-	;; 	'("^CIA-[[:digit:]]+!~?[cC][iI][aA]@"
-	;; 		"^fdo-vcs!~?kgb@\\sw+\\.freedesktop\\.org$"
-	;; 		"^KGB[^!]+!~?Debian-kgb@.*\\.kitenet\\.net$"
-	;; 		"^travis-ci!~?travis-ci@.*\\.amazonaws\\.com$"
-	;; 		"^irker[[:digit:]]+!~?irker@"
-	;; 		"^GitHub[[:digit:]]+!~?GitHub[[:digit:]]+@.*\\.github\\.com$")
+	;; erc-hide-list are completely ignored, there are per-network/channel/etc lists
+	erc-hide-list '("JOIN" "PART" "MODE" "MODE-nick" "QUIT" "324")
 
 	erc-server-auto-reconnect t
 	erc-server-reconnect-attempts t
