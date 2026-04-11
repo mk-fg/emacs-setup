@@ -28,7 +28,7 @@
 (setq-default
 	emms-player-list '(emms-player-mpv)
 	emms-player-mpv-environment
-		'("PULSE_PROP_media.role=music")
+		'("PULSE_PROP_media.role=music" "PIPEWIRE_PROPS={ media.role=music }")
 	emms-player-mpv-parameters
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no"))
 (customize-set-variable 'emms-player-mpv-update-metadata t)
