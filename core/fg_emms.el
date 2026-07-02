@@ -28,7 +28,9 @@
 (setq-default
 	emms-player-list '(emms-player-mpv)
 	emms-player-mpv-environment
-		'("PULSE_PROP_media.role=music" "PIPEWIRE_PROPS={ media.role=music }")
+		;; restore_stream_hook in wireplumber 0.5.15 no longer uses media.role,
+		;;  but application.id has highest priority, so use that instead
+		'("PULSE_PROP_application.id=mpv.music" "PIPEWIRE_PROPS={ application.id=mpv.music }")
 	emms-player-mpv-parameters
 		'("--quiet" "--really-quiet" "--no-audio-display" "--force-window=no"))
 (customize-set-variable 'emms-player-mpv-update-metadata t)
