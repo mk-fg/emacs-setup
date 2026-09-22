@@ -27,7 +27,7 @@ from emacsclient, match returned filename, read file contents, remove it."
 		(let*
 			((tmp (make-temp-file ".ece.remote."))
 				(data (s-join "\n" (--map (format "%s" it) (if (listp data) data (list data))))))
-			(unless (s-ends-with? "\n" data) (set 'data (concat data "\n")))
+			(unless (s-ends-with? "\n" data) (setq data (concat data "\n")))
 			(write-region data nil tmp)
 			tmp)))
 
@@ -126,11 +126,11 @@ unless OVERWIRITE is specified and matches one of the following:
 * 'force' - answer 'y' on all queries asked in process, including any unmatched (unknown) ones."
 	(let ((suppress-all '(mod exists force)) suppress)
 		(when (and overwrite (not (symbolp overwrite)))
-			(set 'overwrite (intern overwrite)))
+			(setq overwrite (intern overwrite)))
 		(if (-contains? suppress-all overwrite)
-			(set 'suppress (cons overwrite suppress))
+			(setq suppress (cons overwrite suppress))
 			(if (-contains? '(all y t yes) overwrite) ; special composite values
-				(set 'suppress (-cons* 'mod 'exists suppress))
+				(setq suppress (-cons* 'mod 'exists suppress))
 				(when overwrite
 					(error "Unrecognized value for OVERWRITE: %s" overwrite))))
 		(with-current-buffer (fg-get-useful-buffer pattern buffers)

@@ -179,7 +179,7 @@ Useful for &rest + &key + &allow-other-keys in `defun*'."
 	(let (res drop)
 		(dolist (v args)
 			(when (not drop)
-				(if (keywordp v) (set 'drop t)
+				(if (keywordp v) (setq drop t)
 					(setq res (cons v res) drop nil))))
 		(nreverse res)))
 
@@ -208,7 +208,7 @@ Based on `describe-function-1'."
 					(let ((f def))
 						(while
 							(and (fboundp f) (symbolp (symbol-function f)))
-							(set 'f (symbol-function f)))
+							(setq f (symbol-function f)))
 						f)
 					real-function)))
 		(format "%s" real-function)))
@@ -749,7 +749,7 @@ Uses async dbus call and does not return notification id."
 	nil)
 
 (defun fg-time-string (&optional ts)
-	(unless ts (set 'ts (current-time)))
+	(unless ts (setq ts (current-time)))
 	(concat (current-time-string ts) " " (cadr (current-time-zone ts))))
 
 
@@ -764,8 +764,8 @@ Uses async dbus call and does not return notification id."
 
 (defun* fg-hex (val &optional (offset 0) len)
 	"Parse hex from a VAL string, or substring (OFFSET / LEN) of VAL."
-	(when (/= 0 offset) (set 'val (substring val offset)))
-	(when len (set 'val (substring val 0 len)))
+	(when (/= 0 offset) (setq val (substring val offset)))
+	(when len (setq val (substring val 0 len)))
 	(string-to-number val 16))
 
 (defun* fg-xor (a b)
@@ -1197,7 +1197,7 @@ Optional arguments are same as in `replace-regexp-in-string'."
 		(let
 			((keep-nulls (not (if sep omit-nulls t)))
 				(rexp (or sep split-string-default-separators))
-				(start 0) notfirst (list nil))
+				(start 0) notfirst list)
 			(cl-block 'limited
 				(while
 					(and
@@ -1205,15 +1205,15 @@ Optional arguments are same as in `replace-regexp-in-string'."
 							(if (and notfirst (= start (match-beginning 0))
 								(< start (length string))) (1+ start) start))
 						(< start (length string)))
-					(set 'notfirst t)
+					(setq notfirst t)
 					(when (or keep-nulls (< start (match-beginning 0)))
-						(set 'list (cons (substring string start (match-beginning 0)) list))
-						(when (and limit (<= (set 'limit (1- limit)) 0))
-							(set 'list (cons (substring string (match-end 0)) list))
+						(setq list (cons (substring string start (match-beginning 0)) list))
+						(when (and limit (<= (setq limit (1- limit)) 0))
+							(setq list (cons (substring string (match-end 0)) list))
 							(cl-return-from 'limited)))
-					(set 'start (match-end 0)))
+					(setq start (match-end 0)))
 				(when (or keep-nulls (< start (length string)))
-					(set 'list (cons (substring string start) list))))
+					(setq list (cons (substring string start) list))))
 			(nreverse list))
 		(list string)))
 
@@ -1251,9 +1251,9 @@ Returns the resulting string."
 				(mapcar 'regexp-quote (fg-keys-from-rest frags))))
 			regexp)
 		(when (memq from '(both r right))
-			(set 'regexp (cons (format "\\(%s\\)+\\'" frags) regexp)))
+			(setq regexp (cons (format "\\(%s\\)+\\'" frags) regexp)))
 		(when (memq from '(both l left))
-			(set 'regexp (cons (format "\\`\\(%s\\)+" frags) regexp)))
+			(setq regexp (cons (format "\\`\\(%s\\)+" frags) regexp)))
 		(replace-regexp-in-string (apply 'fg-string-join "\\|" regexp) "" string t t)))
 
 (defun* fg-string-strip-chars (string chars &key (from 'both) &allow-other-keys)
@@ -1270,7 +1270,7 @@ Returns the resulting string."
 			'(("_\\(-+\\)_" "_--\\1_") ("\\[" "_-_") ("\\]" "_--_"))))
 	;; Will fail if original func will add "_-+_", to the resulting regexp, but shouldn't happen
 	ad-do-it
-	(set 'ad-return-value
+	(setq ad-return-value
 		(fg-string-replace-pairs ad-return-value
 			'(("_-_" "\\\\[") ("_--_" "\\\\]") ("_--\\(-+\\)_" "_\\1_")))))
 
