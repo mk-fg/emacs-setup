@@ -183,11 +183,6 @@ Useful for &rest + &key + &allow-other-keys in `defun*'."
 					(setq res (cons v res) drop nil))))
 		(nreverse res)))
 
-(defun fg-apply-macro (macro &rest args)
-	"Same as `apply', but can apply macro instead of a function."
-	(let ((args (append (nbutlast args) (car (last args)))))
-		(eval (macroexpand-all `(,macro ,@args)))))
-
 (defun fg-real-function-name (function)
 	"Return name of FUNCTION or name it is an alias of.
 Based on `describe-function-1'."
