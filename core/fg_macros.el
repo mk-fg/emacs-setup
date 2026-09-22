@@ -108,6 +108,8 @@
 ; cl: (let* ((A (car (last LIST)))) (nbutlast LIST) ...)
 
 ; py: list.append(a)
+; el: (if list (setcdr (last list) (cons a nil)) (list a))
+; py: list.insert(0, a)
 ; el: (push A LIST)
 
 ; py: for a in list:
@@ -777,8 +779,35 @@ Uses async dbus call and does not return notification id."
 
 (defvar fg-color-tweak-debug nil)
 
-;; No idea if L*a*b* coord ranges for a*/b* and sRGB bounds are actually correct
-(defun* fg-color-tweak
+(defun fg-color-tweak-shift (color0 seed min-offs max-offs lab-ranges)
+	"Shift LAB color components by random values within specified bounds."
+	(mapcar (lambda (n) (let*
+		((o (* n 4))
+			(sign (if (> (fg-hex seed o 1) 7) '+ '-))
+			(rnd (/ (fg-hex seed (+ o 1) 3) 4095.0))
+			(c (nth n color0))
+			(n-min (or (and min-offs (nth n min-offs)) 0))
+			(n-max (and max-offs (nth n max-offs))))
+		(if n-max
+			; "c1 = c +/- (rnd * (max-min) + min)"
+			(funcall sign c (+ (* rnd (- n-max n-min)) n-min))
+			(let*
+				; c1 in [a, b], where a/b are picked from rnd and pos/neg spans
+				((lab-range (nth n lab-ranges))
+					(c-pos-a (cadr lab-range))
+					(c-pos-b (min c-pos-a (+ c n-min)))
+					(c-pos-span (abs (- c-pos-a c-pos-b)))
+					(c-neg-a (car lab-range))
+					(c-neg-b (max c-neg-a (- c n-min)))
+					(c-neg-span (abs (- (abs c-neg-a) (abs c-neg-b))))
+					(rnd-ratio (/ c-neg-span (+ c-neg-span c-pos-span))))
+				(if (> rnd rnd-ratio)
+					(setq a c-pos-a b c-pos-b k c-pos-span rnd (- rnd rnd-ratio))
+					(setq a c-neg-a b c-neg-b k (- c-neg-span)))
+				(when (> (abs a) (abs b)) (let ((ax a)) (setq a b b ax)))
+				(if (= a b) a (+ c (* rnd k) a)))))) '(0 1 2)))
+
+(cl-defun fg-color-tweak
 	(color &optional seed min-shift max-shift
 		(clamp-rgb-after 20)
 		(lab-ranges '((0 100) (-86.185 98.254) (-107.863 94.482))))
@@ -790,20 +819,23 @@ R G B list, or a string suitable for `color-name-to-rgb'.
 MIN-SHIFT / MAX-SHIFT can be:
  * three-value list (numbers) of min/max offset on L*a*b* in either direction
  * one number - min/max cie-de2000 distance
- * four-value list of offsets and distance, combining both options above
+ * four-value list of offsets then distance, combining both options above
  * nil for no-limit
 
 SEED can be number, string or nil.
 Empty string or nil passed as SEED will return the original color.
 
 CLAMP-RGB-AFTER defines how many attempts to make in picking
-L*a*b* color with random offset that translates to non-imaginary sRGB color.
-When that number is reached, last color will be `color-clamp'ed to fit into sRGB.
+L*a*b* color with random offset within distance that translates to non-imaginary sRGB.
+After that, any (preferrably valid) color will be `color-clamp'ed to fit into sRGB.
 
-Returns color plus/minus offset as a hex string.
-Resulting color offset should be uniformly distributed between min/max shift limits."
+Returns offset color as a hex string,
+that should be uniformly shifted within specified limits."
 	(interactive)
 	(when (< clamp-rgb-after 1) (error "clamp-rgb-after must be >1"))
+	(if (numberp seed)
+		(setq seed (concat "###" (number-to-string seed)))
+		(when (or (not seed) (equal seed "")) (cl-return-from fg-color-tweak color)))
 	(let*
 
 		((parse-ciede2k
@@ -813,95 +845,45 @@ Resulting color offset should be uniformly distributed between min/max shift lim
 							(when (= (length shift-spec) 4) (nth 3 shift-spec))))))
 			(parse-offsets
 				(lambda (shift-spec) (and shift-spec (listp shift-spec) shift-spec)))
+			(color-hex (lambda (color-srgb) (cl-multiple-value-bind (r g b)
+				(mapcar #'color-clamp color-srgb) (color-rgb-to-hex r g b 2))))
 
 			(min-ciede2k (funcall parse-ciede2k min-shift))
 			(max-ciede2k (funcall parse-ciede2k max-shift))
 			(min-offs (funcall parse-offsets min-shift))
-			(max-offs (funcall parse-offsets max-shift))
+			(max-offs (or (funcall parse-offsets max-shift)
+				(and max-ciede2k (list max-ciede2k max-ciede2k max-ciede2k))))
 
-			(color0
-				(apply #'color-srgb-to-lab
-					(if (stringp color) (color-name-to-rgb color) color)))
-			color1-srgb-valid-first ; skipped on ciede2k diff mismatch
-			color1-srgb-fallback) ; any color1, used as a last resort
+			(color0 (apply #'color-srgb-to-lab
+				(if (stringp color) (color-name-to-rgb color) color)))
+			color1-srgb-valid color1-srgb-fallback)
 
-		(apply #'color-rgb-to-hex
-			(cl-loop
-				for n from 0 to clamp-rgb-after
-				do
-					(let*
-
-						((color1
-								(cl-block :color-shift
-									(if (numberp seed)
-										(set 'seed (concat "###" (number-to-string seed)))
-										(when (or (not seed) (equal seed ""))
-											(cl-return-from :color-shift color0)))
-									(set 'seed (md5 seed))
-									(cl-loop
-										for n from 0 to 2
-										collect
-											(let*
-												((o (* n 4))
-													(sign (if (> (fg-hex seed o 1) 7) '+ '-))
-													(rnd (/ (fg-hex seed (+ o 1) 3) 4095.0))
-													(c (nth n color0))
-													(n-min (or (and min-offs (nth n min-offs)) 0))
-													(n-max (and max-offs (nth n max-offs))))
-												(if n-max
-													; "c1 = c +/- (rnd * (max-min) + min)"
-													(funcall sign c (+ (* rnd (- n-max n-min)) n-min))
-													(let*
-														; c1 in [a, b], where a/b are picked from rnd and pos/neg spans
-														((lab-range (nth n lab-ranges))
-															(c-pos-a (cadr lab-range))
-															(c-pos-b (min c-pos-a (+ c n-min)))
-															(c-pos-span (abs (- c-pos-a c-pos-b)))
-															(c-neg-a (car lab-range))
-															(c-neg-b (max c-neg-a (- c n-min)))
-															(c-neg-span (abs (- (abs c-neg-a) (abs c-neg-b))))
-															(rnd-ratio (/ c-neg-span (+ c-neg-span c-pos-span))))
-														(if (> rnd rnd-ratio)
-															(setq a c-pos-a b c-pos-b k c-pos-span rnd (- rnd rnd-ratio))
-															(setq a c-neg-a b c-neg-b k (- c-neg-span)))
-														(when (> (abs a) (abs b)) (let ((ax a)) (setq a b b ax)))
-														(if (= a b) a (+ c (* rnd k) a))))))))
-							(color1-srgb (apply #'color-lab-to-srgb color1))
-							(color1-srgb-valid
-								(cl-loop
-									for c in color1-srgb
-									do (when (or (> c 1) (< c -0.06)) (cl-return nil))
-									collect (color-clamp c))))
-
-						(when color1-srgb-valid
-							(unless color1-srgb-valid-first
-								(set 'color1-srgb-valid-first color1-srgb-valid))
-							(let
-								((ciede2k (color-cie-de2000 color0 color1)))
-								(when
-									(and
-										(or (not min-ciede2k) (> ciede2k min-ciede2k))
-										(or (not max-ciede2k) (< ciede2k max-ciede2k)))
-								(when fg-color-tweak-debug
-									(message "fg-color-tweak: %s -> %s, n=%d [%.2f]"
-										color (apply #'color-rgb-to-hex color1-srgb) n ciede2k))
-								(cl-return color1-srgb-valid))))
-
-						(unless color1-srgb-fallback
-							(set 'color1-srgb-fallback color1-srgb)))
-
-				finally
+		(dotimes (n (1+ clamp-rgb-after) color)
+			(setq seed (md5 seed))
+			(let*
+				((color1 (fg-color-tweak-shift color0 seed min-offs max-offs lab-ranges))
+					(color1-srgb (apply #'color-lab-to-srgb color1)))
+				(if (--any (or (> it 1) (< it -0.06)) color1-srgb) ; invalid color in sRGB
+					(unless color1-srgb-fallback (setq color1-srgb-fallback color1-srgb))
 					(let
-						((color1-srgb
-							(mapcar #'color-clamp
-								(or color1-srgb-valid-first color1-srgb-fallback))))
-						(when fg-color-tweak-debug
-							(message "fg-color-tweak: %s -> %s, n=%d [FALLBACK]"
-								color (apply #'color-rgb-to-hex color1-srgb) n))
-						(cl-return color1-srgb))))))
+						((ciede2k (color-cie-de2000 color0 color1)))
+						(when (and ; still has to be in ciede2k-diff min-max range, if any
+								(or (not min-ciede2k) (> ciede2k min-ciede2k))
+								(or (not max-ciede2k) (< ciede2k max-ciede2k)))
+							(setq color1 (funcall color-hex color1-srgb))
+							(when fg-color-tweak-debug
+								(message "fg-color-tweak: %s -> %s, n=%d [%.2f]" color color1 n ciede2k))
+							(cl-return-from fg-color-tweak color1)))
+					(unless color1-srgb-valid (setq color1-srgb-valid color1-srgb)))))
+
+		(let ; no colors in ciede2k distance
+			((color1 (funcall color-hex (or color1-srgb-valid color1-srgb-fallback))))
+			(when fg-color-tweak-debug
+				(message "fg-color-tweak: %s -> %s [FALLBACK]" color color1))
+			color1)))
 
 ;; (setq fg-color-tweak-debug t)
-;; (cl-loop for n from 0 to 10 do (fg-color-tweak "#000" n 80))
+;; (cl-loop for n from 0 to 10 do (message "%s" (fg-color-tweak "#000" n 2 '(3 5 5))))
 
 (defun fg-ibuffer-reset-filters (&optional name)
 	"Run `fg-ibuffer-apply-locals', reset filters and do an update in named buffer.
