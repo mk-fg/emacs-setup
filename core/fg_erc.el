@@ -618,7 +618,7 @@ TEXT argument is processed by `fg-erc-get-hook-msg'."
 
 (require 'color)
 
-(defun* fg-erc-get-color-for-nick (nick &optional (min-delta 40))
+(cl-defun fg-erc-get-color-for-nick (nick &optional (min-delta 40))
 	(fg-color-tweak
 		(plist-get (custom-face-attributes-get 'default (selected-frame)) :background)
 		(downcase nick) min-delta))

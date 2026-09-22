@@ -94,7 +94,7 @@ otherwise socket type is toggled based on `server-use-tcp'."
 	(if server-use-tcp 'tcp 'unix))
 
 
-(defun* fg-remote-buffer (&optional pattern buffers &key list-hide-mod-mark)
+(cl-defun fg-remote-buffer (&optional pattern buffers &key list-hide-mod-mark)
 	"Depending on whether PATTERN is specified, return
 results of `fg-list-useful-buffer-names' as a newline-delimited string,
 with '* ' prefix for ones that are marked as modified unless LIST-HIDE-MOD-MARK is set,
@@ -109,14 +109,14 @@ or text contents of a buffer with name matching (via `fg-get-useful-buffer') PAT
 (defalias 'fg-remote-buff 'fg-remote-buffer)
 (defalias 'fg-remote-b 'fg-remote-buffer)
 
-(defun* fg-remote-buffer-names (&optional pattern)
+(cl-defun fg-remote-buffer-names (&optional pattern)
 	"Same as `fg-remote-buffer', but always returns a list of names,
 optionally filtered by PATTERN. Uses `fg-list-useful-buffer-names' for filtering."
 	(fg-list-useful-buffer-names pattern))
 
 (defalias 'fg-remote-bn 'fg-remote-buffer-names)
 
-(defun* fg-remote-buffer-save (pattern &optional overwrite buffers)
+(cl-defun fg-remote-buffer-save (pattern &optional overwrite buffers)
 	"Saves the buffer matching (via `fg-get-useful-buffer') PATTERN.
 Any queries during save (e.g. file was modified by something else) will signal error,
 unless OVERWIRITE is specified and matches one of the following:
@@ -155,7 +155,7 @@ unless OVERWIRITE is specified and matches one of the following:
 (defalias 'fg-remote-buff-save 'fg-remote-buffer-save)
 (defalias 'fg-remote-bs 'fg-remote-buffer-save)
 
-(defun* fg-remote-buffer-kill (pattern &optional buffers)
+(cl-defun fg-remote-buffer-kill (pattern &optional buffers)
 	"Kill buffer matching (via `fg-get-useful-buffer') PATTERN.
 It doesn't matter if buffer is modified or if there's
 an associated process, it will still be killed without any prompt.

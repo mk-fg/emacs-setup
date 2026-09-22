@@ -177,7 +177,7 @@
 
 (defun fg-keys-from-rest (args)
 	"Remove keywords and their values from ARGS.
-Useful for &rest + &key + &allow-other-keys in `defun*'."
+Useful for &rest + &key + &allow-other-keys in `cl-defun'."
 	(let (res drop)
 		(dolist (v args)
 			(when (not drop)
@@ -240,7 +240,7 @@ BEFORE-P is passed as-is to `kill-append', if it ends up being used."
 	(interactive "r")
 	(fg-copy-string (filter-buffer-substring start end) (< end start)))
 
-(defun* fg-taint (&key call whole-lines-only)
+(cl-defun fg-taint (&key call whole-lines-only)
 	"Smart region interpreter.
 If nothing is marked, work on the whole current line.
 If part of a single line is marked, apply CALL to this part, unless second
@@ -647,7 +647,7 @@ FORCE option allows to bypass this caching."
 (defvar fg-find-buffer-state nil
 	"Stores '(buffer-from buffer-to) information for `fg-find-buffer'.")
 
-(defun* fg-find-buffer
+(cl-defun fg-find-buffer
 	(name &key error-if-not-found (switch-back t))
 	"Switch to named buffer, without creating it if it doesn't exists.
 SWITCH-BACK allows to reverse the operation with
@@ -706,7 +706,7 @@ If more than one match is returned, error gets signaled."
 (defvar fg-notify-never-escape nil
 	"Never escape html entities in notification functions")
 
-(defun* fg-notify
+(cl-defun fg-notify
 	(header &optional (message "") &key pixmap urgency strip dont-escape)
 	"Send desktop notification about event.
 PIXMAP specifies an icon to use.
@@ -764,13 +764,13 @@ Uses async dbus call and does not return notification id."
 	(let ((del (make-symbol "del")))
 		(remove del (mapcar (lambda (el) (if (funcall pred el) el del)) seq))))
 
-(defun* fg-hex (val &optional (offset 0) len)
+(cl-defun fg-hex (val &optional (offset 0) len)
 	"Parse hex from a VAL string, or substring (OFFSET / LEN) of VAL."
 	(when (/= 0 offset) (setq val (substring val offset)))
 	(when len (setq val (substring val 0 len)))
 	(string-to-number val 16))
 
-(defun* fg-xor (a b)
+(cl-defun fg-xor (a b)
 	"Easy XOR logic function. Force-converts A and B to t or nil."
 	(let ((a (and a t)) (b (and b t))) (not (eq a b))))
 
@@ -1172,7 +1172,7 @@ Optional arguments are same as in `replace-regexp-in-string'."
 (defun fg-string-suffix-p (suffix s &optional ignore-case)
 	(string-prefix-p (fg-string-reverse suffix) (fg-string-reverse s) ignore-case))
 
-(defun* fg-string-split (string &key sep omit-nulls limit (from 'left))
+(cl-defun fg-string-split (string &key sep omit-nulls limit (from 'left))
 	"Same as `split-string', but with optional split-limit and direction keys."
 	(when (not (eq from 'left)) (error "Only [:from 'left] is supported now."))
 	(if (and limit (/= limit 0))
@@ -1224,7 +1224,7 @@ Uses `fg-string-pos' internally."
 	"Join STRINGS arguments by a SEP string."
 	(mapconcat 'identity strings sep))
 
-(defun* fg-string-strip (string &rest frags &key (from 'both) &allow-other-keys)
+(cl-defun fg-string-strip (string &rest frags &key (from 'both) &allow-other-keys)
 	"Remove substrings (e.g. characters) from STRING margins.
 FROM can be one of '(both l left r right), 'both being a default.
 Returns the resulting string."
@@ -1238,7 +1238,7 @@ Returns the resulting string."
 			(setq regexp (cons (format "\\`\\(%s\\)+" frags) regexp)))
 		(replace-regexp-in-string (apply 'fg-string-join "\\|" regexp) "" string t t)))
 
-(defun* fg-string-strip-chars (string chars &key (from 'both) &allow-other-keys)
+(cl-defun fg-string-strip-chars (string chars &key (from 'both) &allow-other-keys)
 	(apply 'fg-string-strip string :from from (mapcar 'char-to-string chars)))
 
 (defun fg-string-strip-whitespace (string)

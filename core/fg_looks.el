@@ -232,7 +232,7 @@ FACE defaults to nil, see `hi-lock-faces' for list of these."
 ;; TODO: picking of lab color values in a way that maximizes color distance from prev ones
 (require 'color)
 
-(defun* fg-buffer-bg-tweak (&optional seed (min-shift 2) (max-shift '(3 5 5)))
+(cl-defun fg-buffer-bg-tweak (&optional seed (min-shift 2) (max-shift '(3 5 5)))
 	"Adjust buffer bg color based on (md5 of-) SEED.
 MIN-SHIFT / MAX-SHIFT and SEED are passed to `fg-color-tweak'.
 If SEED is nil or an empty string, bg color is restored to default face bg."

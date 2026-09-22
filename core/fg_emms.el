@@ -199,7 +199,7 @@ See also `emms-playlist-mode-next' for a more canonical way to do similar thing.
 
 ;;;; Track info / description
 
-(defun* fg-emms-file-track-wash-name (title &key strip-ext)
+(cl-defun fg-emms-file-track-wash-name (title &key strip-ext)
 	"Process underscore-encoded spaces in name,
 split numeric prefix (if delimited in a standard fashion), strip file extension."
 	(let
