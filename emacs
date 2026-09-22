@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;;;; Hack to show lines where Compile-Log warnings happen on emacs startup
 ;; (defun dont-delay-compile-warnings (fun type &rest args)
 ;; 	(if (eq type 'bytecomp)

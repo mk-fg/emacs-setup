@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (defvar fg-stack-time-line-format "---== %Y-%m-%d, %a"
 	"Date format for auto-appended dates after sleep-lines.")
 

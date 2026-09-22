@@ -1,4 +1,4 @@
-;; Font lock colorization customizations
+;; Font lock colorization customizations  -*- lexical-binding: t; -*-
 (defun color-theme-billc ()
   "Bill Clementson's white background custom color theme."
   (interactive)

@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;; Basics
 
 (setq-default

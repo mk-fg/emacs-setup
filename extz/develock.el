@@ -1,4 +1,4 @@
-;;; develock.el --- additional font-lock keywords for the developers
+;;; develock.el --- additional font-lock keywords for the developers  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2001-2003, 2005-2009, 2012, 2013, 2015
 ;; Katsumi Yamaoka

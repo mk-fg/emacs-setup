@@ -1,4 +1,4 @@
-;;; obarray-fns.el --- obarray-manipulating routines
+;;; obarray-fns.el --- obarray-manipulating routines  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 1995, 1998, 2006 Noah S. Friedman
 

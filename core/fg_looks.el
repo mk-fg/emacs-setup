@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;; Initial scratch buffer
 ;; Useful for common temp snippets to edit/run from there
 

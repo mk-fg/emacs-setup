@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;;;; GHG transparent encryption - https://github.com/mk-fg/ghg
 ;; Based on jka-compr-install, which has all the same hooks
 

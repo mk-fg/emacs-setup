@@ -1,4 +1,4 @@
-;;; auto-complete.el --- Inline auto completion
+;;; auto-complete.el --- Inline auto completion  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2008, 2009  MATSUYAMA Tomohiro
 
@@ -55,7 +55,7 @@
 ;; --------------------------------
 ;;
 ;; Add following code to your .emacs.
-;; 
+;;
 ;;     (define-key ac-complete-mode-map "\C-n" 'ac-next)
 ;;     (define-key ac-complete-mode-map "\C-p" 'ac-previous)
 ;;
@@ -243,7 +243,7 @@
 
 ;;; Code:
 
- 
+
 
 (defgroup auto-complete nil
   "Auto completion with popup menu"
@@ -291,7 +291,7 @@ If you specify `nil', never be started automatically."
 
 (defcustom ac-override-local-map nil
   "Non-nil mean use `ac-complete-mode-map' override local map.
-Please set it to non-nil only if you faced to some problem about 
+Please set it to non-nil only if you faced to some problem about
 minor-mode keymap conflicts."
   :type 'boolean
   :group 'auto-complete)
@@ -387,7 +387,7 @@ using the `TARGET' that is given as a first argument.")
   (let ((map (make-sparse-keymap)))
     (define-key map "\t" 'ac-expand)
     (define-key map "\r" 'ac-complete)
-    
+
     (define-key map [down] 'ac-next)
     (define-key map [up] 'ac-previous)
 
@@ -397,7 +397,7 @@ using the `TARGET' that is given as a first argument.")
 (defvar ac-saved-local-map nil
   "Old keymap before `auto-complete' activated.")
 
- 
+
 
 ;;;; Auto completion
 
@@ -733,7 +733,7 @@ using the `TARGET' that is given as a first argument.")
   auto-complete-mode auto-complete-mode-maybe
   :group 'auto-complete)
 
- 
+
 
 ;;;; Basic cache facility
 
@@ -746,7 +746,7 @@ using the `TARGET' that is given as a first argument.")
   (dolist (variable ac-clear-variables-after-save)
     (set variable nil)))
 
- 
+
 
 ;;;; Sources implementation
 
@@ -863,7 +863,7 @@ use SOURCES as `ac-sources'.")
     (if (consp source)
         (assoc-default property source))))
 
- 
+
 
 ;;;; Standard sources
 
@@ -1006,7 +1006,7 @@ This is useful if you just want to define a dictionary/keywords source."
   `(defvar ,name
      '((candidates . (lambda () (all-completions ac-prefix ,list))))))
 
- 
+
 
 ;;;; Popup menu
 

@@ -1,4 +1,4 @@
-;;; jinja2-mode.el --- A major mode for jinja2
+;;; jinja2-mode.el --- A major mode for jinja2  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2011-2022 Florian Mounier aka paradoxxxzero
 

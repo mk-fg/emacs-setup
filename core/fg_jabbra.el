@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (require 'password-cache) ; for jabbra reconnect features
 
 (require 'jabber)

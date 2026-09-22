@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (setq-default
 	ediff-diff-program "ediff-prog"
 	ediff-split-window-function 'split-window-horizontally

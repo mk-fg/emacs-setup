@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;;;; Python stuff
 
 

@@ -1,4 +1,4 @@
-;;; wcy-swbuff.el --- switch buffer quickly
+;;; wcy-swbuff.el --- switch buffer quickly -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2004  Free Software Foundation, Inc.
 

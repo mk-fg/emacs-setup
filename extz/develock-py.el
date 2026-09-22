@@ -1,4 +1,4 @@
-;;
+;; -*- lexical-binding: t; -*-
 ;; develock-py.el
 ;;
 ;; Made by Daniel Farina

@@ -1,4 +1,4 @@
-;;; vline.el --- show vertical line (column highlighting) mode.
+;;; vline.el --- show vertical line (column highlighting) mode.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2002, 2008, 2009, 2010 by Taiki SUGAWARA <buzz.taiki@gmail.com>
 

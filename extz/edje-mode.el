@@ -1,4 +1,4 @@
-;;; edje-mode-el -- Major mode for editing Edje files
+;;; edje-mode-el -- Major mode for editing Edje files  -*- lexical-binding: t; -*-
 
 ;; Author: Gustavo Sverzut Barbieri <barbieri@gmail.com>
 ;; Created: 2007-07-23

@@ -1,4 +1,4 @@
-;;; hide-region.el --- hide regions of text using overlays
+;;; hide-region.el --- hide regions of text using overlays  -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2001, 2005  Mathias Dahl
 ;;

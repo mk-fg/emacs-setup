@@ -1,4 +1,4 @@
-;;; sws-mode.el --- (S)ignificant (W)hite(S)pace mode
+;;; sws-mode.el --- (S)ignificant (W)hite(S)pace mode  -*- lexical-binding: t; -*-
 ;;;
 ;;; URL: https://github.com/brianc/jade-mode
 ;;; Author: Brian M. Carlson and other contributors

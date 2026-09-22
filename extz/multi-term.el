@@ -1,4 +1,4 @@
-;;; multi-term.el --- Managing multiple terminal buffers in Emacs.
+;;; multi-term.el --- Managing multiple terminal buffers in Emacs.  -*- lexical-binding: t; -*-
 
 ;; Author: Andy Stewart <lazycat.manatee@gmail.com>
 ;; Maintainer: Andy Stewart <lazycat.manatee@gmail.com>

@@ -660,8 +660,8 @@ Note that this does not apply to backreferences."
   (reb-do-update))
 
 (defun rxt--toggle-flag-minibuffer (char)
-  (setf (buffer-substring (minibuffer-prompt-end) (point-max))
-        (rxt--toggle-flag-string (minibuffer-contents) char))
+  ;; (setf (buffer-substring (minibuffer-prompt-end) (point-max))
+  ;;       (rxt--toggle-flag-string (minibuffer-contents) char))
   (when
       (and (= (point) (minibuffer-prompt-end))
            (looking-at (rx "(?" (group (+ (any ?i ?s ?x))) ")")))

@@ -1,4 +1,4 @@
-;;; jade-mode.el --- Major mode for editing .jade files
+;;; jade-mode.el --- Major mode for editing .jade files  -*- lexical-binding: t; -*-
 ;;;
 ;;; URL: https://github.com/brianc/jade-mode
 ;;; Author: Brian M. Carlson and other contributors

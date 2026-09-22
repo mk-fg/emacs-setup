@@ -1,4 +1,4 @@
-;;; vi-style line number mode for Emacs
+;;; vi-style line number mode for Emacs  -*- lexical-binding: t; -*-
 ;;; (requires Emacs 19.29 or later, or XEmacs 19.14 or later)
 ;;; Copyright (C) 1994, 1995, 1997 Kyle E. Jones
 ;;;

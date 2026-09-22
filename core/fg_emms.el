@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;; Basic setup
 (require 'emms)
 (require 'emms-source-file)

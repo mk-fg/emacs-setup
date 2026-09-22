@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;; TODO: add some-keys + num for discrete buffer switching (Alt+NUM Alt+B)
 
 (defmacro iwrapm (func &rest args)

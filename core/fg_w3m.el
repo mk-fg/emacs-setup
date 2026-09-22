@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;; For newsticker
 ;; (autoload 'w3m-region "w3m"
 ;; 	"Render region in current buffer and replace with result." t)

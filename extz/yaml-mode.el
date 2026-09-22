@@ -1,4 +1,4 @@
-;;; yaml-mode.el --- Major mode for editing YAML files
+;;; yaml-mode.el --- Major mode for editing YAML files  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2010  Yoshiki Kurihara
 

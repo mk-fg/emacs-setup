@@ -1,27 +1,27 @@
-;;; column-marker.el --- Highlight certain character columns
-;; 
+;;; column-marker.el --- Highlight certain character columns  -*- lexical-binding: t; -*-
+;;
 ;; Filename: column-marker.el
 ;; Description: Highlight certain character columns
 ;; Author: Rick Bielawski <rbielaws@i1.net>
 ;; Maintainer: Rick Bielawski <rbielaws@i1.net>
 ;; Created: Tue Nov 22 10:26:03 2005
-;; Version: 
+;; Version:
 ;; Last-Updated: Fri Jan 22 11:28:48 2010 (-0800)
 ;;           By: dradams
 ;;     Update #: 312
 ;; Keywords: tools convenience highlight
 ;; Compatibility: GNU Emacs 21, GNU Emacs 22, GNU Emacs 23
-;; 
+;;
 ;; Features that might be required by this library:
 ;;
 ;;   None
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;;; Commentary: 
-;; 
+;;
+;;; Commentary:
+;;
 ;; Highlights the background at a given character column.
-;; 
+;;
 ;; Commands `column-marker-1', `column-marker-2', and
 ;; `column-marker-3' each highlight a given column (using different
 ;; background colors, by default).
@@ -82,7 +82,7 @@
 ;; Please report any bugs!
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;;; Change log:
 ;;
 ;; 2009/12/10 dadams
@@ -106,7 +106,7 @@
 ;; 2005-12-29 RGB
 ;;     column-marker.el now supports multi-column characters.
 ;; 2005/11/21 dadams
-;;     Combined static and dynamic. 
+;;     Combined static and dynamic.
 ;;     Use separate faces for each marker.  Different interactive spec.
 ;; 2005/10/19 RGB
 ;;     Initial release of column-marker.el.
@@ -129,7 +129,7 @@
 ;; Floor, Boston, MA 02110-1301, USA.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;;; Code:
 
 ;;;;;;;;;;;;;;;;;;;;;;
@@ -171,7 +171,7 @@ FACE is the face to use.  If nil, then face `column-marker-1' is used."
      ;; define context variable ,VAR so marker can be removed if desired
      (defvar ,var ()
        "Buffer local. Used internally to store column marker spec.")
-     ;; context must be buffer local since font-lock is 
+     ;; context must be buffer local since font-lock is
      (make-variable-buffer-local ',var)
      ;; Define wrapper function named ,VAR to call `column-marker-internal'
      (defun ,var (arg)

@@ -1,4 +1,4 @@
-;;; minimap.el --- Sidebar showing a "mini-map" of a buffer
+;;; minimap.el --- Sidebar showing a "mini-map" of a buffer  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2009-2014 Free Software Foundation, Inc.
 

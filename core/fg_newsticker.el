@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 (load-library "fg_w3m") ;; see https://savannah.nongnu.org/bugs/index.php?34350
 (require 'newsticker)
 

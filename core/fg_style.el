@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;; Tabs appearance and formatting basics
 (setq-default
 	indent-tabs-mode t

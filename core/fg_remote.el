@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;; Stuff to call via emacsclient
 
 (setq-default

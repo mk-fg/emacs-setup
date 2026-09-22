@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t -*-
 (require 'erc)
 (require 'erc-ibuffer)
 

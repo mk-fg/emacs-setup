@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t -*-
+
 ;;;; This is a work in progress
 ;;;; I've decided to try out Mew first, then fall back to gnus, if it won't be good enough...
 ;;;; Ok, back to gnus. Mew seem to be quite twisted and news-oriented stuff should be better

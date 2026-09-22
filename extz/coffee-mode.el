@@ -1,4 +1,4 @@
-;;; coffee-mode.el --- Major mode to edit CoffeeScript files in Emacs
+;;; coffee-mode.el --- Major mode to edit CoffeeScript files in Emacs  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
