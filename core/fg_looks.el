@@ -84,8 +84,9 @@ FACE defaults to nil, see `hi-lock-faces' for list of these."
 			(coding-system-for-write enc))
 		(revert-buffer t t)))
 
-(defadvice select-safe-coding-system-interactively
-	(around fg-select-safe-coding-system-interactively activate) 'raw-text)
+(defun fg-select-safe-coding-system-interactively (func &rest args) 'raw-text)
+(advice-add 'select-safe-coding-system-interactively
+	:around #'fg-select-safe-coding-system-interactively)
 
 
 ;; Fonts
@@ -521,7 +522,7 @@ See also: emacs bug 30129, emacs-mirror/emacs#d3cb07d7."
 		`(erc-nick-default-face ((t (:weight normal))))
 		`(erc-current-nick-face ((t (:foreground ,fg-color-kw :weight bold))))
 		`(erc-notice-face ((t (:foreground ,fg-color-fg-modeline))))
-		`(erc-prompt-face ((t (:foreground ,fg-color-fg-core :background "unspecified"))))
+		`(erc-prompt-face ((t (:foreground ,fg-color-fg-core))))
 		;; Newsticker
 		`(newsticker-treeview-face ((t (:foreground ,fg-color-fg-core))))
 		`(newsticker-treeview-immortal-face
